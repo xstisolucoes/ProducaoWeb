@@ -1,0 +1,267 @@
+# Project TODO
+
+- [x] Inventariar o projeto Delphi e registrar a estrutura real de menus, telas, formulários e consultas Firebird.
+- [ ] Definir o modelo de conectividade segura entre o backend publicado, o proxy local e o banco Firebird, sem acesso direto pelo navegador.
+- [x] Instalar e configurar o pacote `node-firebird` exclusivamente no backend Node.js.
+- [x] Implementar autenticação e autorização para restringir o acesso aos dados de produção.
+- [ ] Construir o layout principal com sidebar baseada exclusivamente no menu identificado no sistema Delphi legado.
+- [x] Implementar dashboard de produção com ordens em andamento, status e indicadores calculados a partir do Firebird.
+- [ ] Implementar módulo de Ordens de Produção com consulta, busca, filtros, paginação, criação, edição e atualização de status.
+- [ ] Implementar módulo de Produtos/Itens com consulta, busca, filtros, paginação e cadastro conforme a estrutura Firebird.
+- [x] Implementar módulo de Estoque com saldos, busca, filtros, paginação e histórico de movimentações conforme a estrutura Firebird.
+- [x] Implementar estados de carregamento, vazio, erro e indisponibilidade de proxy em todas as telas de dados.
+- [x] Cobrir a camada de regras e integração com testes Vitest, validar o build e revisar o layout em desktop e mobile.
+- [x] Documentar os parâmetros, a instalação do proxy local e os requisitos de rede para ativar a integração Firebird em produção.
+- [x] Preparar a execução exclusivamente na LAN, sem depender de URL pública ou resolução DNS externa.
+- [ ] Validar as consultas do proxy contra a versão real do Firebird e ajustar possíveis variações de nomes de tabelas ou campos.
+- [ ] Implementar a criação de ordem após confirmar os campos obrigatórios, geradores e transações usados pela base Firebird local.
+- [ ] Implementar o cadastro de produto após validar a estrutura completa da tabela de produtos no banco local.
+- [ ] Ampliar os filtros avançados das ordens conforme os critérios operacionais definidos pela empresa.
+- [ ] Validar a equivalência final da sidebar com os módulos Delphi inventariados, mantendo o dashboard como ponto de entrada solicitado.
+- [x] Adicionar estados de carregamento visíveis e consistentes no dashboard, nas listagens e no histórico de estoque.
+- [x] Mapear os módulos legados confirmados e impedir que módulos pendentes sejam redirecionados a telas não relacionadas.
+- [x] Criar testes Vitest para procedimentos de produção, paginação, atualização de status e falhas do proxy local.
+- [x] Corrigir o carregamento do arquivo .env nos testes locais do proxy Firebird em Windows.
+- [x] Corrigir o script pnpm dev para execução direta no Windows.
+- [x] Incluir todos os roteadores de produção exigidos pelo servidor web no pacote corretivo local.
+- [x] Substituir o login externo padrão por autenticação local compatível com os usuários e permissões do Firebird.
+- [x] Mapear a consulta real de permissões do usuário no Firebird e incluí-la na sessão local.
+- [x] Aplicar as permissões Firebird na navegação e nas ações de alteração de status da aplicação local.
+- [x] Aplicar permissões da sessão local para ocultar ou desabilitar menus e ações não autorizadas na interface.
+- [x] Documentar o mapeamento entre permissões Firebird, módulos da sidebar e ações operacionais do sistema web.
+- [ ] Confirmar o carregamento real de Programação, Ordens, Produto Venda e Estoque na instalação Firebird local.
+- [ ] Registrar e corrigir divergências entre as consultas atuais e os campos ou permissões da base Firebird em uso.
+- [ ] Mapear no vídeo o vínculo operador-máquina, a fila de programação e os dados filtrados por máquina.
+- [x] Implementar o botão de início de processo para operadores autorizados.
+- [ ] Implementar a tela de apontamento vinculada ao processo iniciado, conforme o fluxo do desktop.
+- [ ] Concluir os módulos de Pacotes/Paletização e Solicitações após validar seus fluxos no vídeo legado.
+- [x] Implementar Solicitações restritas a Manutenção e Desenvolvimento com setores, descrição e gravação em SOLICITACOES.
+- [x] Adicionar consulta de quantidades aprovadas por processo, arranjo e status para a OP ativa.
+- [x] Mover Solicitações para a barra superior do apontamento e exibir os indicadores de quantidade reservada e processo anterior conforme o legado.
+- [x] Abrir Solicitações em modal pelo apontamento, removendo setor destino e definindo Manutenção/Desenvolvimento automaticamente pelo tipo.
+- [x] Exibir somente o primeiro nome do solicitante e adicionar Cancelar no modal de Solicitações.
+- [x] Impedir corte do cartão Desenvolvimento em larguras operacionais e corrigir o fundo sólido do modal de Quantidades aprovadas.
+- [x] Corrigir SOL_SETOR_PARA usando SETORES_EMPRESA e alinhar os cartões do modal de Solicitações.
+- [x] Padronizar os modais operacionais no visual de Solicitações: cabeçalho com faixa amarela suave, corpo sólido, espaçamento, bordas e ações vermelho/verde.
+- [ ] Validar na LAN uma solicitação de teste para Manutenção e Desenvolvimento e conferir a gravação em SOLICITACOES.
+- [ ] Validar na LAN a consulta de quantidades aprovadas com uma OP que possua histórico em MOV_PROCESSOS_HORARIOS.
+- [x] Implementar programação do operador com máquina identificada, sequência de processos, fila e ação de iniciar processo.
+- [ ] Implementar programação do programador com consulta, alteração de fila e alteração de processo conforme as permissões.
+- [ ] Implementar apontamento com dados técnicos da ordem, setup, início, parada e finalização de produção.
+- [ ] Aplicar matriz de perfis: programador altera fila e processo; operador inicia, aponta, registra paradas e finaliza.
+- [x] Manter o módulo de Transferir Estoque sem alterações durante esta etapa de programação e apontamento.
+- [x] Extrair do vídeo a sequência de estados, botões e dados obrigatórios do apontamento do operador.
+- [x] Corrigir a identificação da máquina por computadores usando maquinas_processos.MQP_LOGON.
+- [x] Restringir a programação do operador a ordens com status Liberado.
+- [x] Ampliar tipografia, contraste e controles do apontamento para uso à distância no chão de fábrica.
+- [ ] Implementar os estados restantes de setup, parada, produção e finalização do apontamento com dados Firebird.
+- [x] Compactar o cabeçalho e a grade do apontamento para caber na altura inicial do monitor operacional.
+- [x] Validar visualmente o apontamento compacto em viewport equivalente ao monitor operacional e ajustar até eliminar a rolagem inicial.
+- [x] Implementar início e término de parada com motivo no histórico de paradas do Firebird.
+- [ ] Implementar finalização de produção com quantidades produzidas, perdas, observação e rastreio de lote.
+- [ ] Revisar os bloqueios de escrita e as mensagens de confirmação antes da validação em ordem de teste.
+- [x] Diagnosticar a indisponibilidade do Firebird local reportada ao iniciar setup e corrigir o caminho de gravação.
+- [x] Corrigir o sombreamento da variável process na rota de início de setup do proxy Firebird.
+- [x] Corrigir o mapeamento de posição e horários do apontamento após iniciar setup no Firebird.
+- [x] Substituir o seletor de resultado de setup por botões grandes Atendido, Cancelado e A Concluir.
+- [x] Adicionar o título Finalizar setup acima das decisões do operador.
+- [ ] Registrar validação reproduzível do apontamento compacto em monitor operacional, comprovando a ausência de rolagem inicial.
+- [x] Implementar checklist de processos de perda/motivos entre setup atendido e produção iniciada.
+- [x] Exibir o checklist de liberação de máquina em um modal centralizado com foco no operador.
+- [x] Corrigir a normalização de MP_POSICAO ao confirmar o checklist de liberação.
+- [x] Exibir os motivos de parada em modal, filtrados pelo grupo da máquina atual.
+- [x] Corrigir o filtro de motivos ativos para unir motivos de todas as máquinas ao GMQ_CODIGO da máquina atual, conforme o select legado.
+- [x] Registrar a parada no histórico e bloquear a finalização de produção até a retomada.
+- [x] Exibir apenas o nome principal do operador na faixa de situação do apontamento.
+- [x] Remover o aviso auxiliar de rastreio do bloco de comandos de operação.
+- [x] Corrigir a gravação de hpar_situacao_processo para persistir Produção sem corrupção de acentuação no Firebird.
+- [x] Substituir as confirmações padrão do navegador por modais personalizados com ícones de pergunta, aviso e cuidado.
+- [x] Exibir os resultados de finalização de produção em três botões diretos: Atendido, A Concluir e Parcial.
+- [x] Listar matérias-primas da ordem para rastreio a partir de ORDEM_PRODUCAO_ESTRUTURA e PROD_VENDAS_EST_PRODUTO.
+- [x] Validar o lote informado em CONTROLE_VALIDADE pelo PC_CODIGO e gravar o rastreio confirmado na estrutura da ordem.
+- [x] Corrigir o rastreio para usar produtos_compras e os joins completos confirmados pelo SQL da instalação.
+- [x] Migrar o rastreio para rota exclusiva, sem colisão com o endpoint genérico de apontamento.
+- [x] Instrumentar o endpoint de rastreio para registrar o OP_CODIGO e a quantidade de linhas retornadas pelo proxy.
+- [x] Exibir no modal o erro retornado pela consulta de rastreio antes da chamada ao proxy.
+- [x] Corrigir a colisão de rota no proxy que interpretava o rastreio como processo inválido.
+- [x] Mover os endpoints de rastreio para fora de /v1/pointing, evitando captura pela rota genérica de processo.
+- [x] Simplificar o rastreio para mostrar apenas o nome da matéria-prima em uma linha.
+- [x] Dividir a digitação de lote em dois campos numéricos obrigatórios de quatro dígitos.
+- [x] Exibir a validação de lote no modal operacional padronizado.
+- [x] Ampliar o modal de rastreio para exibir o nome completo da matéria-prima.
+- [x] Mostrar a rejeição de lote inválido em modal operacional de cuidado.
+- [x] Manter nome, lote segmentado e ação de validação em uma única linha ampla no rastreio.
+- [x] Exigir a revalidação dos lotes em cada nova abertura do rastreio.
+- [x] Permitir seguir diretamente à finalização quando o processo não tiver matérias-primas na estrutura.
+- [x] Remover a instrumentação transitória de rastreio e cobrir com teste a rota exclusiva da estrutura da ordem.
+- [x] Exigir quantidade produzida e perda antes de liberar um resultado de finalização.
+- [x] Consultar a reserva de estoque da OP conforme o grupo da máquina e aplicar as regras de quantidade atendida, parcial ou a concluir.
+- [x] Alertar em modal quando a produção superar a reserva, informando a quantidade e o percentual excedentes.
+- [x] Baixar a reserva e inserir movimentação em prod_compras_estoque na finalização, conforme InserirMovEstoque do legado.
+- [x] Mapear a regra de reserva por grupo e os parâmetros da movimentação de estoque no legado.
+- [x] Mapear os joins de rastreio e a gravação de PCE_LOTE na estrutura da ordem de produção.
+- [x] Mapear o registro legados de parada em historico_paradas e o filtro de motivos por grupo de máquina.
+- [x] Mapear os itens do checklist legado: motivos do tipo Liberação de Máquina filtrados pelo grupo da máquina.
+- [ ] Validar na LAN, em ordem de teste controlada, a baixa de reserva e a movimentação de estoque da finalização.
+- [x] Ajustar a saída de estoque para usar o sinal negativo e os parâmetros confirmados na rotina Delphi InserirMovEstoque.
+- [x] Corrigir a detecção de reserva da OP 11343 para reconhecer os campos e estados efetivamente cadastrados em estoque_reservado.
+- [x] Ajustar o modal de finalização para eliminar rolagem horizontal e manter os controles legíveis no monitor operacional.
+- [x] Validar na LAN o retorno da rota de reserva para a OP 11343 após o alinhamento de grupos e tipos.
+- [x] Cobrir diretamente a política de reservas para os tipos Aberta, Revincada, Cortada/Vincada e Aproveitamento.
+- [x] Garantir reserva obrigatória para a máquina impressora Imp. Nilgraf 0900 x 1800 da OP 11343, mesmo quando o tipo informado pela base divergir do esperado.
+- [x] Compactar verticalmente o modal de finalização para manter a ação Voltar visível no monitor operacional.
+- [x] Validar visualmente na LAN o modal de finalização aberto, confirmando que a ação Voltar fica acessível no monitor operacional.
+- [x] Remover a referência incompatível a grupo_maquinas.GMQ_DESCRICAO da consulta de reserva da impressora.
+- [x] Incluir grupo_maquinas.GMQ_GRUPO na consulta de reserva da impressora conforme o campo confirmado na base local.
+- [x] Remover GMQ_GRUPO da leitura do proxy quando sua codificação inválida impedir a consulta de reserva.
+- [x] Tornar a codificação do Firebird configurável e ajustar o proxy local para evitar erro de string malformada no banco legado.
+- [x] Validar na LAN a reserva da OP 11343 usando FIREBIRD_ENCODING=WIN1252 e registrar se a codificação elimina o erro Malformed string.
+- [x] Retornar automaticamente para Programação após finalizar a produção como A Concluir, Parcial ou Atendido.
+- [x] Exibir na fila do operador apenas ordens com status Aberto, A Concluir e Setup a Concluir.
+- [x] Permitir iniciar o apontamento somente para as ordens elegíveis na nova fila do operador.
+- [x] Cobrir explicitamente que a rota raiz exibida após a finalização corresponde à tela de Programação.
+- [x] Agrupar visualmente as ordens Abertas, A Concluir e Setup a Concluir na fila do operador.
+- [x] Ao reiniciar A Concluir, limpar MP_FIM, gravar novo MP_INICIO e inserir novo ciclo em mov_processos_horarios.
+- [ ] Validar na LAN a retomada A Concluir, confirmando MP_FIM vazio e novo registro ativo em mov_processos_horarios.
+- [x] Integrar contador_diario_processos como fonte sequencial de horários em setup Liberado, fim de setup, checklist e finalização, preservando A Concluir com timestamp direto.
+- [x] Atualizar CDP_CRONOMETRO nas transições controladas pelo contador diário, exceto no início direto de A Concluir.
+- [x] Usar CDP_CRONOMETRO como referência de setup somente para ordens Liberadas e manter A Concluir com timestamp direto no início.
+- [ ] Validar na LAN a sequência de CDP_CRONOMETRO em setup, fim de setup e finalização de uma ordem Liberada.
+- [x] Bloquear o início de ordens Liberadas/Abertas quando existir A Concluir pendente na máquina e liberar somente a fila prioritária.
+- [x] Exibir Início da produção com hora atual e Fim da produção vazio ao retomar uma ordem A Concluir.
+- [ ] Validar na LAN a prioridade de A Concluir e os cronômetros exibidos após a retomada.
+- [x] Corrigir a retomada A Concluir para atualizar mov_processos para Em Produção e inserir novo registro em mov_processos_horarios na mesma transação.
+- [x] Corrigir MP_FIM e MPH_FIM para usar o mesmo CDP_CRONOMETRO válido no fechamento da produção, evitando timestamp fora da sequência diária.
+- [ ] Encerrar e renovar automaticamente o contador diário Iniciado de uma máquina quando sua data não corresponder ao dia corrente.
+- [ ] Validar na LAN que MP_FIM e MPH_FIM recebem o mesmo horário do contador diário da data corrente ao finalizar produção.
+- [x] Confirmar na LAN a estrutura de contador_diario_processos, especialmente CDP_DATA e CDP_INICIO, antes de ativar a renovação diária automática.
+- [x] Registrar evidência textual dos campos confirmados de contador_diario_processos e cobrir seu uso pelo proxy.
+- [ ] Executar na LAN uma virada de contador diário e comprovar o fechamento do registro anterior e a criação/uso do registro atual pela máquina.
+- [x] Filtrar o rastreio da impressora pelo GMQ_CODIGO da estrutura igual ao grupo da máquina, substituindo o requisito inicial por TP_CODIGO.
+- [x] Filtrar o rastreio da coladeira pelo GMQ_CODIGO da estrutura igual ao grupo da máquina, substituindo o requisito inicial por TP_CODIGO.
+- [ ] Validar na LAN o rastreio de impressora sem cola e o rastreio de coladeira sem tinta indevida.
+- [x] Adicionar botão Visualizar layout no apontamento para processos de impressão.
+- [x] Consultar PV_CAMINHO_DESENHO de produtos_vendas pelo PV_CODIGO e PV_REVISAO do processo.
+- [x] Exibir até três clichês e até três facas da ficha de produto, somente quando existirem valores.
+- [x] Listar cores de prod_vendas_cores relacionadas a cores para apresentar o tom da impressão.
+- [x] Servir o arquivo SVG de PV_CAMINHO_DESENHO pelo proxy local autenticado, sem expor o caminho de rede ao navegador.
+- [x] Consultar clichês e facas pelas relações FC_CODIGO/FF_CODIGO, incluindo as variações 2 e 3.
+- [ ] Validar na LAN a abertura de um SVG real, as cores e os recursos exibidos para uma OP de impressão.
+- [x] Exibir o SVG de layout em modo de tela inteira para uso no monitor operacional.
+- [x] Adicionar zoom por botões e roda do mouse, com arraste para navegar pelo layout ampliado.
+- [ ] Validar na LAN o zoom, arraste e tela inteira usando um SVG real no monitor operacional.
+- [x] Alterar o fundo do visualizador de layout para branco e preservar os controles na barra superior.
+- [x] Ocultar cartões de faca e clichê/peça solta quando não houver valor cadastrado.
+- [x] Exibir cada cor como cartão preenchido pelo tom, com texto sobre fundo de alto contraste.
+- [x] Manter o botão Detalhes sempre visível na barra superior, com conteúdo lateral opcional.
+- [ ] Validar na LAN o fundo branco, detalhes condicionais e cartões de cor com dados reais de uma OP de impressão.
+- [x] Exibir produto, revisão, clichês e cores disponíveis diretamente na barra superior do layout.
+- [x] Exibir cada cor na barra superior apenas como nome centralizado em branco sobre o tom, sem os códigos hexadecimal.
+- [ ] Validar na LAN o cabeçalho compacto com produto, clichê e cores reais de uma OP de impressão.
+- [x] Alterar a barra superior do layout para verde claro e reforçar o contraste dos metadados e controles.
+- [ ] Validar na LAN o contraste da barra verde clara com dados reais de produto, clichê e cor.
+- [x] Remover o botão e o painel lateral Detalhes do visualizador, mantendo os dados na barra superior.
+- [ ] Validar na LAN a visualização sem painel Detalhes, com metadados suficientes na barra superior.
+- [x] Distinguir PV_CODIGO interno de PV_COD_PROD_CLI (CPC) na tela de apontamento.
+- [x] Exibir cliente, razão social, composição interna, papelão ondulado, grampos e demais campos confirmados do select legado.
+- [x] Alinhar ajustes, quantidades e cronômetros da tela aos campos reais de mov_processos e produtos_vendas.
+- [ ] Validar na LAN o apontamento com o select completo, confirmando produto interno, CPC, cliente e composição.
+- [x] Reordenar os metadados do apontamento como Produto, Revisão, Referência, CPC e Cliente.
+- [x] Exibir em duas linhas as especificações de ajuste e incluir PV_CHAPA_CORTADA_LARG/PV_CHAPA_CORTADA_COMP.
+- [x] Remover a navegação de menu e o retorno à fila enquanto a produção estiver ativa, exigindo finalização controlada.
+- [ ] Validar na LAN que o operador não consegue sair à fila durante uma produção ativa.
+- [x] Corrigir Cliente para PES_FANTASIA, Papelão ondulado para CINT_DESCRICAO, Fechamento para CPS_DESCRICAO e LAP para PV_FECHAMENTO.
+- [x] Exibir PV_CHAPA_CORTADA_LARG ao lado do ajuste de largura e PV_ARRANJO_FACA_COMP_CV ao lado do ajuste de comprimento.
+- [x] Corrigir Fechamento para PV_FECHAMENTO e Fechamento do LAP para POSICAO_JUNTA.
+- [ ] Validar na LAN os rótulos corrigidos e os valores laterais de ajuste na OP de impressão.
+- [x] Substituir o campo lateral de comprimento por PV_CHAPA_CORTADA_COMP.
+- [x] Consultar Pacotes / Paletização por produto, revisão e cliente, priorizando o cadastro específico do cliente sobre o cadastro padrão.
+- [x] Exibir dados de pacote, palete, lastro, complementos, observação e indicadores de arqueado, espelho, cantoneira e filme stretch.
+- [x] Ocultar seção e imagem de palete quando PVP_PALETIZADO for N.
+- [x] Adicionar botão Pacotes / Paletização no apontamento com modal operacional de consulta.
+- [ ] Validar na LAN a consulta específica de cliente, o cadastro padrão e a ocultação do palete quando PVP_PALETIZADO=N.
+- [x] Ampliar o modal de Pacotes / Paletização para ocupar o espaço operacional semelhante ao desktop.
+- [x] Recuperar e exibir a imagem real do palete conforme a rotina Delphi de Pacotes / Paletização.
+- [x] Completar os campos de palete e pacote apresentados no formulário legado.
+- [ ] Validar na LAN a imagem de lastro/palete e os campos completos em uma configuração real de paletização.
+- [x] Remover a limitação-base de largura do diálogo para o modal de Pacotes / Paletização ocupar o espaço operacional amplo.
+- [ ] Completar e validar os campos de palete e imagem que não foram retornados na consulta real de Pacotes / Paletização.
+- [x] Priorizar PALETE_JSON como caminho PNG da imagem de palete e usar LASTRO_JSON somente como alternativa.
+- [x] Reproduzir o painel Pacotes / Paletização conforme a referência Delphi: cartões de pacote, palete, indicadores, fitas e observação à esquerda, com imagem ampla à direita.
+- [ ] Vincular cada rótulo exibido no painel de Pacotes / Paletização ao campo Firebird correspondente e validar o retorno real na LAN.
+- [x] Corrigir o retorno parcial de paletização quando o produto possui pacote cadastrado, mas os dados de palete não chegam ao modal.
+- [x] Restaurar o modal de Pacotes / Paletização ao padrão visual verde/claro da aplicação, em janela ampla sem ocupar a tela inteira.
+- [x] Corrigir o dimensionamento responsivo do modal de Pacotes / Paletização para impedir compressão horizontal e rolagem excessiva em telas menores.
+- [x] Mapear o vínculo PROD_VENDAS_EST_PRODUTO.GMQ_CODIGO com o grupo da máquina para o filtro definitivo de rastreio.
+- [x] Filtrar o rastreio pelo PROD_VENDAS_EST_PRODUTO.GMQ_CODIGO igual ao grupo da máquina do processo.
+- [ ] Preparar o encerramento de período para registrar CDP_FIM e permitir novo contador diário no próximo acesso à máquina.
+- [x] Analisar o vídeo e implementar o fluxo RPNC de checklist de não conformidade para produto e matéria-prima.
+- [x] Consultar CHECK_LIST, ITENS_CHECK_LIST e CAUSA_APARENTE pelo proxy Firebird para alimentar o RPNC.
+- [ ] Gravar transacionalmente INSPECAO_PRODUTO, RPNC, RPNC_NAO_CONFORMIDADES e RPNC_CAUSA_NC em uma ordem de teste controlada.
+- [x] Implementar a transação protegida de RPNC, com validação de checklist, item e causa antes da escrita no Firebird.
+- [x] Reorganizar o modal RPNC conforme a grade Delphi: checklist à esquerda, itens no topo direito, causas abaixo e ação de contenção em área ampla.
+- [x] Compactar a área de Causa aparente em três linhas visíveis e bloquear o fechamento do RPNC fora dos botões do formulário.
+- [x] Gravar no RPNC o MPH_CODIGO ativo de MOV_PROCESSOS_HORARIO e PES_CODIGO por origem (cliente no Produto, fornecedor no lote de Matéria-prima).
+- [x] Gravar sempre RPNC_ACOES_PRODUTO_NC para qualquer origem com MANC_CODIGO 48 (GRM) e os valores padrão confirmados.
+- [x] Corrigir o painel de causas RPNC para acompanhar o item Não Conforme ativo e alinhar Qtde/Ação de contenção no rodapé.
+- [x] Reduzir a largura do campo Qtde no rodapé RPNC para eliminar sobreposição com Ação de contenção.
+- [x] Perguntar sobre não conformidade antes da finalização: seguir se Conforme ou abrir RPNC se Não Conforme.
+- [x] Corrigir e conferir na versão LAN a largura efetiva de Qtde e a abertura obrigatória da decisão de não conformidade antes de finalizar.
+- [x] Substituir o rótulo quebrado de Qtde por bloco compacto horizontal e garantir a execução visível da pergunta de não conformidade antes de finalizar.
+- [x] Mover a pergunta de não conformidade para antes do rastreio e aplicar o padrão verde aos modais de Rastreio e Finalizar produção.
+- [x] Analisar vídeo, DFM, PAS e SQL legado para modelar a Consulta de Fila por máquina.
+- [x] Implementar a consulta Firebird da fila, filtros operacionais, grid e consulta de reservas vinculada à OP.
+- [x] Integrar Pacotes / Paletização e Visualizar Impressão à OP selecionada na Consulta de Fila.
+- [x] Refinar a hierarquia visual da Consulta de Fila para reduzir o excesso de verde e aumentar contraste dos dados.
+- [x] Ampliar e reorganizar a visualização de Reserva da OP selecionada.
+- [x] Reutilizar os modais completos de Pacotes / Paletização e Visualizar Layout do apontamento na Consulta de Fila.
+- [x] Adicionar faixa de processos/máquinas e seus status à Consulta de Fila.
+- [x] Exibir cores, clichês e faca do produto da OP selecionada e aplicar amarelo suave às grades operacionais.
+- [x] Padronizar cores de MOV_PROCESSOS: Em Produção amarelo, Liberado azul, Atendido verde, Cancelado vermelho e estados A Concluir/Setup a Concluir laranja.
+- [x] Refinar a Reserva de matéria-prima em verde e amarelo e disponibilizar o botão de consulta no apontamento ativo.
+- [x] Padronizar todos os botões de Fechar em vermelho no sistema operacional.
+- [x] Ajustar todos os botões Fechar ao padrão vermelho sólido, com texto branco e cantos arredondados da referência.
+- [x] Ordenar os processos da OP na Consulta de Fila por MP_CODIGO, preservando o filtro de OP mestre.
+- [x] Exibir no modal de Pacotes / Paletização a imagem de PALETE_JSON e o Lastro de Amarração de LASTRO_JSON.
+- [x] Igualar o tamanho visual dos totais aos campos de ajuste no apontamento.
+- [x] Corrigir a importação do hook de autenticação local na tela de Solicitações.
+- [x] Exibir o termo Em Produção no título do apontamento quando a OP já estiver em produção.
+- [x] Dar destaque visual ao indicador de reserva no resumo da OP apontada.
+- [x] Manter apenas a imagem do Lastro de Amarração no modal de Pacotes / Paletização.
+- [x] Implementar a Inspeção de Processo periódica durante a produção, com intervalo configurável por variável de ambiente.
+- [x] Consultar e gravar a Inspeção de Processo no horário ativo de MOV_PROCESSOS_HORARIOS.
+- [x] Bloquear o fechamento da Inspeção de Processo até que todos os itens obrigatórios estejam selecionados.
+- [x] Ampliar e compactar o modal de Inspeção de Processo para perguntas em até duas linhas e sem rolagem operacional.
+- [x] Gravar o horário da Inspeção de Processo no formato brasileiro DD/MM/AAAA - HH:MM:SS.
+- [x] Compactar o apontamento ativo para manter cabeçalho, dados técnicos, ajustes e comandos no monitor sem rolagem.
+- [x] Preparar modo de operação restrita com tela cheia solicitada pela aplicação e orientação de navegador em quiosque para a estação do operador.
+- [x] Ampliar os campos de medidas no apontamento para leitura a aproximadamente três metros.
+- [x] Adicionar atalhos de teclado F1, F2 e demais comandos operacionais ao apontamento.
+- [x] Aplicar rótulos e atalhos a todos os botões de chamada do apontamento, incluindo consultas e visualizações.
+- [x] Corrigir o diagnóstico e a consulta Firebird da Fila de programação filtrada pela máquina atual.
+- [x] Adicionar atalhos visíveis e funcionais aos comandos do modal de Fila de programação.
+- [x] Consultar dados da Etiqueta de Processo pelo OP e processo ativo com os campos do select legado.
+- [x] Criar etiqueta de processo vertical 14,5 × 21 cm com visualização e impressão pelo apontamento.
+- [x] Adicionar ação e atalho para abrir a Etiqueta de Processo durante a produção.
+- [x] Solicitar impressora, quantidade por palete e cópias antes da prévia e impressão da Etiqueta de Processo.
+- [x] Remover a dependência externa de QR Code da Etiqueta de Processo para o pacote LAN não exigir instalação adicional.
+- [x] Listar as impressoras instaladas no Windows que executa o proxy local e oferecê-las na Etiqueta de Processo.
+- [x] Corrigir a pesquisa da Fila para evitar truncagem de string no Firebird e retirar os atalhos desse modal.
+- [x] Alinhar o formulário da Etiqueta de Processo e manter o botão Fechar sempre por último.
+- [x] Centralizar o título MATERIAL EM PROCESSO na prévia da etiqueta.
+- [x] Buscar a empresa e sua logomarca pelo cadastro EMPRESA para a Etiqueta de Processo.
+- [x] Adicionar seleção de empresa na entrada do sistema de produção.
+- [x] Ajustar os campos de quantidade por palete e cópias para cinco dígitos sem sobreposição no formulário da etiqueta.
+- [x] Ler e exibir EMPRESAS.EMP_LOGO (BLOB) como logomarca da Etiqueta de Processo.
+- [x] Remover os ícones X dos controles de fechamento em todos os modais operacionais.
+- [x] Corrigir a referência da Etiqueta de Processo de EMPRESAS para a tabela EMPRESA do Firebird local.
+- [x] Adicionar botões Fechar e Deslogar na tela principal de programação.
+- [x] Detectar uma OP Em Produção na máquina atual ao entrar no sistema e recuperar o apontamento correspondente.
+- [x] Exibir mensagem de recuperação antes de entrar automaticamente em uma OP que permaneceu Em Produção após reinício.
+- [x] Ampliar o modal de parada e organizar os motivos para no máximo duas linhas por opção.
+- [x] Padronizar o botão Cancelar do modal de parada em vermelho sólido.
+- [x] Priorizar o saldo reservado como limite de finalização quando houver reserva vinculada à OP.
+- [x] Manter o saldo geral do processo como referência somente quando não houver reserva vinculada à OP.
+- [x] Manter todos os comandos da faixa superior disponíveis em Setup e em Produção.
+- [x] Exibir início e fim de Setup com o cronômetro diário na fase de setup, sem reutilizar o fim da produção anterior.
+- [x] Ao iniciar uma OP pela Programação, gravar o início do Setup com o cronômetro diário e abrir o apontamento já em Setup iniciado.
