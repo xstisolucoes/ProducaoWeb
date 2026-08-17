@@ -17,7 +17,8 @@ describe("visualizador de layout em tela inteira", () => {
     expect(source).toContain("backgroundColor: safeColor(color.hexWhite)");
     expect(source).toContain('text-xs font-black uppercase tracking-wide text-[#356d4a]">Produto');
     expect(source).toContain("Clichê {cliche.code}");
-    expect(source).toContain("text-sm font-black text-white shadow-sm");
+    expect(source).toContain("text-sm font-black !text-black shadow-sm");
+    expect(source).toContain('color: "#050505"');
     expect(source).not.toContain("Branco: {color.hexWhite ||");
     expect(source).toContain("bg-[#d9f2df]");
     expect(source).toContain("border-[#92c7a3]");

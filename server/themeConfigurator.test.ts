@@ -16,19 +16,34 @@ describe("configurador de temas operacionais", () => {
     expect(context).toContain('document.documentElement.dataset.brandTheme = brandTheme');
   });
 
-  it("oferece o tema XSTI com a logomarca fornecida", () => {
+  it("oferece o tema vermelho XPAPER com a logomarca fornecida", () => {
     expect(configurator).toContain("Verde Produção");
-    expect(configurator).toContain("Vermelho XSTI");
-    expect(configurator).toContain("/manus-storage/xsti-logo_fe74654b.png");
+    expect(configurator).toContain("Vermelho XPAPER");
+    expect(configurator).toContain("XPAPER_LOGO_SRC");
   });
 
   it("aplica tokens de marca à Programação, ao Apontamento e aos diálogos", () => {
     expect(css).toContain(':root[data-brand-theme="xsti"]');
     expect(css).toContain(".theme-machine-band");
     expect(css).toContain('[data-slot="dialog-header"]');
-    expect(programming).toContain("<ThemeConfigurator />");
+    expect(programming).toContain("<ThemeConfigurator compact />");
     expect(programming).toContain("theme-machine-band");
     expect(login).toContain("<ThemeConfigurator compact />");
-    expect(login).toContain('alt="XSTI — Soluções em Tecnologia da Informação"');
+    expect(login).toContain('alt="XPAPER — Sistema de Produção"');
+  });
+
+  it("centraliza os tokens XSTI para grids, buscas, botões e superfícies de consulta", () => {
+    expect(css).toContain("--xsti-grid-header");
+    expect(css).toContain("--xsti-grid-selected");
+    expect(css).toContain("--xsti-btn-primary");
+    expect(css).toContain(".theme-grid-header");
+    expect(css).toContain(".theme-btn-primary");
+    expect(css).toContain("table thead");
+    expect(css).toContain("[data-slot=\"dialog-content\"]");
+    expect(css).toContain(".layout-color-chip");
+    expect(css).toContain('[data-slot="dialog-content"] .layout-color-chip');
+    expect(css).toContain(".theme-tooling-chip");
+    expect(css).toContain(".process-status-card");
+    expect(programming).toContain("process-status-card");
   });
 });

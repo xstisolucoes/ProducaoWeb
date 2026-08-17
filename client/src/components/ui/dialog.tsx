@@ -78,7 +78,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
+        "theme-modal-overlay data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
         className
       )}
       {...props}
@@ -123,7 +123,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-[#fbfdfb] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-hidden rounded-2xl border-2 border-[#d6e0d9] p-0 shadow-2xl duration-200 sm:max-w-lg",
+          "theme-modal-body bg-[#fbfdfb] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-hidden rounded-2xl border-2 border-[#d6e0d9] p-0 shadow-2xl duration-200 sm:max-w-lg",
           className
         )}
         onEscapeKeyDown={handleEscapeKeyDown}
@@ -139,7 +139,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2 border-b border-[#e2eae4] bg-gradient-to-r from-[#f0f8f2] via-white to-[#fff8df] px-5 py-4 text-center sm:px-6 sm:py-5 sm:text-left", className)}
+      className={cn("theme-modal-header flex flex-col gap-2 border-b border-[#e2eae4] bg-gradient-to-r from-[#f0f8f2] via-white to-[#fff8df] px-5 py-4 text-center sm:px-6 sm:py-5 sm:text-left", className)}
       {...props}
     />
   );
@@ -150,7 +150,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="dialog-footer"
       className={cn(
-        "flex flex-col-reverse gap-2 border-t border-[#e2eae4] bg-[#fbfdfb] px-5 py-4 sm:flex-row sm:justify-end",
+        "theme-modal-footer flex flex-col-reverse gap-2 border-t border-[#e2eae4] bg-[#fbfdfb] px-5 py-4 sm:flex-row sm:justify-end",
         className
       )}
       {...props}

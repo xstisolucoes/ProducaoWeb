@@ -1,9 +1,10 @@
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { XPAPER_LOGO_SRC } from "@/lib/xpaperLogo";
 import { Check, Palette } from "lucide-react";
 
-const XSTI_LOGO = "/manus-storage/xsti-logo_fe74654b.png";
+const XPAPER_LOGO = XPAPER_LOGO_SRC;
 
 export function ThemeConfigurator({ compact = false }: { compact?: boolean }) {
   const { brandTheme, setBrandTheme } = useTheme();
@@ -27,8 +28,8 @@ export function ThemeConfigurator({ compact = false }: { compact?: boolean }) {
             <div className="flex items-center justify-between bg-white p-4"><span className="text-sm font-semibold text-[#385044]">Tema atual do sistema</span>{brandTheme === "verde" ? <Check className="h-5 w-5 text-[#177458]" /> : null}</div>
           </button>
           <button onClick={() => setBrandTheme("xsti")} className={`overflow-hidden rounded-xl border-2 text-left transition ${brandTheme === "xsti" ? "border-[#b6222a] ring-2 ring-[#e8a7ab]" : "border-[#ded6d6] hover:border-[#c85b61]"}`}>
-            <div className="flex h-28 items-center justify-between bg-[linear-gradient(112deg,#1b1b1d,#372226,#971f29)] px-5"><img src={XSTI_LOGO} alt="XSTI" className="h-16 w-auto rounded bg-white p-1.5 object-contain" /><div className="text-right text-white"><p className="text-xs font-black uppercase tracking-[.16em] text-red-100">Identidade XSTI</p><p className="mt-2 text-xl font-black">Vermelho XSTI</p></div></div>
-            <div className="flex items-center justify-between bg-white p-4"><span className="text-sm font-semibold text-[#4e3638]">Soluções em tecnologia</span>{brandTheme === "xsti" ? <Check className="h-5 w-5 text-[#b6222a]" /> : null}</div>
+            <div className="flex h-28 items-center justify-between bg-[linear-gradient(112deg,#0b0b0c,#2a1719,#971f29)] px-5"><img src={XPAPER_LOGO} alt="XPAPER" className="h-16 max-w-48 object-contain" /><div className="text-right text-white"><p className="text-xs font-black uppercase tracking-[.16em] text-red-100">Identidade XPAPER</p><p className="mt-2 text-xl font-black">Vermelho XPAPER</p></div></div>
+            <div className="flex items-center justify-between bg-white p-4"><span className="text-sm font-semibold text-[#4e3638]">Preto, branco e vermelho operacional</span>{brandTheme === "xsti" ? <Check className="h-5 w-5 text-[#b6222a]" /> : null}</div>
           </button>
         </div>
         <DialogFooter><span className="mr-auto text-xs font-medium text-[#68736c]">O tema é aplicado imediatamente a esta estação.</span><DialogClose asChild><Button className="bg-[#cf3f3f] text-white hover:bg-[#ad2e2e]">Fechar</Button></DialogClose></DialogFooter>

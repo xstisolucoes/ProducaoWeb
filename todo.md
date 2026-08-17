@@ -313,4 +313,18 @@
 - [x] Criar configurador de temas, preservando o tema verde atual como padrão.
 - [x] Adicionar tema XSTI vermelho com logomarca fornecida e contraste operacional.
 - [x] Persistir a escolha de tema da estação e aplicar os tokens às telas de operadores e Programador.
+- [x] Criar tokens globais XSTI para superfícies, grids, buscas, botões, estados e modais em vermelho, preto e neutros.
+- [x] Aplicar o tema XSTI integralmente às telas de Operador, Programador e Apontamento.
+- [x] Aplicar o tema XSTI às consultas, buscas, grids, modais e botões reutilizáveis, preservando o tema Verde original.
+- [x] Substituir a marca exibida pelo ativo XPAPER fornecido e reposicionar o configurador de tema antes do usuário Programador.
+- [x] Remover a barra superior externa da Programação sem afetar a faixa operacional da máquina.
+- [x] Corrigir o contraste do visualizador de layout e dos ferramentais no tema XSTI.
+- [x] Refinar a paleta XSTI para reduzir superfícies rosadas e priorizar preto, branco neutro e vermelho de maior contraste.
+- [x] Forçar texto preto nos chips de cores do visualizador de layout no tema XPAPER, incluindo cores escuras.
+- [x] Corrigir as duas exibições da logomarca XPAPER para carregar sem corte ou fundo indevido.
+- [x] Embutir a logomarca XPAPER no pacote LAN sem depender de URL externa de armazenamento.
+- [x] Aplicar texto preto diretamente nos componentes de chips de cor dos dois visualizadores de layout.
+- [x] Reutilizar o mapa de cores de status da Fila de Máquina nos cartões de processos da Programação e Operadores.
+- [x] Remover a classe branca e renderizar texto preto diretamente em todos os chips de cores dos visualizadores de layout.
+- [x] Substituir a estrutura de chip do visualizador por cartão branco fixo e rótulo preto independente do tema.
 - [ ] Gravar início de limpeza e fim de período em MOTIVOS_OCIOSIDADE após confirmar os campos e regras do legado.
