@@ -47,7 +47,7 @@ Como contingência, o `.env` pode listar impressoras adicionais manualmente:
 PRODUCTION_LABEL_PRINTERS=Zebra ZT230;Argox OS-214
 ```
 
-No login local, o proxy procura primeiro a máquina pelo nome do computador atual, comparando-o com `maquinas_processos.MQP_LOGON`; por exemplo, uma estação chamada `DESKTOP-NCNL42A` deve ter esse mesmo valor no cadastro da máquina. Se não encontrar o nome, usa `usuarios_maquinas` como alternativa. Caso a estação tenha um vínculo diferente, defina `FIREBIRD_MACHINE_CODE` ou `FIREBIRD_MACHINE_LOGON` explicitamente. O perfil operacional usa os grupos `3,4,6` como **programador** por padrão; para ajustar à sua instalação, defina `PRODUCTION_PROGRAMMER_GROUPS` com os códigos separados por vírgula.
+No login local, o proxy procura primeiro a máquina pelo nome do computador atual, comparando-o com `maquinas_processos.MQP_LOGON`; por exemplo, uma estação Windows chamada `DESKTOP-NCNL42A` deve ter esse mesmo valor no cadastro da máquina. Em Raspberry Pi e Orange Pi, é usado o hostname Linux da estação; configure-o com `hostnamectl set-hostname NOME-DA-ESTACAO` e cadastre o mesmo valor em `MQP_LOGON`. O proxy preserva a prioridade de `FIREBIRD_MACHINE_LOGON`; se ela não estiver definida, usa `COMPUTERNAME` no Windows e `HOSTNAME`/`os.hostname()` no Linux. Se não encontrar o nome, usa `usuarios_maquinas` como alternativa. Caso a estação tenha um vínculo diferente, defina `FIREBIRD_MACHINE_CODE` ou `FIREBIRD_MACHINE_LOGON` explicitamente. O perfil operacional usa os grupos `3,4,6` como **programador** por padrão; para ajustar à sua instalação, defina `PRODUCTION_PROGRAMMER_GROUPS` com os códigos separados por vírgula.
 
 | Variável local | Efeito |
 |---|---|

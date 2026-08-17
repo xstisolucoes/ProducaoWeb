@@ -13,8 +13,14 @@ describe("estação operacional restrita", () => {
 
   it("remove a navegação do operador e redireciona rotas internas para a programação", () => {
     expect(dashboard).toContain('const operatorStation = user?.operationalProfile === "operator"');
-    expect(dashboard).toContain('if (operatorStation && location !== "/") setLocation("/")');
-    expect(dashboard).toContain('if (operatorStation) return <main className="min-h-dvh flex-1 bg-[#f6f7f4] p-3 sm:p-4">{children}</main>;');
+    expect(dashboard).toContain('if (machineControlStation && location !== "/") setLocation("/");');
+    expect(dashboard).toContain('if (machineControlStation) return <main className="min-h-dvh flex-1 bg-[#f6f7f4] p-3 sm:p-4">{children}</main>;');
+  });
+
+  it("mantém Programador na estação de controle de máquinas, sem sidebar", () => {
+    expect(dashboard).toContain('const programmerStation = user?.operationalProfile === "programmer"');
+    expect(dashboard).toContain("const machineControlStation = operatorStation || programmerStation");
+    expect(dashboard).toContain('if (machineControlStation) return <main className="min-h-dvh flex-1 bg-[#f6f7f4] p-3 sm:p-4">{children}</main>;');
   });
 
   it("mantém a produção aberta ao tentar voltar pelo navegador e compacta o apontamento", () => {
@@ -45,5 +51,13 @@ describe("estação operacional restrita", () => {
     expect(pointing).toContain('<ShortcutKey label="F8" />');
     expect(pointing).toContain('<ShortcutKey label="F9" />');
     expect(pointing).toContain('<ShortcutKey label="F10" />');
+  });
+
+  it("preserva a identificação por hostname local em Windows e Linux", () => {
+    const proxy = readFileSync(resolve(process.cwd(), "local-firebird-proxy/server.mjs"), "utf8");
+    expect(proxy).toContain("FIREBIRD_MACHINE_LOGON");
+    expect(proxy).toContain('process.platform === "win32"');
+    expect(proxy).toContain("process.env.COMPUTERNAME?.trim() || os.hostname()");
+    expect(proxy).toContain("process.env.HOSTNAME?.trim() || os.hostname()");
   });
 });

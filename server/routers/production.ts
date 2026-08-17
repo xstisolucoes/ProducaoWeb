@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   firebirdProxyHealthCheck,
   getActiveProduction,
+  getControlledMachines,
   getOrders,
   getPointingOrder,
   getProcessLabel,
@@ -23,6 +24,7 @@ import {
   getProductionDashboard,
   getLocalPrinters,
   getProgramming,
+  getCleaningReasons,
   getQueue,
   getQueueProcesses,
   getQueueReservations,
@@ -44,6 +46,10 @@ const pageInput = z.object({
   page: z.number().int().min(1).max(100000).default(1),
   limit: z.number().int().min(1).max(100).default(20),
   search: z.string().trim().max(120).default(""),
+});
+const programmingInput = pageInput.extend({
+  machineCode: z.number().int().positive().optional(),
+  status: z.string().trim().max(60).default("Todos"),
 });
 
 const processInput = z.object({
@@ -67,13 +73,20 @@ export const productionRouter = router({
       .mutation(({ input }) => updateOrderStatus(input)),
   }),
   programming: router({
-    list: localProtectedProcedure.input(pageInput).query(({ ctx, input }) => {
-      if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
-      return getProgramming(ctx.localUser.machine.code, input.page, input.limit, input.search, ctx.localUser.operationalProfile === "operator");
+    list: localProtectedProcedure.input(programmingInput).query(({ ctx, input }) => {
+      const operatorOnly = ctx.localUser.operationalProfile === "operator";
+      const machineCode = operatorOnly ? ctx.localUser.machine?.code : (input.machineCode ?? ctx.localUser.machine?.code);
+      if (!machineCode) throw new Error(operatorOnly ? "Nenhuma máquina foi vinculada a este operador." : "Selecione uma máquina controlada.");
+      return getProgramming(machineCode, input.page, input.limit, input.search, operatorOnly, operatorOnly ? "Todos" : input.status);
     }),
+    machines: programmerProcedure.query(() => getControlledMachines()),
     active: operatorProcedure.query(({ ctx }) => {
       if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
       return getActiveProduction(ctx.localUser.machine.code);
+    }),
+    cleaningReasons: operatorProcedure.query(({ ctx }) => {
+      if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
+      return getCleaningReasons(ctx.localUser.machine.code);
     }),
     processes: programmerProcedure.query(() => getProcessOptions()),
     changeProcess: programmerProcedure.input(processInput.extend({ machineCode: z.number().int().positive() })).mutation(({ input }) => changeOrderProcess(input)),
@@ -96,21 +109,17 @@ export const productionRouter = router({
       if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
       return getPointingOrder(input.opCodigo, input.mpCodigo, ctx.localUser.machine.code);
     }),
-    processLabel: operatorProcedure.input(processInput).query(({ ctx, input }) => {
-      if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
-      return getProcessLabel({ ...input, machineCode: ctx.localUser.machine.code, companyCode: ctx.localUser.companyCode });
+    processLabel: localProtectedProcedure.input(processInput).query(({ ctx, input }) => {
+      return getProcessLabel({ ...input, companyCode: ctx.localUser.companyCode });
     }),
-    approvedQuantities: operatorProcedure.input(processInput).query(({ ctx, input }) => {
-      if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
-      return getApprovedProcessQuantities({ ...input, machineCode: ctx.localUser.machine.code });
+    approvedQuantities: localProtectedProcedure.input(processInput).query(({ ctx, input }) => {
+      return getApprovedProcessQuantities(input);
     }),
-    printLayout: operatorProcedure.input(processInput).query(({ ctx, input }) => {
-      if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
-      return getPrintLayout({ ...input, machineCode: ctx.localUser.machine.code });
+    printLayout: localProtectedProcedure.input(processInput).query(({ ctx, input }) => {
+      return getPrintLayout(input);
     }),
-    palletization: operatorProcedure.input(processInput).query(({ ctx, input }) => {
-      if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
-      return getPalletization({ ...input, machineCode: ctx.localUser.machine.code });
+    palletization: localProtectedProcedure.input(processInput).query(({ ctx, input }) => {
+      return getPalletization(input);
     }),
     rpncChecklist: operatorProcedure.input(processInput.extend({ origin: z.enum(["product", "raw-material"]) })).query(({ ctx, input }) => {
       if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");

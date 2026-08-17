@@ -4,6 +4,7 @@ const proxy = vi.hoisted(() => ({
   firebirdProxyHealthCheck: vi.fn(),
   getOrders: vi.fn(),
   getProgramming: vi.fn(),
+  getControlledMachines: vi.fn(),
   getPointingOrder: vi.fn(),
   getProcessOptions: vi.fn(),
   getRpncChecklist: vi.fn(),
@@ -16,6 +17,10 @@ const proxy = vi.hoisted(() => ({
   startSetup: vi.fn(),
   finishSetup: vi.fn(),
   getPauseReasons: vi.fn(),
+  getProcessLabel: vi.fn(),
+  getApprovedProcessQuantities: vi.fn(),
+  getPrintLayout: vi.fn(),
+  getPalletization: vi.fn(),
   startPause: vi.fn(),
   submitRpnc: vi.fn(),
   finishPause: vi.fn(),
@@ -79,7 +84,17 @@ describe("procedimentos de produção", () => {
     const caller = productionRouter.createCaller(operatorCtx);
 
     await expect(caller.programming.list({ page: 1, limit: 20, search: "" })).resolves.toMatchObject({ total: 0 });
-    expect(proxy.getProgramming).toHaveBeenCalledWith(14, 1, 20, "", true);
+    expect(proxy.getProgramming).toHaveBeenCalledWith(14, 1, 20, "", true, "Todos");
+  });
+
+  it("permite que Programador sem MQP_LOGON selecione uma máquina controlada", async () => {
+    proxy.getControlledMachines.mockResolvedValue([{ code: 21, description: "Impressora de teste", manualProcess: null }]);
+    proxy.getProgramming.mockResolvedValue({ items: [], total: 0, page: 1, limit: 7 });
+    const caller = productionRouter.createCaller(ctx);
+
+    await expect(caller.programming.machines()).resolves.toEqual([{ code: 21, description: "Impressora de teste", manualProcess: null }]);
+    await expect(caller.programming.list({ page: 1, limit: 7, search: "", machineCode: 21, status: "Liberado" })).resolves.toMatchObject({ total: 0 });
+    expect(proxy.getProgramming).toHaveBeenCalledWith(21, 1, 7, "", false, "Liberado");
   });
 
   it("encaminha o início de setup com operador e máquina da sessão", async () => {
@@ -93,6 +108,23 @@ describe("procedimentos de produção", () => {
   it("impede que o perfil de programador inicie um setup", async () => {
     const caller = productionRouter.createCaller(ctx);
     await expect(caller.pointing.startSetup({ opCodigo: 21, mpCodigo: 8 })).rejects.toThrow("operadores");
+  });
+
+  it("permite que o Programador consulte dados da OP sem máquina vinculada à sessão", async () => {
+    proxy.getProcessLabel.mockResolvedValue({ opCode: 21 });
+    proxy.getApprovedProcessQuantities.mockResolvedValue({ items: [] });
+    proxy.getPrintLayout.mockResolvedValue({ colors: [] });
+    proxy.getPalletization.mockResolvedValue({ packageType: "Pacote" });
+    const caller = productionRouter.createCaller(ctx);
+
+    await expect(caller.pointing.processLabel({ opCodigo: 21, mpCodigo: 8 })).resolves.toMatchObject({ opCode: 21 });
+    await expect(caller.pointing.approvedQuantities({ opCodigo: 21, mpCodigo: 8 })).resolves.toMatchObject({ items: [] });
+    await expect(caller.pointing.printLayout({ opCodigo: 21, mpCodigo: 8 })).resolves.toMatchObject({ colors: [] });
+    await expect(caller.pointing.palletization({ opCodigo: 21, mpCodigo: 8 })).resolves.toMatchObject({ packageType: "Pacote" });
+    expect(proxy.getProcessLabel).toHaveBeenCalledWith({ opCodigo: 21, mpCodigo: 8, companyCode: null });
+    expect(proxy.getApprovedProcessQuantities).toHaveBeenCalledWith({ opCodigo: 21, mpCodigo: 8 });
+    expect(proxy.getPrintLayout).toHaveBeenCalledWith({ opCodigo: 21, mpCodigo: 8 });
+    expect(proxy.getPalletization).toHaveBeenCalledWith({ opCodigo: 21, mpCodigo: 8 });
   });
 
   it("encaminha a finalização de setup com o resultado escolhido pelo operador", async () => {

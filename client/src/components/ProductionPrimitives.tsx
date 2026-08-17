@@ -3,13 +3,13 @@ import type { ReactNode, Ref } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export function PageHeading({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: ReactNode }) {
+export function PageHeading({ eyebrow, title, description, action, compact = false }: { eyebrow: string; title: string; description: string; action?: ReactNode; compact?: boolean }) {
   return (
-    <header className="flex flex-col gap-5 border-b border-[#e6e7e2] pb-6 lg:flex-row lg:items-end lg:justify-between">
+    <header className={`flex flex-col border-b border-[#e6e7e2] ${compact ? "gap-2 pb-3 lg:flex-row lg:items-end lg:justify-between" : "gap-5 pb-6 lg:flex-row lg:items-end lg:justify-between"}`}>
       <div>
-        <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-[0.19em] text-[#90978c]">{eyebrow}</p>
-        <h1 className="text-3xl font-extrabold tracking-[-0.045em] text-[#17211d] sm:text-[2rem]">{title}</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e756d]">{description}</p>
+        {eyebrow ? <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-[0.19em] text-[#90978c]">{eyebrow}</p> : null}
+        <h1 className={`${compact ? "text-2xl sm:text-[1.7rem]" : "text-3xl sm:text-[2rem]"} font-extrabold tracking-[-0.045em] text-[#17211d]`}>{title}</h1>
+        {description ? <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e756d]">{description}</p> : null}
       </div>
       {action}
     </header>

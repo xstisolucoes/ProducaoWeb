@@ -39,7 +39,32 @@ describe("política de reservas do apontamento", () => {
 
     expect(proxySource).toContain("if (!reservation.applies && netQuantity > currentBalance)");
     expect(proxySource).toContain("const nextBalance = reservation.applies ? Math.max(0, currentBalance - netQuantity) : currentBalance - netQuantity");
-    expect(pointingSource).toContain("Com reserva vinculada, a finalização considera o saldo reservado");
+    expect(pointingSource).toContain("Com reserva vinculada, a baixa considera");
     expect(pointingSource).toContain("será usado o saldo geral do processo");
+  });
+
+  it("calcula produção e baixa de reserva separadamente conforme PROD_VENDAS_PROC_PROD", () => {
+    const proxySource = readFileSync(resolve(process.cwd(), "local-firebird-proxy/server.mjs"), "utf8");
+    const pointingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Pointing.tsx"), "utf8");
+
+    expect(proxySource).toContain("from prod_vendas_proc_prod where pv_codigo = ? and pv_revisao = ? and mqp_codigo = ? order by pvpp_codigo");
+    expect(proxySource).toContain("pvpp_codigo as process_production_code");
+    expect(proxySource).toContain("const productionMultiplier = calculateProductionArrangement || calculateReservationArrangement ? arrangementTotal : 1");
+    expect(proxySource).toContain("const reservationMultiplier = 1");
+    expect(proxySource).toContain("const productionQuantity = quantityProduced * productionMultiplier");
+    expect(proxySource).toContain("const reservationQuantity = quantityProduced * reservationMultiplier");
+    expect(proxySource).toContain("let remaining = reservationQuantity");
+    expect(proxySource).toContain("coalesce(er.er_arranjo_l, 1) as arrangement_length");
+    expect(proxySource).toContain("coalesce(er.er_arranjo_c, 1) as arrangement_columns");
+    expect(proxySource).toContain("const arrangementTotal = reservation.applies ? reservation.arrangementTotal : processArrangementTotal");
+    expect(proxySource).toContain("mp_qtde_produzida = coalesce(mp_qtde_produzida, 0) + ?");
+    expect(proxySource).toContain("mph_qtde_produzida = coalesce(mph_qtde_produzida, 0) + ?");
+    expect(pointingSource).toContain("const productionMultiplier = item?.calculateProductionArrangement || item?.calculateReservationArrangement");
+    expect(pointingSource).toContain("const reservationMultiplier = 1");
+    expect(pointingSource).toContain("const effectiveArrangementTotal = reservation.data?.applicable");
+    expect(pointingSource).toContain("Arranjo da reserva:");
+    expect(pointingSource).toContain("Produção resultante:");
+    expect(pointingSource).toContain("Baixa de reserva:");
+    expect(pointingSource).toContain("PVPP ${result.processProductionCode || \"não localizado\"}");
   });
 });

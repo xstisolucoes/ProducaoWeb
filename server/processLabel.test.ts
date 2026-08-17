@@ -25,7 +25,7 @@ describe("Etiqueta de Processo", () => {
     expect(proxy).toContain("PRODUCTION_LABEL_PRINTERS");
     expect(contracts).toContain("export type ProcessLabel");
     expect(contracts).toContain("export const getProcessLabel");
-    expect(router).toContain("processLabel: operatorProcedure");
+    expect(router).toContain("processLabel: localProtectedProcedure");
     expect(router).toContain("companyCode: ctx.localUser.companyCode");
     expect(pointing).toContain("ProcessLabelDialog");
     expect(pointing).toContain("Etiqueta de processo");

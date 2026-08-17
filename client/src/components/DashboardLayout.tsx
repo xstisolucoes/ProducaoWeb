@@ -98,10 +98,12 @@ function DashboardLayoutContent({
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
   const operatorStation = user?.operationalProfile === "operator";
+  const programmerStation = user?.operationalProfile === "programmer";
+  const machineControlStation = operatorStation || programmerStation;
 
   useEffect(() => {
-    if (operatorStation && location !== "/") setLocation("/");
-  }, [location, operatorStation, setLocation]);
+    if (machineControlStation && location !== "/") setLocation("/");
+  }, [location, machineControlStation, setLocation]);
 
   useEffect(() => {
     if (isCollapsed) {
@@ -139,9 +141,9 @@ function DashboardLayoutContent({
     };
   }, [isResizing, setSidebarWidth]);
 
-  if (operatorStation && location !== "/") return null;
+  if (machineControlStation && location !== "/") return null;
 
-  if (operatorStation) return <main className="min-h-dvh flex-1 bg-[#f6f7f4] p-3 sm:p-4">{children}</main>;
+  if (machineControlStation) return <main className="min-h-dvh flex-1 bg-[#f6f7f4] p-3 sm:p-4">{children}</main>;
 
   return (
     <>

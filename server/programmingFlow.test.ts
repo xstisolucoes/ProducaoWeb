@@ -17,7 +17,8 @@ describe("fluxo de programação do operador", () => {
     const pageSource = readFileSync(resolve(process.cwd(), "client/src/pages/Pointing.tsx"), "utf8");
     const homeSource = readFileSync(resolve(process.cwd(), "client/src/pages/Home.tsx"), "utf8");
 
-    expect(pageSource).toContain('toast.success(`Produção finalizada: ${result.status}. Saldo: ${result.balance}.`); setLocation("/")');
+    expect(pageSource).toContain('toast.success(`Produção finalizada: ${result.status}. Saldo: ${result.balance}.`, { description: `PVPP ${result.processProductionCode || "não localizado"}');
+    expect(pageSource).toContain('setLocation("/")');
     expect(homeSource).toContain('import Programming from "./Programming"');
     expect(homeSource).toContain("return <Programming />");
   });
@@ -26,7 +27,7 @@ describe("fluxo de programação do operador", () => {
     const proxySource = readFileSync(resolve(process.cwd(), "local-firebird-proxy/server.mjs"), "utf8");
     const pageSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
 
-    expect(pageSource).toContain("Liberado/Aberto, A Concluir e Setup a Concluir são exibidos juntos. Somente a fila 1 inicia; A Concluir é prioritária.");
+    expect(pageSource).toContain('const eligibleStatus = ["Liberado", "Aberto", "A Concluir", "Setup a Concluir"]');
     expect(proxySource).toContain('const resumingToConclude = String(movement.mp_status) === "A Concluir"');
     expect(proxySource).toContain("mp_posicao = 'PI', mp_inicio = current_timestamp, mp_fim = null");
     expect(proxySource).toContain("insert into mov_processos_horarios (mph_data, usu_codigo, mph_inicio, op_codigo");
@@ -103,12 +104,57 @@ describe("fluxo de programação do operador", () => {
     expect(programmingSource).toContain("setLocation(`/apontamento/${active.opCodigo}/${active.mpCodigo}`)");
   });
 
-  it("mantém os comandos Fechar e Deslogar na tela principal", () => {
+  it("simplifica a saída do operador e prepara as opções operacionais", () => {
     const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
-    expect(programmingSource).toContain("Deslogar");
     expect(programmingSource).toContain("Fechar");
     expect(programmingSource).toContain("await logout()");
     expect(programmingSource).toContain("window.close()");
+    expect(programmingSource).toContain("Iniciar limpeza");
+    expect(programmingSource).toContain("Trocar operador");
+    expect(programmingSource).toContain("Fim do período");
+    expect(programmingSource).toContain("Checklist de limpeza");
+  });
+
+  it("mantém os campos operacionais no grid, busca superior, barra de chamadas e sequência de processos", () => {
+    const proxySource = readFileSync(resolve(process.cwd(), "local-firebird-proxy/server.mjs"), "utf8");
+    const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
+    const contractSource = readFileSync(resolve(process.cwd(), "server/firebirdProxy.ts"), "utf8");
+    const routerSource = readFileSync(resolve(process.cwd(), "server/routers/production.ts"), "utf8");
+
+    expect(proxySource).toContain("pv.pv_cod_prod_cli");
+    expect(proxySource).toContain("varchar(255)");
+    expect(proxySource).toContain("p.pes_fantasia");
+    expect(proxySource).toContain("mp.mp_situacao_lib as process_situation");
+    expect(proxySource).toContain("pv.pv_total_larg_cn as adjustment_width_total");
+    expect(proxySource).toContain('app.get("/v1/programming/cleaning-reasons"');
+    expect(proxySource).toContain("mp.mp_op_mestre as master_order");
+    expect(programmingSource).toContain("Código prod. cliente, OP ou referência");
+    expect(programmingSource).toContain("Qtde. OP");
+    expect(programmingSource).toContain("Produzida");
+    expect(programmingSource).toContain("Saldo");
+    expect(programmingSource).toContain("processSequence");
+    expect(programmingSource).toContain("processStatusClass(process.status)");
+    expect(programmingSource).toContain("Pacotes / Paletização");
+    expect(programmingSource).toContain("Visualizar layout");
+    expect(programmingSource).toContain("Qtde aprovada");
+    expect(programmingSource).toContain("Etiqueta de processo");
+    expect(programmingSource).toContain("sticky bottom-0");
+    expect(programmingSource).toContain("user?.name");
+    expect(programmingSource).toContain("Ajuste largura");
+    expect(programmingSource).toContain("Clichês / facas");
+    expect(programmingSource).toContain("selectedPrintLayout.data?.colors");
+    expect(contractSource).toContain("export const getCleaningReasons");
+    expect(routerSource).toContain("cleaningReasons: operatorProcedure");
+  });
+
+  it("limita o grid a sete linhas, remove o texto auxiliar e seleciona a OP em ambos os perfis", () => {
+    const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
+
+    expect(programmingSource).toContain("{ page, limit: 7, search, machineCode: activeMachineCode");
+    expect(programmingSource).toContain("limit={7}");
+    expect(programmingSource).toContain('description=""');
+    expect(programmingSource).toContain("onClick={() => setSelectedProcess({ opCode: item.op_codigo");
+    expect(programmingSource).toContain('cursor-pointer transition-colors');
   });
 
   it("renova o contador diário vencido antes de fornecer o horário de fechamento", () => {
@@ -120,5 +166,30 @@ describe("fluxo de programação do operador", () => {
     expect(proxySource).toContain("async function consumeDailyClock(executor, machineCode)");
     expect(proxySource).toContain("const counter = await ensureDailyClock(executor, machineCode)");
     expect(proxySource).toContain("if (machine?.code) await initializeDailyClockForMachine(Number(machine.code))");
+  });
+
+  it("permite ao Programador selecionar máquina controlada e filtrar a fila por status", () => {
+    const proxySource = readFileSync(resolve(process.cwd(), "local-firebird-proxy/server.mjs"), "utf8");
+    const contractSource = readFileSync(resolve(process.cwd(), "server/firebirdProxy.ts"), "utf8");
+    const routerSource = readFileSync(resolve(process.cwd(), "server/routers/production.ts"), "utf8");
+    const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
+
+    expect(proxySource).toContain('app.get("/v1/programming/machines"');
+    expect(proxySource).toContain("mqp.mqp_processo_controlado = 'S'");
+    expect(proxySource).toContain("const statusFilter = String(req.query.status ?? \"Todos\").trim()");
+    expect(contractSource).toContain("export type ControlledMachine");
+    expect(contractSource).toContain("export const getControlledMachines");
+    expect(routerSource).toContain("machines: programmerProcedure");
+    expect(programmingSource).toContain("Selecionar máquina controlada");
+    expect(programmingSource).toContain("A Lib/Lib/Parcial");
+    expect(programmingSource).toContain("user?.name || \"—\"");
+  });
+
+  it("compacta o Programador sem títulos redundantes e preserva a altura de sete linhas no grid", () => {
+    const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
+
+    expect(programmingSource).toContain('{operator ? <PageHeading eyebrow="" title="Sequência da máquina" description="" compact /> : null}');
+    expect(programmingSource).not.toContain('title={operator ? "Sequência da máquina" : "Programação e fila"}');
+    expect(programmingSource).toContain('programmer ? "min-h-[388px]" : ""');
   });
 });

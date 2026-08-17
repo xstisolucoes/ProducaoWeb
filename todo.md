@@ -265,3 +265,52 @@
 - [x] Manter todos os comandos da faixa superior disponíveis em Setup e em Produção.
 - [x] Exibir início e fim de Setup com o cronômetro diário na fase de setup, sem reutilizar o fim da produção anterior.
 - [x] Ao iniciar uma OP pela Programação, gravar o início do Setup com o cronômetro diário e abrir o apontamento já em Setup iniciado.
+- [x] Consultar PROD_VENDAS_PROC_PROD pelo produto e máquina atual para obter flags e multiplicador de arranjo.
+- [x] Multiplicar a produção pelo arranjo quando PVPP_CALCULAR_ARRANJO_PROD=S e manter a perda coerente com a unidade informada.
+- [x] Usar a quantidade digitada para validar e baixar a reserva quando PVPP_CALCULAR_ARRANJO_RES=S.
+- [x] Exibir no modal de finalização a quantidade digitada, o arranjo aplicado, a produção resultante e a baixa de reserva.
+- [x] Aplicar o arranjo à produção quando PVPP_CALCULAR_ARRANJO_RES=S, mantendo a baixa de reserva na quantidade digitada.
+- [x] Garantir que MOV_PROCESSOS acumule com COALESCE as quantidades de cada finalização e retomada A Concluir.
+- [x] Corrigir a seleção do registro PROD_VENDAS_PROC_PROD da máquina ativa para aplicar o arranjo na finalização real.
+- [x] Retornar diagnóstico de arranjo aplicado na finalização para confirmar código, flags, multiplicador e quantidades gravadas.
+- [x] Restringir a consulta de arranjo a PV_CODIGO, PV_REVISAO e MQP_CODIGO do processo ativo.
+- [x] Usar o arranjo real de ESTOQUE_RESERVADO como multiplicador de produção quando as flags PVPP determinarem cálculo.
+- [x] Reorganizar a tela de operadores com cabeçalho de processos, operador identificado e campos operacionais completos no grid.
+- [x] Adicionar busca inferior ao grid de programação por código de produto do cliente e ação de pesquisar.
+- [x] Manter apenas Fechar na tela de operadores e deslogar a sessão por esse comando.
+- [x] Exibir para operador o modal de saída com Iniciar Limpeza, Trocar Operador, Fim do Período e Cancelar.
+- [x] Preparar checklist de Limpeza filtrado e aguardar campos de MOTIVOS_OCIOSIDADE para gravação de limpeza e fim de período.
+- [x] Mover a pesquisa da programação para a faixa superior e adicionar barra inferior de botões de chamada do operador.
+- [x] Aplicar aos processos superiores as cores de status do padrão da Fila de Máquina.
+- [x] Ajustar tipografia e altura da tela de operadores ao padrão visual dos modais para caber no monitor.
+- [x] Aplicar degradê suave ao cabeçalho da máquina e destacar visualmente a linha de OP selecionada.
+- [x] Exibir no grid de operadores Cliente, OP, Produto, Revisão, CPC, quantidade, datas, situação e solicitação conforme o desktop legado.
+- [x] Filtrar a programação automaticamente durante a digitação da busca superior.
+- [x] Restaurar o botão Visualizar layout na barra da tela principal e na tela de apontamento quando houver desenho disponível.
+- [x] Corrigir a consulta de busca da Programação para eliminar a falha retornada pelo proxy Firebird.
+- [x] Retornar Cliente, Produto, CPC, Data de Expedição e Situação M.P. reais no grid de Programação a partir dos joins do legado.
+- [x] Exibir ajustes de largura e comprimento, cores, clichês e facas da OP selecionada na tela principal.
+- [x] Corrigir o grid da Programação conforme os campos MP_FANTASIA, PV_CODIGO, PV_REFERENCIA, PV_COD_PROD_CLI, MP_DATA_EXPEDICAO, ER_SITUACAO e ERS_STATUS do legado.
+- [x] Mover ajustes, cores, clichês e facas para um painel inferior após o grid, no padrão da Consulta de Fila.
+- [x] Inverter a composição da tela principal para o padrão da Fila de Máquina e aumentar a leitura de medidas, cores, clichês e facas.
+- [x] Exibir os rótulos técnicos PV_CODIGO, PV_COD_PROD_CLI, MP_DATA_EXPEDICAO e ER_SITUACAO conforme a referência.
+- [x] Mover Atualizar e Fechar para a barra inferior, remover textos auxiliares e aplicar degradê verde luminoso a todas as faixas.
+- [x] Restaurar a barra inferior de consultas sem reexibir o painel técnico antigo duplicado.
+- [x] Exibir barra de consultas, especificações e processos para Administrador, mantendo alterações de fila e processo conforme suas permissões.
+- [x] Reduzir a altura superior da tela de operadores e alinhar o botão Fechar à direita da barra inferior.
+- [x] Preservar FIREBIRD_MACHINE_LOGON e identificar a máquina pelo hostname local em Windows, Raspberry Pi e Orange Pi.
+- [x] Remover sidebar e módulos Ordens de Produção/Produto Venda do modo Programador, mantendo somente controle de máquinas.
+- [x] Limitar o grid da Programação a sete registros por página nos perfis Operador e Programador.
+- [x] Remover texto auxiliar da Programação e destacar a OP selecionada ao clicar no grid para os dois perfis.
+- [x] Liberar Atualizar, Pacotes, Layout, Reserva, Quantidade aprovada, Solicitações e Etiqueta de Processo para Programador.
+- [x] Exibir o usuário Programador logado no cabeçalho da tela de controle de máquinas.
+- [x] Listar MAQUINAS_PROCESSOS com MQP_PROCESSO_CONTROLADO=S para seleção modal pelo Programador.
+- [x] Filtrar a programação do Programador por máquina controlada e status do legado.
+- [x] Permitir acesso do Programador à Programação sem máquina em MQP_LOGON, mantendo o vínculo obrigatório para Operador.
+- [x] Remover os títulos Controle de máquinas e Programação e fila no modo Programador.
+- [x] Reservar a altura de sete linhas no grid do Programador quando não houver processos da fila master.
+- [x] Garantir que Pacotes, Layout, Reserva, Medidas, Cores, Clichês e Facas consultem a OP selecionada independentemente da máquina ativa.
+- [x] Criar configurador de temas, preservando o tema verde atual como padrão.
+- [x] Adicionar tema XSTI vermelho com logomarca fornecida e contraste operacional.
+- [x] Persistir a escolha de tema da estação e aplicar os tokens às telas de operadores e Programador.
+- [ ] Gravar início de limpeza e fim de período em MOTIVOS_OCIOSIDADE após confirmar os campos e regras do legado.

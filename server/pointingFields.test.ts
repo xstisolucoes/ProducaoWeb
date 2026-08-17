@@ -38,6 +38,8 @@ describe("campos técnicos do apontamento", () => {
     expect(page).toContain("palletization.data.layerImageDataUri");
     expect(page).toContain('productionStarted ? "EM PRODUÇÃO"');
     expect(page).toContain("Reserva de matéria-prima vinculada a esta OP");
+    expect(page).toContain('if (event.key === "F5")');
+    expect(page).toContain("Visualizar layout");
     expect(page).not.toContain("Voltar à fila");
     expect(app).toContain('<Route path={"/apontamento/:opCodigo/:mpCodigo"}><Pointing /></Route>');
   });

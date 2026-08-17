@@ -76,6 +76,35 @@
   --sidebar-accent-foreground: oklch(0.98 0.01 150);
   --sidebar-border: oklch(0.33 0.038 157);
   --sidebar-ring: oklch(0.69 0.1 154);
+  --operation-deep: #0b3a30;
+  --operation-mid: #177458;
+  --operation-bright: #2e9b70;
+  --operation-soft: #e5f6eb;
+  --operation-border: #a9d7ba;
+  --operation-ink: #154c3a;
+}
+
+:root[data-brand-theme="xsti"] {
+  --primary: oklch(0.48 0.19 27);
+  --primary-foreground: oklch(0.98 0.005 20);
+  --sidebar-primary: oklch(0.63 0.19 27);
+  --sidebar-primary-foreground: oklch(0.2 0.02 20);
+  --background: oklch(0.978 0.004 25);
+  --foreground: oklch(0.24 0.015 20);
+  --card-foreground: oklch(0.24 0.015 20);
+  --ring: oklch(0.55 0.19 27);
+  --sidebar: oklch(0.22 0.02 20);
+  --sidebar-foreground: oklch(0.95 0.01 20);
+  --sidebar-accent: oklch(0.31 0.05 22);
+  --sidebar-accent-foreground: oklch(0.99 0.005 20);
+  --sidebar-border: oklch(0.35 0.04 23);
+  --sidebar-ring: oklch(0.63 0.19 27);
+  --operation-deep: #211a1b;
+  --operation-mid: #a71924;
+  --operation-bright: #d6313b;
+  --operation-soft: #fff2f3;
+  --operation-border: #e5b2b6;
+  --operation-ink: #731b23;
 }
 
 .dark {
@@ -135,6 +164,21 @@
 }
 
 @layer components {
+  .theme-machine-band { background: linear-gradient(112deg, var(--operation-deep) 0%, var(--operation-mid) 50%, color-mix(in srgb, var(--operation-deep) 78%, black) 100%); border-color: var(--operation-mid); }
+  .theme-filter-band, .theme-grid-title { background: linear-gradient(100deg, var(--operation-soft), #fff 48%, color-mix(in srgb, var(--operation-soft) 78%, white)); border-color: var(--operation-border); }
+  .theme-details-panel { border-color: var(--operation-border); background: linear-gradient(105deg, var(--operation-soft), #fff 46%, color-mix(in srgb, var(--operation-soft) 80%, white)); }
+  .theme-toolbar { background: linear-gradient(100deg, var(--operation-deep) 0%, var(--operation-mid) 48%, color-mix(in srgb, var(--operation-deep) 82%, black) 100%); border-color: var(--operation-bright); }
+  .theme-config-trigger { border-color: color-mix(in srgb, var(--operation-bright) 65%, white); background: color-mix(in srgb, var(--operation-soft) 76%, white); color: var(--operation-ink); }
+  .theme-config-trigger:hover { background: var(--operation-soft); color: var(--operation-ink); }
+  .theme-login-header { background: linear-gradient(112deg, var(--operation-deep), var(--operation-mid)); }
+  .theme-login-submit { background: var(--operation-mid); color: white; }
+  .theme-login-submit:hover { background: var(--operation-deep); }
+  :root[data-brand-theme="xsti"] .theme-programming .sticky { background: linear-gradient(100deg, var(--operation-deep), var(--operation-mid), #7a121a) !important; border-color: var(--operation-bright) !important; }
+  :root[data-brand-theme="xsti"] .theme-pointing .bg-\[\#177458\] { background-color: var(--operation-mid) !important; }
+  :root[data-brand-theme="xsti"] .theme-pointing .border-\[\#177458\] { border-color: var(--operation-mid) !important; }
+  :root[data-brand-theme="xsti"] .theme-pointing .text-\[\#176148\] { color: var(--operation-ink) !important; }
+  :root[data-brand-theme="xsti"] [data-slot="dialog-content"] { border-color: #e5b2b6; background: #fffafa; }
+  :root[data-brand-theme="xsti"] [data-slot="dialog-header"] { border-color: #eed0d2; background: linear-gradient(100deg, #fff0f1, #fff, #fff6ee); }
   /**
    * Custom container utility that centers content and adds responsive padding.
    *

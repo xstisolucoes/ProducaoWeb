@@ -26,7 +26,7 @@ describe("Pacotes / Paletização", () => {
     const dialog = readFileSync(resolve(process.cwd(), "client/src/components/ProductVisualDialogs.tsx"), "utf8");
     const router = readFileSync(resolve(process.cwd(), "server/routers/production.ts"), "utf8");
 
-    expect(router).toContain("palletization: operatorProcedure.input(processInput)");
+    expect(router).toContain("palletization: localProtectedProcedure.input(processInput)");
     expect(client).toContain("Pacotes / Paletização");
     expect(client).toContain("palletization.data.palletized ?");
     expect(client).toContain("Não cadastrado.");
