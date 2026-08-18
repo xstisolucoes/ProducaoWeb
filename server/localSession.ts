@@ -5,7 +5,7 @@ import type { LocalOperator } from "./firebirdProxy";
 export const LOCAL_SESSION_COOKIE = "producao_local_session";
 const textEncoder = new TextEncoder();
 
-export type LocalSessionUser = Pick<LocalOperator, "id" | "login" | "name" | "email" | "groupCode" | "employeeCode" | "sectorCode" | "companyCode" | "permissions" | "operationalProfile" | "machine">;
+export type LocalSessionUser = Pick<LocalOperator, "id" | "login" | "name" | "email" | "groupCode" | "employeeCode" | "sectorCode" | "companyCode" | "permissions" | "operationalProfile" | "canConfigureStation" | "machine">;
 
 function sessionSecret() {
   const value = process.env.LOCAL_SESSION_SECRET?.trim() || process.env.FIREBIRD_PROXY_TOKEN?.trim();
@@ -64,6 +64,7 @@ export async function readLocalSession(req: Request): Promise<LocalSessionUser |
       companyCode: typeof payload.companyCode === "number" ? payload.companyCode : null,
       permissions: Array.isArray(payload.permissions) ? payload.permissions.filter((permission): permission is string => typeof permission === "string") : [],
       operationalProfile: payload.operationalProfile === "programmer" || payload.operationalProfile === "manual-pointing" ? payload.operationalProfile : "operator",
+      canConfigureStation: payload.canConfigureStation === true,
       machine: (() => {
         const machine = payload.machine;
         if (!machine || typeof machine !== "object" || !("code" in machine) || typeof machine.code !== "number") return null;

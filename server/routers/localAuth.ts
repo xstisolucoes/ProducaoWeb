@@ -37,7 +37,7 @@ export const localAuthRouter = router({
         return withRules(selectedOperator);
       } catch (error) {
         const message = error instanceof Error ? error.message : "";
-        const stationAccessDenied = message.includes("máquina Apontamento") || message.includes("usuário Apontador");
+        const stationAccessDenied = message.includes("máquina Apontamento") || message.includes("usuário Apontador") || message.includes("Esta estação ainda não está configurada");
         throw new TRPCError({ code: stationAccessDenied ? "FORBIDDEN" : "UNAUTHORIZED", message: stationAccessDenied ? message : "Usuário ou senha inválidos." });
       }
     }),

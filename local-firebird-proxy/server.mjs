@@ -222,14 +222,21 @@ async function paged(sql, countSql, params, req) {
   return { items, total: Number(countRows[0]?.total ?? 0), page: Math.floor(offset / limit) + 1, limit };
 }
 
-function operationalProfile(groupCode, groupDescription = "") {
+function canConfigureStation(groupCode, groupDescription = "") {
   const programmerGroups = (process.env.PRODUCTION_PROGRAMMER_GROUPS || "3,4,6")
     .split(",").map((value) => Number(value.trim())).filter((value) => Number.isInteger(value));
+  const configuratorGroups = (process.env.PRODUCTION_STATION_CONFIGURATOR_GROUPS || programmerGroups.join(","))
+    .split(",").map((value) => Number(value.trim())).filter((value) => Number.isInteger(value));
+  const normalizedDescription = String(groupDescription ?? "").trim().toLocaleUpperCase("pt-BR");
+  return configuratorGroups.includes(Number(groupCode)) || /\b(PCP|PROGRAMADOR|ADMINISTRADOR|ADMIN)\b/.test(normalizedDescription);
+}
+
+function operationalProfile(groupCode, groupDescription = "") {
   const manualGroups = (process.env.PRODUCTION_MANUAL_POINTING_GROUPS || "")
     .split(",").map((value) => Number(value.trim())).filter((value) => Number.isInteger(value));
   const normalizedDescription = String(groupDescription ?? "").trim().toLocaleUpperCase("pt-BR");
   if (manualGroups.includes(Number(groupCode)) || normalizedDescription === "APONTADOR") return "manual-pointing";
-  return programmerGroups.includes(Number(groupCode)) ? "programmer" : "operator";
+  return canConfigureStation(groupCode, groupDescription) ? "programmer" : "operator";
 }
 
 function isManualPointingMachine(machine) {
@@ -348,9 +355,15 @@ app.post("/v1/auth/login", ensureAuthorized, async (req, res, next) => {
       left join grupo_permissoes gpe on gpe.gpe_cod_permissao = perm.perm_codigo and gpe.gpe_cod_grupo = usu.gu_codigo
       where iif(up.perm_codigo > 0, up.up_inserir, gpe.gpe_inserir) = 'S'
     `, [user.usu_codigo, user.usu_codigo]);
-    const machine = await findMachineForOperator(Number(user.usu_codigo), req.body?.machineCode);
-    if (machine?.code) await initializeDailyClockForMachine(Number(machine.code));
     const profile = operationalProfile(user.gu_codigo, user.group_description);
+    const canConfigure = canConfigureStation(user.gu_codigo, user.group_description);
+    const selectedMachineCode = Number(req.body?.machineCode);
+    const hasSelectedMachine = Number.isInteger(selectedMachineCode) && selectedMachineCode > 0;
+    if (!hasSelectedMachine && !canConfigure) {
+      return res.status(403).json({ error: "Esta estação ainda não está configurada. Solicite ao PCP, Programador ou Administrador que configure a estação." });
+    }
+    const machine = await findMachineForOperator(Number(user.usu_codigo), hasSelectedMachine ? selectedMachineCode : null);
+    if (machine?.code) await initializeDailyClockForMachine(Number(machine.code));
     if (profile === "manual-pointing" && !isManualPointingMachine(machine)) {
       return res.status(403).json({ error: "O usuário Apontador só pode acessar a máquina Apontamento." });
     }
@@ -369,6 +382,7 @@ app.post("/v1/auth/login", ensureAuthorized, async (req, res, next) => {
       companyCode: user.c_codigo === null || user.c_codigo === undefined ? null : Number(user.c_codigo),
       permissions: permissionRows.map((row) => String(row.perm_name)).filter(Boolean),
       operationalProfile: profile,
+      canConfigureStation: canConfigure,
       machine,
     });
   } catch (error) {

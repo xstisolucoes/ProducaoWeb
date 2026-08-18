@@ -3,16 +3,24 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 describe("seleção persistida de estação", () => {
-  it("oferece estações no login e transmite a seleção ao proxy central", () => {
+  it("mantém a empresa oculta e exige autorização administrativa para configurar a estação", () => {
     const login = readFileSync(resolve(process.cwd(), "client/src/components/LocalLogin.tsx"), "utf8");
     const authRouter = readFileSync(resolve(process.cwd(), "server/routers/localAuth.ts"), "utf8");
     const proxy = readFileSync(resolve(process.cwd(), "local-firebird-proxy/server.mjs"), "utf8");
+    const programming = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
     expect(login).toContain('production-station-machine-code');
-    expect(login).toContain('Estação de trabalho');
     expect(login).toContain('machineCode');
+    expect(login).toContain('className="hidden"');
+    expect(login).toContain('primeiro acesso deve ser realizado por PCP, Programador ou Administrador');
+    expect(login).not.toContain('id="station"');
     expect(authRouter).toContain('stations: publicProcedure.query');
     expect(authRouter).toContain('machineCode: z.number().int().positive().nullable()');
+    expect(authRouter).toContain('Esta estação ainda não está configurada');
     expect(proxy).toContain('app.get("/v1/stations"');
-    expect(proxy).toContain('findMachineForOperator(Number(user.usu_codigo), req.body?.machineCode)');
+    expect(proxy).toContain('function canConfigureStation');
+    expect(proxy).toContain('PRODUCTION_STATION_CONFIGURATOR_GROUPS');
+    expect(proxy).toContain('Esta estação ainda não está configurada. Solicite ao PCP, Programador ou Administrador');
+    expect(programming).toContain('canConfigureStation === true');
+    expect(programming).toContain('Configurar estação deste navegador');
   });
 });

@@ -79,6 +79,7 @@ export type LocalOperator = {
   companyCode: number | null;
   permissions: string[];
   operationalProfile: "operator" | "programmer" | "manual-pointing";
+  canConfigureStation: boolean;
   machine: ProductionMachine | null;
 };
 

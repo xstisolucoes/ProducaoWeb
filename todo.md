@@ -379,4 +379,5 @@
 - [x] Substituir a prioridade de hostname por FIREBIRD_MACHINE_LOGON configurado, usando hostname apenas como alternativa para separar corretamente as estações.
 - [x] Corrigir a autorização do Operador para permitir acesso à máquina operacional resolvida pelo vínculo MQP_LOGON configurado.
 - [x] Selecionar uma máquina na primeira abertura, persistir no navegador e enviar seu código ao login central.
+- [x] Ocultar a empresa no login e permitir definir ou alterar a estação persistida somente para PCP/Programador ou Administrador.
 - [ ] Gravar início de limpeza e fim de período em MOTIVOS_OCIOSIDADE após confirmar os campos e regras do legado.
