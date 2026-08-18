@@ -53,7 +53,8 @@ export const statusUpdateProcedure = localProtectedProcedure.use(requireStatusPe
 
 const requireOperationalProfile = (profile: "operator" | "programmer") =>
   t.middleware(async opts => {
-    if (!opts.ctx.localUser || opts.ctx.localUser.operationalProfile !== profile) {
+    const isOperator = profile === "operator" && ["operator", "manual-pointing"].includes(opts.ctx.localUser?.operationalProfile ?? "");
+    if (!opts.ctx.localUser || (!isOperator && opts.ctx.localUser.operationalProfile !== profile)) {
       throw new TRPCError({ code: "FORBIDDEN", message: profile === "operator" ? "Ação disponível apenas para operadores." : "Ação disponível apenas para programadores." });
     }
     return opts.next({ ctx: { ...opts.ctx, localUser: opts.ctx.localUser } });

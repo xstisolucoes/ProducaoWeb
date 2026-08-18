@@ -327,4 +327,56 @@
 - [x] Reutilizar o mapa de cores de status da Fila de Máquina nos cartões de processos da Programação e Operadores.
 - [x] Remover a classe branca e renderizar texto preto diretamente em todos os chips de cores dos visualizadores de layout.
 - [x] Substituir a estrutura de chip do visualizador por cartão branco fixo e rótulo preto independente do tema.
+- [x] Restaurar o fundo real de cada tinta no visualizador e calcular automaticamente texto preto ou branco conforme contraste.
+- [x] Clarear a faixa superior do visualizador no tema XPAPER, preservando contraste dos controles.
+- [x] Aplicar texto preto aos cartões brancos de Produto, Revisão e Clichê e texto branco garantido aos chips de tinta escuros.
+- [x] Restaurar ícones e percentual do controle de zoom e ampliar a faixa do visualizador para leitura à distância.
+- [x] Padronizar os rótulos de status da Programação como A Lib., Lib. e Parcial.
+- [x] Persistir a máquina escolhida pelo Programador para mantê-la após atualizar a página.
+- [x] Tornar Atualizar uma recarga explícita da programação e remover Deslogar, encerrando a sessão pelo botão Fechar.
+- [x] Normalizar o nome do Programador no cabeçalho para exibir uma única ocorrência.
+- [x] Manter os nomes completos de status e usar A Lib/Lib/Parcial somente como filtro inicial do Programador.
+- [x] Corrigir a restauração da máquina selecionada para não substituí-la pela primeira máquina após atualizar a página.
+- [x] Padronizar todas as colunas do grid de Programação com o mesmo tamanho visual da coluna Cliente.
+- [x] Bloquear alteração de fila para A Concluir e Setup a Concluir conforme o legado.
+- [x] Validar promoção de fila, impedir fila igual ou maior e proteger a fila 1 quando houver produção ou conclusão pendente.
+- [x] Reorganizar sequencialmente a fila da máquina após uma promoção válida, seguindo o fluxo FormarFila do legado.
+- [x] Exibir bloqueios e validações de alteração de fila em modal operacional padronizado de cuidado.
+- [x] Consultar máquinas elegíveis para transferência por GMQ_CODIGO, produto, revisão e equivalência entre os grupos 4 e 6.
+- [x] Substituir o prompt de processo por modal de seleção e confirmação de transferência para a máquina escolhida.
+- [x] Ocultar referências a Firebird e proxy nas mensagens modais de bloqueio de fila.
+- [x] Exibir no modal de fila título Alteração não permitida e descrição específica conforme o status prioritário encontrado.
+- [x] Atualizar a lista da Programação ao fechar um aviso de alteração não permitida.
+- [x] Retornar bloqueios de fila como HTTP 409 controlado para abrir o modal no navegador, sem deixar erro apenas no CMD.
+- [x] Recarregar integralmente a Programação após fechar um aviso de bloqueio, preservando a máquina selecionada.
+- [x] Alterar automaticamente A Liberar para Liberado quando a OP sair da fila 2000 para uma fila operacional.
+- [x] Atualizar automaticamente a Programação depois de promover e liberar uma OP da fila 2000.
+- [x] Identificar usuários do grupo Apontamento e direcionar o início de OP para o Apontamento Manual.
+- [x] Implementar o formulário operacional de Apontamento Manual com dados da OP, horários, quantidade e quantidades anteriores.
+- [x] Integrar Pacotes/Paletização, Visualizar Impressão, RPNC e resultados Atendido/Parcial ao Apontamento Manual.
+- [x] Gravar transacionalmente o resultado do Apontamento Manual conforme regras e campos confirmados no Delphi.
+- [x] Corrigir a consulta de login para usar GRUPOS_USUARIOS.GU_USUARIO e reconhecer Apontador sem GU_DESCRICAO.
+- [x] Restringir o perfil Apontador ao processo/máquina Apontamento antes de abrir o Apontamento Manual.
+- [x] Corrigir a consulta de credenciais do Apontador e mostrar a causa real de acesso negado em vez de senha inválida.
+- [x] Bloquear Operador fora de máquinas operacionais e Apontador fora da máquina Apontamento, com validação cruzada no login.
+- [x] Tornar determinística a identificação de Apontador por GU_USUARIO e validar as combinações Apontador/Apontamento e Operador/demais máquinas.
+- [x] Permitir que Apontador inicie múltiplas OPs Liberadas/Abertas sem exigir fila 1 ou bloquear por outra OP em produção.
+- [x] Direcionar todo início de Apontador ao Apontamento Manual e manter o fluxo normal apenas para Operador.
+- [x] Registrar no início manual MOV_PROCESSOS e MOV_PROCESSOS_HORARIOS como Em Produção até a Liberação de Produto.
+- [x] Corrigir a propagação do perfil Apontador até a Programação para ativar o modo manual.
+- [x] Ocultar Sequência/Fila de máquina, Situação M.P. e Solicitação na Programação Manual.
+- [x] Liberar os botões Iniciar/Apontar do Apontador para OPs Liberadas, Abertas ou Em Produção sem fila prioritária.
+- [x] Reorganizar a Programação do Apontador com processos no topo e sem menu lateral, fila ou painel técnico repetido.
+- [x] Listar para Apontador apenas OPs Liberadas, Parciais ou Em Produção e fazer Fechar deslogar diretamente somente para Apontador.
+- [x] Aplicar padrão XSTI ao Apontamento Manual, ampliar campos de quantidade/perda/pessoas e adicionar botão Voltar.
+- [x] Remover Pessoas do Apontamento Manual e ampliar ainda mais os campos de quantidade produzida e perdida.
+- [x] Ajustar o grid do Apontador para preencher a altura até a barra inferior e manter apenas Em Produção, Liberado e Parcial.
+- [x] Forçar fonte grande com prioridade máxima nos campos de quantidade produzida e perdida do Apontamento Manual.
+- [x] Restaurar medidas, cores, clichês e facas após o grid do Apontador, sem repetir a faixa superior.
+- [x] Corrigir o filtro manual do proxy para trazer Em Produção, Parcial e Liberado na mesma lista.
+- [x] Substituir a prioridade de hostname por FIREBIRD_MACHINE_LOGON configurado, usando hostname apenas como alternativa para separar corretamente as estações.
+- [x] Corrigir a priorização de MQP_LOGON para selecionar a máquina efetivamente acessada antes de validar o perfil Apontador/Operador.
+- [x] Substituir a prioridade de hostname por FIREBIRD_MACHINE_LOGON configurado, usando hostname apenas como alternativa para separar corretamente as estações.
+- [x] Corrigir a autorização do Operador para permitir acesso à máquina operacional resolvida pelo vínculo MQP_LOGON configurado.
+- [x] Selecionar uma máquina na primeira abertura, persistir no navegador e enviar seu código ao login central.
 - [ ] Gravar início de limpeza e fim de período em MOTIVOS_OCIOSIDADE após confirmar os campos e regras do legado.

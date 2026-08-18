@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { getLocalCompanies, loginLocalOperator } from "../firebirdProxy";
+import { getLocalCompanies, getLoginStations, loginLocalOperator } from "../firebirdProxy";
 import { createLocalSession, getLocalSessionCookieOptions, LOCAL_SESSION_COOKIE } from "../localSession";
 import { publicProcedure, router } from "../_core/trpc";
 
@@ -25,17 +25,20 @@ function withRules<T extends Record<string, unknown>>(operator: T) {
 export const localAuthRouter = router({
   me: publicProcedure.query(({ ctx }) => ctx.localUser ? withRules(ctx.localUser) : null),
   companies: publicProcedure.query(() => getLocalCompanies()),
+  stations: publicProcedure.query(() => getLoginStations()),
   login: publicProcedure
-    .input(z.object({ login: z.string().trim().min(1).max(120), password: z.string().min(1).max(256), companyCode: z.number().int().positive().nullable() }))
+    .input(z.object({ login: z.string().trim().min(1).max(120), password: z.string().min(1).max(256), companyCode: z.number().int().positive().nullable(), machineCode: z.number().int().positive().nullable() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const operator = await loginLocalOperator(input.login, input.password);
+        const operator = await loginLocalOperator(input.login, input.password, input.machineCode);
         const selectedOperator = { ...operator, companyCode: input.companyCode ?? operator.companyCode };
         const token = await createLocalSession(selectedOperator);
         ctx.res.cookie(LOCAL_SESSION_COOKIE, token, getLocalSessionCookieOptions(ctx.req));
         return withRules(selectedOperator);
-      } catch {
-        throw new TRPCError({ code: "UNAUTHORIZED", message: "Usuário ou senha inválidos." });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "";
+        const stationAccessDenied = message.includes("máquina Apontamento") || message.includes("usuário Apontador");
+        throw new TRPCError({ code: stationAccessDenied ? "FORBIDDEN" : "UNAUTHORIZED", message: stationAccessDenied ? message : "Usuário ou senha inválidos." });
       }
     }),
   logout: publicProcedure.mutation(({ ctx }) => {

@@ -99,7 +99,8 @@ function DashboardLayoutContent({
   const isMobile = useIsMobile();
   const operatorStation = user?.operationalProfile === "operator";
   const programmerStation = user?.operationalProfile === "programmer";
-  const machineControlStation = operatorStation || programmerStation;
+  const manualPointingStation = user?.operationalProfile === "manual-pointing";
+  const machineControlStation = operatorStation || programmerStation || manualPointingStation;
 
   useEffect(() => {
     if (machineControlStation && location !== "/") setLocation("/");

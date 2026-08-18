@@ -10,6 +10,7 @@ import {
   getPalletization,
   getRpncChecklist,
   getProcessOptions,
+  getEligibleProcessMachines,
   getPauseReasons,
   getInspectionChecklist,
   getProcessInspectionChecklist,
@@ -34,7 +35,9 @@ import {
   getStock,
   getStockHistory,
   changeOrderProcess,
+  changeOrderQueue,
   startSetup,
+  startManualPointing,
   startPause,
   submitRpnc,
   updateOrderStatus,
@@ -74,10 +77,11 @@ export const productionRouter = router({
   }),
   programming: router({
     list: localProtectedProcedure.input(programmingInput).query(({ ctx, input }) => {
+      const manualPointing = ctx.localUser.operationalProfile === "manual-pointing";
       const operatorOnly = ctx.localUser.operationalProfile === "operator";
-      const machineCode = operatorOnly ? ctx.localUser.machine?.code : (input.machineCode ?? ctx.localUser.machine?.code);
-      if (!machineCode) throw new Error(operatorOnly ? "Nenhuma máquina foi vinculada a este operador." : "Selecione uma máquina controlada.");
-      return getProgramming(machineCode, input.page, input.limit, input.search, operatorOnly, operatorOnly ? "Todos" : input.status);
+      const machineCode = operatorOnly || manualPointing ? ctx.localUser.machine?.code : (input.machineCode ?? ctx.localUser.machine?.code);
+      if (!machineCode) throw new Error(operatorOnly || manualPointing ? "Nenhuma máquina foi vinculada a este operador." : "Selecione uma máquina controlada.");
+      return getProgramming(machineCode, input.page, input.limit, input.search, operatorOnly, manualPointing ? input.status : operatorOnly ? "Todos" : input.status);
     }),
     machines: programmerProcedure.query(() => getControlledMachines()),
     active: operatorProcedure.query(({ ctx }) => {
@@ -89,7 +93,9 @@ export const productionRouter = router({
       return getCleaningReasons(ctx.localUser.machine.code);
     }),
     processes: programmerProcedure.query(() => getProcessOptions()),
+    eligibleMachines: programmerProcedure.input(processInput).query(({ input }) => getEligibleProcessMachines(input)),
     changeProcess: programmerProcedure.input(processInput.extend({ machineCode: z.number().int().positive() })).mutation(({ input }) => changeOrderProcess(input)),
+    changeQueue: programmerProcedure.input(processInput.extend({ machineCode: z.number().int().positive(), queue: z.number().int().positive() })).mutation(({ input }) => changeOrderQueue(input)),
   }),
   queue: router({
     list: localProtectedProcedure.input(pageInput).query(({ ctx, input }) => {
@@ -150,6 +156,11 @@ export const productionRouter = router({
     startSetup: operatorProcedure.input(processInput).mutation(({ ctx, input }) => {
       if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
       return startSetup({ ...input, operatorId: ctx.localUser.id, machineCode: ctx.localUser.machine.code });
+    }),
+    startManual: operatorProcedure.input(processInput).mutation(({ ctx, input }) => {
+      if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
+      if (ctx.localUser.operationalProfile !== "manual-pointing") throw new Error("Ação disponível apenas para o grupo Apontamento.");
+      return startManualPointing({ ...input, operatorId: ctx.localUser.id, machineCode: ctx.localUser.machine.code });
     }),
     finishSetup: operatorProcedure.input(processInput.extend({ outcome: z.enum(["attended", "to_conclude", "cancelled"]) })).mutation(({ ctx, input }) => {
       if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");

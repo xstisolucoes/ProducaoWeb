@@ -45,5 +45,7 @@ describe("configurador de temas operacionais", () => {
     expect(css).toContain(".theme-tooling-chip");
     expect(css).toContain(".process-status-card");
     expect(programming).toContain("process-status-card");
+    expect(css).toContain('header > div[class*="rounded-lg"][class*="bg-white"]');
+    expect(css).toContain("font-size: 1.15rem !important");
   });
 });

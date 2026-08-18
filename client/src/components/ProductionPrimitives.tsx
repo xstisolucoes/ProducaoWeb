@@ -68,9 +68,9 @@ export function processStatusClass(status: string | null | undefined) {
   return "bg-[#eff1ee] text-[#687169]";
 }
 
-export function StatusPill({ status }: { status: string | null | undefined }) {
+export function StatusPill({ status, label }: { status: string | null | undefined; label?: string }) {
   const style = processStatusClass(status);
-  return <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${style}`}>{status || "Sem status"}</span>;
+  return <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${style}`}>{label || status || "Sem status"}</span>;
 }
 
 export const displayValue = (value: string | number | null | undefined, fallback = "—") => value === null || value === undefined || value === "" ? fallback : String(value);

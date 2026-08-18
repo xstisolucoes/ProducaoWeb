@@ -101,7 +101,8 @@ describe("fluxo de programação do operador", () => {
     expect(programmingSource).toContain("trpc.production.programming.active.useQuery");
     expect(programmingSource).toContain("OP em produção recuperada");
     expect(programmingSource).toContain("Você será direcionado ao apontamento para continuar ou finalizar o processo.");
-    expect(programmingSource).toContain("setLocation(`/apontamento/${active.opCodigo}/${active.mpCodigo}`)");
+    expect(programmingSource).toContain('manualPointing ? "/apontamento-manual" : "/apontamento"');
+    expect(programmingSource).toContain("active.opCodigo");
   });
 
   it("simplifica a saída do operador e prepara as opções operacionais", () => {
@@ -182,14 +183,97 @@ describe("fluxo de programação do operador", () => {
     expect(routerSource).toContain("machines: programmerProcedure");
     expect(programmingSource).toContain("Selecionar máquina controlada");
     expect(programmingSource).toContain("A Lib/Lib/Parcial");
-    expect(programmingSource).toContain("user?.name || \"—\"");
+    expect(programmingSource).toContain("firstDisplayName(user?.name)");
   });
 
   it("compacta o Programador sem títulos redundantes e preserva a altura de sete linhas no grid", () => {
     const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
 
-    expect(programmingSource).toContain('{operator ? <PageHeading eyebrow="" title="Sequência da máquina" description="" compact /> : null}');
+    expect(programmingSource).toContain('{operator && !manualPointing ? <PageHeading eyebrow="" title="Sequência da máquina" description="" compact /> : null}');
     expect(programmingSource).not.toContain('title={operator ? "Sequência da máquina" : "Programação e fila"}');
     expect(programmingSource).toContain('programmer ? "min-h-[388px]" : ""');
+  });
+
+  it("padroniza a leitura tipográfica de todas as colunas do grid pela referência do Cliente", () => {
+    const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
+    const cssSource = readFileSync(resolve(process.cwd(), "client/src/index.css"), "utf8");
+
+    expect(programmingSource).toContain('programming-grid w-full text-left text-sm ${manualPointing ? "min-w-[1250px]" : "min-w-[1600px]"}');
+    expect(cssSource).toContain(".programming-grid tbody td");
+    expect(cssSource).toContain("font-size: 0.875rem !important");
+  });
+
+  it("reorganiza a fila conforme as proteções operacionais do legado", () => {
+    const proxySource = readFileSync(resolve(process.cwd(), "local-firebird-proxy/server.mjs"), "utf8");
+    const contractSource = readFileSync(resolve(process.cwd(), "server/firebirdProxy.ts"), "utf8");
+    const routerSource = readFileSync(resolve(process.cwd(), "server/routers/production.ts"), "utf8");
+    const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
+
+    expect(proxySource).toContain('app.patch("/v1/programming/:opCodigo/:mpCodigo/queue"');
+    expect(proxySource).toContain('["A Concluir", "Setup a Concluir"].includes(currentStatus)');
+    expect(proxySource).toContain("Não é permitido alterar uma fila para ela mesma.");
+    expect(proxySource).toContain("Não é permitido alterar para uma fila maior que ela mesma.");
+    expect(proxySource).toContain("Existe um processo em produção na fila 1.");
+    expect(proxySource).toContain("Existe um processo A Concluir na fila 1.");
+    expect(proxySource).toContain("Existe um processo Setup a Concluir na fila 1.");
+    expect(proxySource).toContain('if (error?.statusCode) return res.status(error.statusCode).json({ error: error.message }); next(error);');
+    expect(proxySource).toContain("const temporaryOffset = 1000000");
+    expect(proxySource).toContain('const releasedFromQueue2000 = currentStatus.toLocaleLowerCase("pt-BR") === "a liberar" && currentQueue === 2000 && targetQueue < 2000');
+    expect(proxySource).toContain('const nextStatus = releasedFromQueue2000 ? "Liberado" : currentStatus');
+    expect(proxySource).toContain("update mov_processos set mp_fila = ?, mp_status = ?");
+    expect(programmingSource).toContain("window.setTimeout(reloadProgrammingPreservingMachine, 180)");
+    expect(programmingSource).toContain("result.releasedFromQueue2000 ? \" e liberada para produção.\" : \".\"");
+    expect(contractSource).toContain("export const changeOrderQueue");
+    expect(routerSource).toContain("changeQueue: programmerProcedure");
+    expect(programmingSource).toContain("trpc.production.programming.changeQueue.useMutation");
+  });
+
+  it("mostra bloqueios de fila no modal operacional padronizado", () => {
+    const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
+
+    expect(programmingSource).toContain('import { OperationalMessageDialog } from "@/components/OperationalConfirmDialog"');
+    expect(programmingSource).toContain('const [queueMessage, setQueueMessage] = useState<QueueMessage | null>(null)');
+    expect(programmingSource).toContain('title={queueMessage.title}');
+    expect(programmingSource).toContain('tone="caution"');
+    expect(programmingSource).toContain("function operationalQueueMessage");
+    expect(programmingSource).toContain("Não foi possível alterar a fila neste momento.");
+    expect(programmingSource).toContain("setQueueMessage(operationalQueueMessage(error.message))");
+    expect(programmingSource).toContain("Existe um processo em produção na fila 1.");
+    expect(programmingSource).toContain("const reloadAfterQueueWarning = () =>");
+    expect(programmingSource).toContain("window.localStorage.setItem(PROGRAMMER_MACHINE_CACHE_KEY, String(machineCode))");
+    expect(programmingSource).toContain("window.location.reload()");
+  });
+
+  it("lista no modal apenas máquinas elegíveis para alteração de processo", () => {
+    const proxySource = readFileSync(resolve(process.cwd(), "local-firebird-proxy/server.mjs"), "utf8");
+    const contractSource = readFileSync(resolve(process.cwd(), "server/firebirdProxy.ts"), "utf8");
+    const routerSource = readFileSync(resolve(process.cwd(), "server/routers/production.ts"), "utf8");
+    const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
+
+    expect(proxySource).toContain('app.get("/v1/programming/:opCodigo/:mpCodigo/eligible-machines"');
+    expect(proxySource).toContain("candidate.gmq_codigo = case when current_machine.gmq_codigo = 4 then 6 when current_machine.gmq_codigo = 6 then 4 else 0 end");
+    expect(proxySource).toContain("pvp.pv_codigo = source.pv_codigo and pvp.pv_revisao = source.pv_revisao");
+    expect(contractSource).toContain("export const getEligibleProcessMachines");
+    expect(routerSource).toContain("eligibleMachines: programmerProcedure");
+    expect(programmingSource).toContain("Alterar processo");
+    expect(programmingSource).toContain("Confirmar transferência");
+    expect(programmingSource).not.toContain("window.prompt(\"Informe o código do novo processo/máquina:\")");
+  });
+
+  it("mantém máquina selecionada, status abreviados, atualização explícita e saída pelo Fechar", () => {
+    const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
+
+    expect(programmingSource).toContain('PROGRAMMER_MACHINE_CACHE_KEY = "production-programming-machine-code"');
+    expect(programmingSource).toContain("window.localStorage.setItem(PROGRAMMER_MACHINE_CACHE_KEY");
+    expect(programmingSource).toContain('const [statusFilter, setStatusFilter] = useState("A Lib/Lib/Parcial")');
+    expect(programmingSource).toContain("Number(item.code) === Number(selectedMachineCode)");
+    expect(programmingSource).toContain("process.status ?? \"Sem status\"");
+    expect(programmingSource).not.toContain("programmingStatusLabel");
+    expect(programmingSource).toContain("const refreshProgramming = async () =>");
+    expect(programmingSource).toContain("Programação atualizada");
+    expect(programmingSource).toContain("onClick={manualPointing ? signOut : operator ? () => setShowExitOptions(true) : signOut}");
+    expect(programmingSource).toContain('manualPointing ? "flex min-h-dvh flex-col gap-3" : "space-y-4"');
+    expect(programmingSource).toContain('selectedItem ? <section className="theme-details-panel');
+    expect(programmingSource).not.toContain(">Deslogar</Button>");
   });
 });

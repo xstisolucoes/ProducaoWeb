@@ -87,6 +87,17 @@ describe("procedimentos de produção", () => {
     expect(proxy.getProgramming).toHaveBeenCalledWith(14, 1, 20, "", true, "Todos");
   });
 
+  it("encaminha o filtro manual do Apontador sem impor a fila padrão do Operador", async () => {
+    proxy.getProgramming.mockResolvedValue({ items: [], total: 0, page: 1, limit: 7 });
+    const caller = productionRouter.createCaller({
+      ...operatorCtx,
+      localUser: { ...operatorCtx.localUser, operationalProfile: "manual-pointing" },
+    });
+
+    await expect(caller.programming.list({ page: 1, limit: 7, search: "", status: "Liberado/Parcial/Em Produção" })).resolves.toMatchObject({ total: 0 });
+    expect(proxy.getProgramming).toHaveBeenCalledWith(14, 1, 7, "", false, "Liberado/Parcial/Em Produção");
+  });
+
   it("permite que Programador sem MQP_LOGON selecione uma máquina controlada", async () => {
     proxy.getControlledMachines.mockResolvedValue([{ code: 21, description: "Impressora de teste", manualProcess: null }]);
     proxy.getProgramming.mockResolvedValue({ items: [], total: 0, page: 1, limit: 7 });

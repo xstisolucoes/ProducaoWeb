@@ -14,11 +14,12 @@ describe("visualizador de layout em tela inteira", () => {
     expect(source).toContain("Ajustar");
     expect(source).toContain("Fechar");
     expect(source).toContain("bg-white\" onWheel");
-    expect(source).toContain("backgroundColor: safeColor(color.hexWhite)");
+    expect(source).toContain("colorChipStyle(color.hexWhite)");
+    expect(source).toContain("colorChipContrastTone(color.hexWhite)");
+    expect(source).toContain("layout-meta-card");
     expect(source).toContain('text-xs font-black uppercase tracking-wide text-[#356d4a]">Produto');
     expect(source).toContain("Clichê {cliche.code}");
-    expect(source).toContain("text-sm font-black !text-black shadow-sm");
-    expect(source).toContain('color: "#050505"');
+    expect(source).toContain("layout-color-chip rounded border px-3 py-1 text-sm font-black shadow-sm");
     expect(source).not.toContain("Branco: {color.hexWhite ||");
     expect(source).toContain("bg-[#d9f2df]");
     expect(source).toContain("border-[#92c7a3]");

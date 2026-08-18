@@ -222,32 +222,48 @@ async function paged(sql, countSql, params, req) {
   return { items, total: Number(countRows[0]?.total ?? 0), page: Math.floor(offset / limit) + 1, limit };
 }
 
-function operationalProfile(groupCode) {
+function operationalProfile(groupCode, groupDescription = "") {
   const programmerGroups = (process.env.PRODUCTION_PROGRAMMER_GROUPS || "3,4,6")
     .split(",").map((value) => Number(value.trim())).filter((value) => Number.isInteger(value));
+  const manualGroups = (process.env.PRODUCTION_MANUAL_POINTING_GROUPS || "")
+    .split(",").map((value) => Number(value.trim())).filter((value) => Number.isInteger(value));
+  const normalizedDescription = String(groupDescription ?? "").trim().toLocaleUpperCase("pt-BR");
+  if (manualGroups.includes(Number(groupCode)) || normalizedDescription === "APONTADOR") return "manual-pointing";
   return programmerGroups.includes(Number(groupCode)) ? "programmer" : "operator";
 }
 
-async function findMachineForOperator(userId) {
+function isManualPointingMachine(machine) {
+  const description = String(machine?.description ?? "").trim().toLocaleUpperCase("pt-BR");
+  return Boolean(machine?.manualProcess) || description.includes("APONTAMENTO");
+}
+
+async function findMachineForOperator(userId, selectedMachineCode = null) {
+  const selectedCode = Number(selectedMachineCode);
+  const hasSelectedCode = Number.isInteger(selectedCode) && selectedCode > 0;
   const configuredCode = Number(process.env.FIREBIRD_MACHINE_CODE);
-  const byCode = Number.isInteger(configuredCode) && configuredCode > 0;
+  const configuredMachineCode = Number.isInteger(configuredCode) && configuredCode > 0 ? configuredCode : null;
+  const machineCode = hasSelectedCode ? selectedCode : configuredMachineCode;
+  const byCode = machineCode !== null;
   const configuredLogon = process.env.FIREBIRD_MACHINE_LOGON?.trim();
   const localHostname = process.platform === "win32"
     ? process.env.COMPUTERNAME?.trim() || os.hostname()
     : process.env.HOSTNAME?.trim() || os.hostname();
-  const logonName = configuredLogon || localHostname;
+  const logonCandidates = [...new Set([configuredLogon, localHostname].filter((value) => Boolean(value)))];
   try {
-    const rows = await query(byCode ? `
-      select first 1 mqp_codigo as code, mqp_descricao as description, gmq_codigo as group_code,
-             mqp_segue_fila as follows_queue, mqp_processo_manual as manual_process
-      from maquinas_processos where mqp_codigo = ?
-    ` : `
-      select first 1 mqp_codigo as code, mqp_descricao as description, gmq_codigo as group_code,
-             mqp_segue_fila as follows_queue, mqp_processo_manual as manual_process
-      from maquinas_processos
-      where upper(trim(mqp_logon)) = upper(trim(?))
-    `, [byCode ? configuredCode : logonName]);
-    let machine = rows[0];
+    let machine = null;
+    if (byCode) {
+      const rows = await query(`select first 1 mqp_codigo as code, mqp_descricao as description, gmq_codigo as group_code,
+        mqp_segue_fila as follows_queue, mqp_processo_manual as manual_process
+        from maquinas_processos where mqp_codigo = ? and mqp_status = 'Ativo'`, [machineCode]);
+      machine = rows[0] ?? null;
+    } else {
+      for (const logonName of logonCandidates) {
+        const rows = await query(`select first 1 mqp_codigo as code, mqp_descricao as description, gmq_codigo as group_code,
+          mqp_segue_fila as follows_queue, mqp_processo_manual as manual_process
+          from maquinas_processos where upper(trim(mqp_logon)) = upper(trim(?))`, [logonName]);
+        if (rows[0]) { machine = rows[0]; break; }
+      }
+    }
     if (!machine && !byCode) {
       const fallbackRows = await query(`
         select first 1 mq.mqp_codigo as code, mq.mqp_descricao as description, mq.gmq_codigo as group_code,
@@ -290,6 +306,21 @@ app.get("/v1/companies", ensureAuthorized, async (_req, res, next) => {
   } catch (error) { next(error); }
 });
 
+app.get("/v1/stations", ensureAuthorized, async (_req, res, next) => {
+  try {
+    const rows = await query(`select mqp_codigo as code, mqp_descricao as description, gmq_codigo as group_code,
+      mqp_segue_fila as follows_queue, mqp_processo_manual as manual_process
+      from maquinas_processos where mqp_status = 'Ativo' order by mqp_descricao`);
+    res.json(rows.map((machine) => ({
+      code: Number(machine.code ?? machine.CODE),
+      description: String(machine.description ?? machine.DESCRIPTION ?? "Máquina sem descrição"),
+      groupCode: machine.group_code == null && machine.GROUP_CODE == null ? null : Number(machine.group_code ?? machine.GROUP_CODE),
+      followsQueue: String(machine.follows_queue ?? machine.FOLLOWS_QUEUE ?? "S").toUpperCase() !== "N",
+      manualProcess: String(machine.manual_process ?? machine.MANUAL_PROCESS ?? "N").toUpperCase() === "S",
+    })));
+  } catch (error) { next(error); }
+});
+
 app.post("/v1/auth/login", ensureAuthorized, async (req, res, next) => {
   try {
     const login = String(req.body?.login ?? "").trim();
@@ -298,15 +329,15 @@ app.post("/v1/auth/login", ensureAuthorized, async (req, res, next) => {
 
     const users = await query(`
       select usu.usu_codigo, usu.usu_email, usu.usu_login, usu.usu_senha,
-             usu.fun_codigo, usu.gu_codigo, fun.fun_nome, fun.fun_sobrenome,
+             usu.fun_codigo, usu.gu_codigo, gu.gu_usuario as group_description, fun.fun_nome, fun.fun_sobrenome,
              fun.se_codigo, fun.c_codigo
       from usuarios usu
-      inner join funcionarios fun on fun.fun_codigo = usu.fun_codigo
-      inner join grupo_usuarios gu on gu.gu_codigo = usu.gu_codigo
+      left join funcionarios fun on fun.fun_codigo = usu.fun_codigo
+      left join grupo_usuarios gu on gu.gu_codigo = usu.gu_codigo
       where lower(usu.usu_login) = lower(?) or lower(usu.usu_email) = lower(?)
     `, [login, login]);
     const user = users[0];
-    if (!user || !(await bcrypt.compare(password, String(user.usu_senha ?? "")))) {
+    if (!user || !(await bcrypt.compare(password, String(user.usu_senha ?? "").trim()))) {
       return res.status(401).json({ error: "Usuário ou senha inválidos." });
     }
     const permissionRows = await query(`
@@ -317,19 +348,27 @@ app.post("/v1/auth/login", ensureAuthorized, async (req, res, next) => {
       left join grupo_permissoes gpe on gpe.gpe_cod_permissao = perm.perm_codigo and gpe.gpe_cod_grupo = usu.gu_codigo
       where iif(up.perm_codigo > 0, up.up_inserir, gpe.gpe_inserir) = 'S'
     `, [user.usu_codigo, user.usu_codigo]);
-    const machine = await findMachineForOperator(Number(user.usu_codigo));
+    const machine = await findMachineForOperator(Number(user.usu_codigo), req.body?.machineCode);
     if (machine?.code) await initializeDailyClockForMachine(Number(machine.code));
+    const profile = operationalProfile(user.gu_codigo, user.group_description);
+    if (profile === "manual-pointing" && !isManualPointingMachine(machine)) {
+      return res.status(403).json({ error: "O usuário Apontador só pode acessar a máquina Apontamento." });
+    }
+    if (profile === "operator" && isManualPointingMachine(machine)) {
+      return res.status(403).json({ error: "A máquina Apontamento é exclusiva para usuários Apontador." });
+    }
     res.json({
       id: Number(user.usu_codigo),
       login: String(user.usu_login),
       name: [user.fun_nome, user.fun_sobrenome].filter(Boolean).join(" ") || String(user.usu_login),
       email: user.usu_email ? String(user.usu_email) : null,
       groupCode: user.gu_codigo === null || user.gu_codigo === undefined ? null : Number(user.gu_codigo),
+      groupDescription: user.group_description ? String(user.group_description) : null,
       employeeCode: user.fun_codigo === null || user.fun_codigo === undefined ? null : Number(user.fun_codigo),
       sectorCode: user.se_codigo === null || user.se_codigo === undefined ? null : Number(user.se_codigo),
       companyCode: user.c_codigo === null || user.c_codigo === undefined ? null : Number(user.c_codigo),
       permissions: permissionRows.map((row) => String(row.perm_name)).filter(Boolean),
-      operationalProfile: operationalProfile(user.gu_codigo),
+      operationalProfile: profile,
       machine,
     });
   } catch (error) {
@@ -426,6 +465,7 @@ app.get("/v1/programming", ensureAuthorized, async (req, res, next) => {
     if (!operatorOnly && statusFilter && statusFilter !== "Todos") {
       const statusGroups = {
         "A Lib/Lib/Parcial": ["A LIBERAR", "LIBERADO", "PARCIAL"],
+        "Liberado/Parcial/Em Produção": ["LIBERADO", "PARCIAL", "EM PRODUÇÃO"],
         "A Liberar": ["A LIBERAR"],
         "Atendido": ["ATENDIDO"],
         "Liberado": ["LIBERADO"],
@@ -654,14 +694,100 @@ app.patch("/v1/programming/:opCodigo/:mpCodigo/process", ensureAuthorized, async
   try {
     const opCodigo = Number(req.params.opCodigo); const mpCodigo = Number(req.params.mpCodigo); const machineCode = Number(req.body?.machineCode);
     if (![opCodigo, mpCodigo, machineCode].every((value) => Number.isInteger(value) && value > 0)) return res.status(400).json({ error: "Dados de processo inválidos." });
-    const current = await query(`select first 1 mp_status from mov_processos where op_codigo = ? and mp_codigo = ?`, [opCodigo, mpCodigo]);
+    const current = await query(`select first 1 mp_status, pv_codigo, pv_revisao, mqp_codigo from mov_processos where op_codigo = ? and mp_codigo = ?`, [opCodigo, mpCodigo]);
     if (!current[0]) return res.status(404).json({ error: "Ordem não encontrada." });
     if (["Atendido", "A Concluir"].includes(String(current[0].mp_status))) return res.status(409).json({ error: "Não é permitido alterar o processo de uma ordem Atendida ou A Concluir." });
+    if (String(current[0].mp_status) === "Setup a Concluir") return res.status(409).json({ error: "Não é permitido alterar o processo de uma ordem Setup a Concluir." });
+    const eligible = await query(`select first 1 candidate.mqp_codigo as code
+      from prod_vendas_proc_prod pvp
+      inner join maquinas_processos candidate on candidate.mqp_codigo = pvp.mqp_codigo
+      inner join maquinas_processos current_machine on current_machine.mqp_codigo = ?
+      where pvp.pv_codigo = ? and pvp.pv_revisao = ? and candidate.mqp_codigo = ? and candidate.mqp_codigo <> ?
+        and (candidate.gmq_codigo = current_machine.gmq_codigo or candidate.gmq_codigo = case when current_machine.gmq_codigo = 4 then 6 when current_machine.gmq_codigo = 6 then 4 else 0 end)`,
+    [Number(current[0].mqp_codigo), Number(current[0].pv_codigo), Number(current[0].pv_revisao), machineCode, Number(current[0].mqp_codigo)]);
+    if (!eligible[0]) return res.status(409).json({ error: "A máquina selecionada não é elegível para o produto, revisão e grupo produtivo desta OP." });
     const queues = await query(`select coalesce(max(mp_fila), 0) + 1 as queue from mov_processos where mqp_codigo = ? and mp_fila < 1000`, [machineCode]);
     const queue = Number(queues[0]?.queue ?? 1);
     await query(`update mov_processos set mqp_codigo = ?, mp_fila = ?, mp_status = 'Liberado' where op_codigo = ? and mp_codigo = ?`, [machineCode, queue, opCodigo, mpCodigo]);
     res.json({ success: true, queue });
   } catch (error) { next(error); }
+});
+
+app.get("/v1/programming/:opCodigo/:mpCodigo/eligible-machines", ensureAuthorized, async (req, res, next) => {
+  try {
+    const opCodigo = Number(req.params.opCodigo);
+    const mpCodigo = Number(req.params.mpCodigo);
+    if (![opCodigo, mpCodigo].every((value) => Number.isInteger(value) && value > 0)) return res.status(400).json({ error: "Dados de processo inválidos." });
+    const rows = await query(`select distinct candidate.mqp_codigo as code, candidate.mqp_descricao as description
+      from mov_processos source
+      inner join maquinas_processos current_machine on current_machine.mqp_codigo = source.mqp_codigo
+      inner join prod_vendas_proc_prod pvp on pvp.pv_codigo = source.pv_codigo and pvp.pv_revisao = source.pv_revisao
+      inner join maquinas_processos candidate on candidate.mqp_codigo = pvp.mqp_codigo
+      where source.op_codigo = ? and source.mp_codigo = ? and candidate.mqp_codigo <> source.mqp_codigo
+        and (candidate.gmq_codigo = current_machine.gmq_codigo or candidate.gmq_codigo = case when current_machine.gmq_codigo = 4 then 6 when current_machine.gmq_codigo = 6 then 4 else 0 end)
+      order by candidate.mqp_descricao`, [opCodigo, mpCodigo]);
+    res.json(rows.map((row) => ({ code: Number(row.code ?? row.CODE), description: String(row.description ?? row.DESCRIPTION ?? "Máquina sem descrição") })));
+  } catch (error) { next(error); }
+});
+
+app.patch("/v1/programming/:opCodigo/:mpCodigo/queue", ensureAuthorized, async (req, res, next) => {
+  try {
+    const opCodigo = Number(req.params.opCodigo);
+    const mpCodigo = Number(req.params.mpCodigo);
+    const machineCode = Number(req.body?.machineCode);
+    const targetQueue = Number(req.body?.queue);
+    if (![opCodigo, mpCodigo, machineCode, targetQueue].every((value) => Number.isInteger(value) && value > 0)) {
+      return res.status(400).json({ error: "Informe uma posição de fila válida." });
+    }
+
+    const result = await withTransaction(async (transaction) => {
+      const currentRows = await transaction.queryAsync(`select first 1 mqp_codigo as machine_code, mp_fila as queue, mp_status as status
+        from mov_processos where op_codigo = ? and mp_codigo = ?`, [opCodigo, mpCodigo]);
+      const current = currentRows[0];
+      if (!current) throw Object.assign(new Error("Ordem de produção não encontrada."), { statusCode: 404 });
+
+      const currentMachineCode = Number(current.machine_code ?? current.MACHINE_CODE);
+      const currentQueue = Number(current.queue ?? current.QUEUE);
+      const currentStatus = String(current.status ?? current.STATUS ?? "").trim();
+      const releasedFromQueue2000 = currentStatus.toLocaleLowerCase("pt-BR") === "a liberar" && currentQueue === 2000 && targetQueue < 2000;
+      const nextStatus = releasedFromQueue2000 ? "Liberado" : currentStatus;
+      if (currentMachineCode !== machineCode) throw Object.assign(new Error("O processo não pertence à máquina selecionada."), { statusCode: 409 });
+      if (["A Concluir", "Setup a Concluir"].includes(currentStatus)) {
+        throw Object.assign(new Error(`Não é permitido alterar a fila da ordem de produção com status "${currentStatus}".`), { statusCode: 409 });
+      }
+      if (!Number.isInteger(currentQueue) || currentQueue < 1) throw Object.assign(new Error("A ordem não possui uma posição de fila válida."), { statusCode: 409 });
+      if (targetQueue === currentQueue) throw Object.assign(new Error("Não é permitido alterar uma fila para ela mesma."), { statusCode: 409 });
+      if (targetQueue > currentQueue) throw Object.assign(new Error("Não é permitido alterar para uma fila maior que ela mesma."), { statusCode: 409 });
+
+      if (targetQueue === 1) {
+        const priorityRows = await transaction.queryAsync(`select mp_status as status from mov_processos
+          where mqp_codigo = ? and mp_fila = 1 and not (op_codigo = ? and mp_codigo = ?)`, [machineCode, opCodigo, mpCodigo]);
+        const priorityStatuses = priorityRows.map((row) => String(row.status ?? row.STATUS ?? "").trim());
+        if (priorityStatuses.includes("Em Produção")) {
+          throw Object.assign(new Error("Existe um processo em produção na fila 1."), { statusCode: 409 });
+        }
+        if (priorityStatuses.includes("A Concluir")) {
+          throw Object.assign(new Error("Existe um processo A Concluir na fila 1."), { statusCode: 409 });
+        }
+        if (priorityStatuses.includes("Setup a Concluir")) {
+          throw Object.assign(new Error("Existe um processo Setup a Concluir na fila 1."), { statusCode: 409 });
+        }
+      }
+
+      const temporaryOffset = 1000000;
+      await transaction.queryAsync(`update mov_processos set mp_fila = mp_fila + ?
+        where mqp_codigo = ? and mp_fila >= ? and mp_fila < ? and not (op_codigo = ? and mp_codigo = ?)`,
+      [temporaryOffset, machineCode, targetQueue, currentQueue, opCodigo, mpCodigo]);
+      await transaction.queryAsync(`update mov_processos set mp_fila = ?, mp_status = ? where op_codigo = ? and mp_codigo = ? and mqp_codigo = ?`,
+      [targetQueue, nextStatus, opCodigo, mpCodigo, machineCode]);
+      await transaction.queryAsync(`update mov_processos set mp_fila = mp_fila - ?
+        where mqp_codigo = ? and mp_fila >= ? and mp_fila < ?`,
+      [temporaryOffset - 1, machineCode, targetQueue + temporaryOffset, currentQueue + temporaryOffset]);
+      return { success: true, queue: targetQueue, status: nextStatus, releasedFromQueue2000 };
+    });
+
+    res.json(result);
+  } catch (error) { if (error?.statusCode) return res.status(error.statusCode).json({ error: error.message }); next(error); }
 });
 
 app.get("/v1/pointing/:opCodigo/:mpCodigo/print-layout", ensureAuthorized, async (req, res, next) => {
@@ -1063,6 +1189,31 @@ app.post("/v1/pointing/:opCodigo/:mpCodigo/start-setup", ensureAuthorized, async
     await query(`update mov_processos set mp_data = current_date, mp_status = 'Em Produção', mp_posicao = 'SI', mp_inicio_ajuste = ?, mp_fim_ajuste = null, mp_inicio = null, mp_fim = null, usu_codigo = ? where op_codigo = ? and mp_codigo = ? and mqp_codigo = ?`, [setupClock, operatorId, opCodigo, mpCodigo, machineCode]);
     await query(`insert into mov_processos_horarios (mph_data, usu_codigo, mph_inicio_setup, op_codigo, pv_codigo, pv_revisao, mqp_codigo, mph_verificador, mp_codigo, mph_numero_processo) values (?, ?, ?, ?, ?, ?, ?, 'A', ?, ?)`, [setupClock, operatorId, setupClock, opCodigo, movement.pv_codigo, movement.pv_revisao, machineCode, mpCodigo, processNumber]);
     res.json({ success: true, state: "SI" });
+  } catch (error) { next(error); }
+});
+
+app.post("/v1/pointing/:opCodigo/:mpCodigo/start-manual", ensureAuthorized, async (req, res, next) => {
+  try {
+    if (process.env.PRODUCTION_POINTING_WRITE_ENABLED?.trim().toUpperCase() !== "S") return res.status(403).json({ error: "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste." });
+    const opCodigo = Number(req.params.opCodigo); const mpCodigo = Number(req.params.mpCodigo); const machineCode = Number(req.body?.machineCode); const operatorId = Number(req.body?.operatorId);
+    if (![opCodigo, mpCodigo, machineCode, operatorId].every((value) => Number.isInteger(value) && value > 0)) return res.status(400).json({ error: "Dados de início manual inválidos." });
+    const machineRows = await query(`select first 1 mqp_descricao as description, mqp_processo_manual as manual_process from maquinas_processos where mqp_codigo = ?`, [machineCode]);
+    const manualMachine = machineRows[0] ? { description: machineRows[0].description ?? machineRows[0].DESCRIPTION, manualProcess: String(machineRows[0].manual_process ?? machineRows[0].MANUAL_PROCESS ?? "N").toUpperCase() === "S" } : null;
+    if (!isManualPointingMachine(manualMachine)) return res.status(403).json({ error: "O Apontamento Manual só pode ser iniciado na máquina Apontamento." });
+    const started = await withTransaction(async (transaction) => {
+      const rows = await transaction.queryAsync(`select first 1 pv_codigo, pv_revisao, mp_fila, mp_status from mov_processos where op_codigo = ? and mp_codigo = ? and mqp_codigo = ?`, [opCodigo, mpCodigo, machineCode]);
+      const movement = rows[0];
+      if (!movement) throw Object.assign(new Error("Processo não encontrado para a máquina atual."), { statusCode: 404 });
+      if (String(movement.mp_status ?? movement.MP_STATUS) === "Em Produção") return { success: true, resumed: true };
+      if (!['Liberado', 'Aberto'].includes(String(movement.mp_status ?? movement.MP_STATUS))) throw Object.assign(new Error("A ordem não está Liberada ou Aberta para apontamento manual."), { statusCode: 409 });
+      const sequenceRows = await transaction.queryAsync(`select coalesce(max(mph_numero_processo), 0) + 1 as process_number from mov_processos_horarios where op_codigo = ? and mqp_codigo = ?`, [opCodigo, machineCode]);
+      const processNumber = Number(sequenceRows[0]?.process_number ?? sequenceRows[0]?.PROCESS_NUMBER ?? 1);
+      const startedAt = new Date();
+      await transaction.queryAsync(`update mov_processos set mp_data = current_date, mp_status = 'Em Produção', mp_posicao = 'PI', mp_inicio = ?, mp_fim = null, usu_codigo = ? where op_codigo = ? and mp_codigo = ? and mqp_codigo = ?`, [startedAt, operatorId, opCodigo, mpCodigo, machineCode]);
+      await transaction.queryAsync(`insert into mov_processos_horarios (mph_data, usu_codigo, mph_inicio, op_codigo, pv_codigo, pv_revisao, mqp_codigo, mph_verificador, mp_codigo, mph_numero_processo) values (?, ?, ?, ?, ?, ?, ?, 'A', ?, ?)`, [startedAt, operatorId, startedAt, opCodigo, movement.pv_codigo ?? movement.PV_CODIGO, movement.pv_revisao ?? movement.PV_REVISAO, machineCode, mpCodigo, processNumber]);
+      return { success: true, resumed: false, startedAt: startedAt.toISOString() };
+    });
+    res.json(started);
   } catch (error) { next(error); }
 });
 

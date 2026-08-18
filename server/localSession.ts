@@ -63,7 +63,7 @@ export async function readLocalSession(req: Request): Promise<LocalSessionUser |
       sectorCode: typeof payload.sectorCode === "number" ? payload.sectorCode : null,
       companyCode: typeof payload.companyCode === "number" ? payload.companyCode : null,
       permissions: Array.isArray(payload.permissions) ? payload.permissions.filter((permission): permission is string => typeof permission === "string") : [],
-      operationalProfile: payload.operationalProfile === "programmer" ? "programmer" : "operator",
+      operationalProfile: payload.operationalProfile === "programmer" || payload.operationalProfile === "manual-pointing" ? payload.operationalProfile : "operator",
       machine: (() => {
         const machine = payload.machine;
         if (!machine || typeof machine !== "object" || !("code" in machine) || typeof machine.code !== "number") return null;
