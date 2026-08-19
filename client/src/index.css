@@ -236,6 +236,15 @@
   .theme-login-header { background: linear-gradient(112deg, var(--operation-deep), var(--operation-mid)); }
   .theme-login-submit { background: var(--operation-mid); color: white; }
   .theme-login-submit:hover { background: var(--operation-deep); }
+  .manual-production-date { border: 2px solid color-mix(in srgb, var(--operation-bright) 72%, white); background: color-mix(in srgb, var(--operation-soft) 78%, white); color: var(--operation-ink); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--operation-bright) 22%, transparent), 0 5px 14px color-mix(in srgb, var(--operation-mid) 16%, transparent); }
+  .manual-production-date input { border-color: color-mix(in srgb, var(--operation-mid) 54%, var(--theme-border)); background: white; color: var(--operation-ink); }
+  .reservation-dialog { border-color: var(--theme-border); background: var(--theme-surface); color: var(--theme-text); }
+  .reservation-dialog [data-slot="dialog-header"] { border-color: var(--theme-border); background: linear-gradient(105deg, var(--operation-soft), var(--theme-surface) 50%, color-mix(in srgb, var(--operation-soft) 78%, white)); color: var(--theme-text); }
+  .reservation-dialog [data-slot="dialog-title"], .reservation-dialog [data-slot="dialog-description"] { color: var(--theme-text); }
+  .reservation-dialog [data-slot="dialog-title"] svg, .reservation-total, .reservation-quantity { color: var(--operation-ink); }
+  .reservation-total { border-color: color-mix(in srgb, var(--operation-bright) 55%, var(--theme-border)); background: color-mix(in srgb, var(--operation-soft) 74%, white); }
+  .reservation-balance { color: var(--operation-mid); }
+  .reservation-help { color: var(--theme-text-muted); }
   :root[data-brand-theme="xsti"] .theme-programming,
   :root[data-brand-theme="xsti"] .theme-pointing { color: var(--theme-text); }
   :root[data-brand-theme="xsti"] .theme-details-panel { border-color: #b72630 !important; background: linear-gradient(105deg, #fff 0%, #f3f1f1 48%, #fff 100%) !important; }
@@ -359,6 +368,22 @@
 .manual-quantity-input { border-color: #aac7b2; background: #fff; color: #173c28; }
 .manual-partial-action { border: 2px solid #355aa3; background: #3e66b5; color: #fff; }
 .manual-partial-action:hover { background: #2e5198; }
+
+.product-release-header {
+  border-color: rgba(109, 19, 30, .65);
+  background: linear-gradient(112deg, var(--operation-deep) 0%, var(--operation-mid) 52%, color-mix(in srgb, var(--operation-deep) 78%, black) 100%);
+}
+.product-release-balance {
+  min-width: 180px;
+  border: 1px solid rgba(255, 255, 255, .34);
+  background: rgba(28, 8, 10, .32);
+  color: #fff;
+}
+.product-release-metric input,
+.product-release-metric p {
+  border-color: #c9a4a9;
+  color: #451015;
+}
 
 :root[data-brand-theme="xsti"] .theme-pointing > header.manual-pointing-header {
   border-color: #a71924 !important;

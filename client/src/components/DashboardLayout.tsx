@@ -99,7 +99,7 @@ function DashboardLayoutContent({
   const isMobile = useIsMobile();
   const operatorStation = user?.operationalProfile === "operator";
   const programmerStation = user?.operationalProfile === "programmer";
-  const manualPointingStation = user?.operationalProfile === "manual-pointing";
+  const manualPointingStation = ["manual-pointing", "manual-production", "quality-release"].includes(user?.operationalProfile ?? "");
   const machineControlStation = operatorStation || programmerStation || manualPointingStation;
 
   useEffect(() => {

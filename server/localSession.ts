@@ -63,7 +63,7 @@ export async function readLocalSession(req: Request): Promise<LocalSessionUser |
       sectorCode: typeof payload.sectorCode === "number" ? payload.sectorCode : null,
       companyCode: typeof payload.companyCode === "number" ? payload.companyCode : null,
       permissions: Array.isArray(payload.permissions) ? payload.permissions.filter((permission): permission is string => typeof permission === "string") : [],
-      operationalProfile: payload.operationalProfile === "programmer" || payload.operationalProfile === "manual-pointing" ? payload.operationalProfile : "operator",
+      operationalProfile: payload.operationalProfile === "programmer" || payload.operationalProfile === "manual-pointing" || payload.operationalProfile === "manual-production" || payload.operationalProfile === "quality-release" ? payload.operationalProfile : "operator",
       canConfigureStation: payload.canConfigureStation === true,
       machine: (() => {
         const machine = payload.machine;
@@ -73,6 +73,7 @@ export async function readLocalSession(req: Request): Promise<LocalSessionUser |
           code: machine.code,
           description: typeof values.description === "string" ? values.description : "Máquina não identificada",
           groupCode: typeof values.groupCode === "number" ? values.groupCode : null,
+          groupDescription: typeof values.groupDescription === "string" ? values.groupDescription : null,
           followsQueue: values.followsQueue === true,
           manualProcess: values.manualProcess === true,
         };

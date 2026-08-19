@@ -28,7 +28,8 @@ describe("política de reservas do apontamento", () => {
 
     expect(proxySource).toContain('import { reservePolicy, selectApplicableReservations } from "./reservationPolicy.mjs"');
     expect(proxySource).toContain("const policy = reservePolicy(");
-    expect(proxySource).toContain("const applicableRows = selectApplicableReservations(normalized, policy)");
+    expect(proxySource).toContain("const applicableRows = policy.applies");
+    expect(proxySource).toContain("selectApplicableReservations(normalized, policy)");
     expect(proxySource).not.toContain("gmq_descricao");
     expect(proxySource).toContain("mq.mqp_descricao as machine_description");
   });

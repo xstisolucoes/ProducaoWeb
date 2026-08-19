@@ -380,4 +380,30 @@
 - [x] Corrigir a autorização do Operador para permitir acesso à máquina operacional resolvida pelo vínculo MQP_LOGON configurado.
 - [x] Selecionar uma máquina na primeira abertura, persistir no navegador e enviar seu código ao login central.
 - [x] Ocultar a empresa no login e permitir definir ou alterar a estação persistida somente para PCP/Programador ou Administrador.
+- [x] Persistir a estação configurada por PCP/Programador também após reiniciar o navegador, sem exigir nova configuração diária.
+- [x] Reconhecer o grupo Manual no Apontamento Manual, exigindo quantidade de pessoas somente nesse perfil, liberando todas as máquinas com MQP_PROCESSO_MANUAL='S' e aplicando a baixa final confirmada do legado.
+- [x] Restringir a entrada de estoque acabado e a escolha de data de produção exclusivamente ao grupo Apontamento; iniciar a data pelo primeiro processo da OP e usá-la na validade.
+- [x] Corrigir a incompatibilidade de tipos entre MP_DATA e MP_INICIO na consulta da data inicial do Apontamento Manual.
+- [x] Separar a busca da data de produção da consulta principal do Apontamento Manual para eliminar a incompatibilidade restante de COALESCE.
+- [x] Padronizar a tipografia e os tamanhos da Reserva nos temas Verde e XSTI, corrigir início manual em OP Parcial e confirmar a data de produção antes de Atendido ou Parcial no grupo Apontamento.
+- [x] Buscar a Data de produção pelo primeiro MPH_DATA de MOV_PROCESSOS_HORARIOS, excluindo máquinas do grupo GMQ_CODIGO 1.
+- [x] Exibir o saldo a apontar do processo anterior no Apontamento Manual e confirmar desvios de quantidade acima de 10% sem bloquear a gravação autorizada.
+- [x] Buscar retroativamente o último processo anterior da OP com quantidade apontada quando o processo anterior imediato estiver sem apontamento.
+- [x] Corrigir a consulta do último apontamento anterior para usar o campo de quantidade efetivamente gravado na base Firebird.
+- [x] Implementar Liberação de Produto para máquinas desse grupo com MP_SALDO, PLANO_AMOSTRAGEM, inspeção Conforme/Não Conforme e resultados de atendimento.
+- [x] Permitir usuários do grupo Qualidade apenas nas máquinas manuais de Liberação de Produto, mantendo o bloqueio nas demais máquinas manuais.
+- [x] Ajustar Programação de Qualidade sem menu lateral, ampliar a grade em três linhas, mostrar Nível de Inspeção e reforçar a Liberação de Produto com campos grandes e Saldo a liberar.
+- [x] Fazer a Liberação de Produto respeitar o tema Verde, remover Quantidade recebida, tornar Saldo a liberar editável e abrir RPNC antes de encaminhar Não Conforme para Amostragem Geral.
+- [x] Exibir na Programação de Qualidade a Situação da Liberação de Produto, como 1º Amostragem ou Amostragem Geral.
+- [x] Reutilizar o formulário completo de RPNC na Liberação de Produto e mostrar Saldo a liberar, Perda e Retrabalho somente em Amostragem Geral com o padrão visual do NC.
+- [x] Unificar a interface de RPNC do Operador, Apontamento Manual e Liberação de Produto no formulário padrão de checklist.
+- [x] Substituir a RPNC do Apontamento Manual e da Liberação de Produto pela mesma interface visual literal do Operador.
+- [x] Na RPNC de Liberação, trazer o lote da reserva de matéria-prima, confirmar Amostragem Geral, encerrar MOV_PROCESSOS_HORARIOS zerado e deixar MOV_PROCESSOS Liberado/Amostragem Geral.
+- [x] Após o apontamento de Amostragem Geral pela Qualidade, abrir Liberação sem Conforme e mostrar Saldo a liberar, Perda, Retrabalho e Tamanho da amostra.
+- [x] No encerramento da Amostragem Geral, manter MP_STATUS Liberado e MP_SITUACAO_LIB Amostragem Geral e impedir duas gravações em MOV_PROCESSOS_HORARIOS.
+- [x] Após RPNC de Liberação, retornar e atualizar a Programação; padronizar campos da Amostragem Geral com Tamanho da Amostra e eliminar a segunda inserção em MOV_PROCESSOS_HORARIOS.
+- [x] Tornar o início de Processo Manual idempotente para impedir duas inserções concorrentes em MOV_PROCESSOS_HORARIOS.
+- [x] Restaurar Atendido e Parcial na Amostragem Geral, mantendo somente a opção Conforme indisponível.
+- [x] Diagnosticar e corrigir o login pelo celular com configuração de estação protegida na aplicação central.
+- [x] Corrigir a submissão do primeiro login PCP no celular e abrir o configurador de estação após autenticação.
 - [ ] Gravar início de limpeza e fim de período em MOTIVOS_OCIOSIDADE após confirmar os campos e regras do legado.

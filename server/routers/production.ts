@@ -5,6 +5,8 @@ import {
   getControlledMachines,
   getOrders,
   getPointingOrder,
+  getProductReleaseSamplingPlan,
+  finishProductRelease,
   getProcessLabel,
   getPrintLayout,
   getPalletization,
@@ -77,7 +79,7 @@ export const productionRouter = router({
   }),
   programming: router({
     list: localProtectedProcedure.input(programmingInput).query(({ ctx, input }) => {
-      const manualPointing = ctx.localUser.operationalProfile === "manual-pointing";
+      const manualPointing = ["manual-pointing", "manual-production", "quality-release"].includes(ctx.localUser.operationalProfile);
       const operatorOnly = ctx.localUser.operationalProfile === "operator";
       const machineCode = operatorOnly || manualPointing ? ctx.localUser.machine?.code : (input.machineCode ?? ctx.localUser.machine?.code);
       if (!machineCode) throw new Error(operatorOnly || manualPointing ? "Nenhuma máquina foi vinculada a este operador." : "Selecione uma máquina controlada.");
@@ -115,6 +117,10 @@ export const productionRouter = router({
       if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
       return getPointingOrder(input.opCodigo, input.mpCodigo, ctx.localUser.machine.code);
     }),
+    productReleasePlan: operatorProcedure.input(processInput).query(({ ctx, input }) => {
+      if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
+      return getProductReleaseSamplingPlan({ ...input, machineCode: ctx.localUser.machine.code });
+    }),
     processLabel: localProtectedProcedure.input(processInput).query(({ ctx, input }) => {
       return getProcessLabel({ ...input, companyCode: ctx.localUser.companyCode });
     }),
@@ -133,6 +139,7 @@ export const productionRouter = router({
     }),
     submitRpnc: operatorProcedure.input(processInput.extend({
       origin: z.enum(["product", "raw-material"]),
+      transitionToGeneralSampling: z.boolean().default(false),
       checklists: z.array(z.object({
         checklistCode: z.number().int().positive(),
         items: z.array(z.object({
@@ -150,7 +157,7 @@ export const productionRouter = router({
         machineCode: ctx.localUser.machine.code,
         userId: ctx.localUser.id,
         employeeCode: ctx.localUser.employeeCode ?? ctx.localUser.id,
-        submission: { origin: input.origin, checklists: input.checklists },
+        submission: { origin: input.origin, transitionToGeneralSampling: input.transitionToGeneralSampling, checklists: input.checklists },
       });
     }),
     startSetup: operatorProcedure.input(processInput).mutation(({ ctx, input }) => {
@@ -159,8 +166,21 @@ export const productionRouter = router({
     }),
     startManual: operatorProcedure.input(processInput).mutation(({ ctx, input }) => {
       if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
-      if (ctx.localUser.operationalProfile !== "manual-pointing") throw new Error("Ação disponível apenas para o grupo Apontamento.");
+      if (!["manual-pointing", "manual-production", "quality-release"].includes(ctx.localUser.operationalProfile)) throw new Error("Ação disponível apenas para os grupos Apontador, Manual ou Qualidade.");
       return startManualPointing({ ...input, operatorId: ctx.localUser.id, machineCode: ctx.localUser.machine.code });
+    }),
+    finishProductRelease: operatorProcedure.input(processInput.extend({
+      outcome: z.enum(["attended", "partial"]),
+      conformity: z.enum(["Conforme", "Não Conforme"]),
+      stage: z.enum(["1º Amostragem", "Amostragem Geral"]),
+      lotSize: z.number().int().positive(),
+      quantityLost: z.number().int().min(0).default(0),
+      quantityReworked: z.number().int().min(0).default(0),
+    })).mutation(({ ctx, input }) => {
+      if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
+      if (!["manual-pointing", "manual-production", "quality-release"].includes(ctx.localUser.operationalProfile)) throw new Error("A Liberação de Produto exige um usuário de apontamento manual ou Qualidade.");
+      if (input.quantityLost > input.lotSize) throw new Error("A quantidade perdida não pode exceder o tamanho do lote.");
+      return finishProductRelease({ ...input, machineCode: ctx.localUser.machine.code, operatorId: ctx.localUser.employeeCode ?? ctx.localUser.id });
     }),
     finishSetup: operatorProcedure.input(processInput.extend({ outcome: z.enum(["attended", "to_conclude", "cancelled"]) })).mutation(({ ctx, input }) => {
       if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
@@ -203,9 +223,10 @@ export const productionRouter = router({
       if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
       return getProductionReservation({ ...input, machineCode: ctx.localUser.machine.code });
     }),
-    finishProduction: operatorProcedure.input(processInput.extend({ quantityProduced: z.number().int().positive(), quantityLost: z.number().int().min(0), outcome: z.enum(["attended", "to_conclude", "partial"]), observation: z.string().max(500).default(""), lotTrace: z.string().max(500).default("") })).mutation(({ ctx, input }) => {
+    finishProduction: operatorProcedure.input(processInput.extend({ quantityProduced: z.number().int().positive(), quantityLost: z.number().int().min(0), quantityPeople: z.number().int().min(0).default(0), productionDate: z.string().regex(/^$|^\d{4}-\d{2}-\d{2}$/).default(""), outcome: z.enum(["attended", "to_conclude", "partial"]), observation: z.string().max(500).default(""), lotTrace: z.string().max(500).default("") })).mutation(({ ctx, input }) => {
       if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
       if (input.quantityLost > input.quantityProduced) throw new Error("A perda não pode ser maior que a quantidade produzida.");
+      if (ctx.localUser.operationalProfile === "manual-production" && input.quantityPeople < 1) throw new Error("Informe a quantidade de pessoas para finalizar o Apontamento Manual.");
       return finishProduction({ ...input, machineCode: ctx.localUser.machine.code, operatorId: ctx.localUser.employeeCode ?? ctx.localUser.id });
     }),
   }),

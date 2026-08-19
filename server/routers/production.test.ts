@@ -156,7 +156,7 @@ describe("procedimentos de produção", () => {
     proxy.finishProduction.mockResolvedValue({ success: true, status: "Atendido", balance: 0, reservation: 120, allocated: 120 });
     const caller = productionRouter.createCaller(operatorCtx);
     await expect(caller.pointing.finishProduction({ opCodigo: 21, mpCodigo: 8, quantityProduced: 120, quantityLost: 5, outcome: "attended", observation: "", lotTrace: "L-01" })).resolves.toEqual({ success: true, status: "Atendido", balance: 0, reservation: 120, allocated: 120 });
-    expect(proxy.finishProduction).toHaveBeenCalledWith({ opCodigo: 21, mpCodigo: 8, machineCode: 14, operatorId: 1, quantityProduced: 120, quantityLost: 5, outcome: "attended", observation: "", lotTrace: "L-01" });
+    expect(proxy.finishProduction).toHaveBeenCalledWith({ opCodigo: 21, mpCodigo: 8, machineCode: 14, operatorId: 1, quantityProduced: 120, quantityLost: 5, quantityPeople: 0, productionDate: "", outcome: "attended", observation: "", lotTrace: "L-01" });
   });
 
   it("consulta o checklist RPNC pela origem e máquina vinculada ao operador", async () => {
@@ -173,6 +173,6 @@ describe("procedimentos de produção", () => {
     const input = { opCodigo: 21, mpCodigo: 8, origin: "product" as const, checklists: [{ checklistCode: 5, items: [{ itemCode: 11, quantity: 1000, causeCodes: [7], containmentAction: "Separar lote" }] }] };
 
     await expect(caller.pointing.submitRpnc(input)).resolves.toMatchObject({ success: true, rpncCode: 18 });
-    expect(proxy.submitRpnc).toHaveBeenCalledWith({ opCodigo: 21, mpCodigo: 8, machineCode: 14, userId: 1, employeeCode: 1, submission: { origin: "product", checklists: input.checklists } });
+    expect(proxy.submitRpnc).toHaveBeenCalledWith({ opCodigo: 21, mpCodigo: 8, machineCode: 14, userId: 1, employeeCode: 1, submission: { origin: "product", transitionToGeneralSampling: false, checklists: input.checklists } });
   });
 });

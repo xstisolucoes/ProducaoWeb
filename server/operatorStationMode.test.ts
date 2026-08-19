@@ -7,8 +7,9 @@ describe("estação operacional restrita", () => {
   const dashboard = readFileSync(resolve(process.cwd(), "client/src/components/DashboardLayout.tsx"), "utf8");
   const pointing = readFileSync(resolve(process.cwd(), "client/src/pages/Pointing.tsx"), "utf8");
 
-  it("solicita tela cheia no login da estação", () => {
-    expect(login).toContain("document.documentElement.requestFullscreen()");
+  it("mantém o login compatível com celular sem depender de tela cheia", () => {
+    expect(login).toContain('window.location.assign("/")');
+    expect(login).toContain("Validando acesso");
   });
 
   it("remove a navegação do operador e redireciona rotas internas para a programação", () => {

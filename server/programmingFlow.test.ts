@@ -148,10 +148,10 @@ describe("fluxo de programação do operador", () => {
     expect(routerSource).toContain("cleaningReasons: operatorProcedure");
   });
 
-  it("limita o grid a sete linhas, remove o texto auxiliar e seleciona a OP em ambos os perfis", () => {
+  it("mantém sete linhas nos perfis padrão e amplia a grade para dez linhas em Qualidade", () => {
     const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
 
-    expect(programmingSource).toContain("{ page, limit: 7, search, machineCode: activeMachineCode");
+    expect(programmingSource).toContain("{ page, limit: qualityRelease ? 10 : 7, search, machineCode: activeMachineCode");
     expect(programmingSource).toContain("limit={7}");
     expect(programmingSource).toContain('description=""');
     expect(programmingSource).toContain("onClick={() => setSelectedProcess({ opCode: item.op_codigo");

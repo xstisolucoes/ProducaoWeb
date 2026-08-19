@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import Orders from "./pages/Orders";
 import Pointing from "./pages/Pointing";
 import ManualPointing from "./pages/ManualPointing";
+import ProductReleasePointing from "./pages/ProductReleasePointing";
 import Products from "./pages/Products";
 import Requests from "./pages/Requests";
 import Stock from "./pages/Stock";
@@ -24,6 +25,7 @@ function Router() {
       <Route path={"/solicitacoes"}><DashboardLayout><Requests /></DashboardLayout></Route>
       <Route path={"/apontamento/:opCodigo/:mpCodigo"}><Pointing /></Route>
       <Route path={"/apontamento-manual/:opCodigo/:mpCodigo"}><ManualPointing /></Route>
+      <Route path={"/liberacao-produto/:opCodigo/:mpCodigo"}><ProductReleasePointing /></Route>
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

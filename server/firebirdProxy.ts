@@ -78,7 +78,7 @@ export type LocalOperator = {
   sectorCode: number | null;
   companyCode: number | null;
   permissions: string[];
-  operationalProfile: "operator" | "programmer" | "manual-pointing";
+  operationalProfile: "operator" | "programmer" | "manual-pointing" | "manual-production" | "quality-release";
   canConfigureStation: boolean;
   machine: ProductionMachine | null;
 };
@@ -87,6 +87,7 @@ export type ProductionMachine = {
   code: number;
   description: string;
   groupCode: number | null;
+  groupDescription: string | null;
   followsQueue: boolean;
   manualProcess: boolean;
 };
@@ -175,7 +176,7 @@ export type RpncCause = { code: number; description: string; status: string | nu
 export type RpncChecklistItem = { code: number; checklistCode: number; description: string; definition: string | null; documentPath: string | null; status: string | null; causes: RpncCause[] };
 export type RpncChecklist = { code: number; description: string; fullDescription: string | null; status: string | null; inspectionType: string | null; items: RpncChecklistItem[] };
 export type RpncChecklistData = { origin: RpncOrigin; originLabel: string; inspectionType: string; lot: string | null; supplierCode: number | null; checklists: RpncChecklist[] };
-export type RpncSubmission = { origin: RpncOrigin; checklists: { checklistCode: number; items: { itemCode: number; quantity: number; causeCodes: number[]; containmentAction: string }[] }[] };
+export type RpncSubmission = { origin: RpncOrigin; transitionToGeneralSampling?: boolean; checklists: { checklistCode: number; items: { itemCode: number; quantity: number; causeCodes: number[]; containmentAction: string }[] }[] };
 
 export type ProgrammingOrder = ProductionOrder & {
   machineCode: number;
@@ -243,10 +244,15 @@ export type QueueProcess = {
 
 export type RequestSector = { code: number; description: string; areaCode: number | null };
 export type ApprovedProcessQuantity = { processGroup: number | null; arrangement: string | null; approvedQuantity: number | null; status: string | null };
+export type ProductReleaseSamplingPlan = { lotSize: number; sampleSize: number | null; acceptableLimit: number | null; nonConformingLimit: number | null; planCode: number | null; stage: "1º Amostragem" | "Amostragem Geral" };
 
 export type PointingOrder = ProgrammingOrder & {
   productCode: number | null;
   machineDescription: string;
+  machineGroup: string | null;
+  productionDate: string | null;
+  previousProcessBalance: number | null;
+  previousProcessName: string | null;
   clientLegalName: string | null;
   clientFantasy: string | null;
   internalComposition: string | null;
@@ -357,6 +363,10 @@ export const getApprovedProcessQuantities = (input: { opCodigo: number; mpCodigo
   request<ApprovedProcessQuantity[]>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/approved-quantities`);
 export const getPointingOrder = (opCodigo: number, mpCodigo: number, machineCode: number) =>
   request<PointingOrder>(`/v1/pointing/${opCodigo}/${mpCodigo}?machineCode=${machineCode}`);
+export const getProductReleaseSamplingPlan = (input: { opCodigo: number; mpCodigo: number; machineCode: number }) =>
+  request<ProductReleaseSamplingPlan>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/product-release-plan?machineCode=${input.machineCode}`);
+export const finishProductRelease = (input: { opCodigo: number; mpCodigo: number; machineCode: number; operatorId: number; outcome: "attended" | "partial"; conformity: "Conforme" | "Não Conforme"; stage: "1º Amostragem" | "Amostragem Geral"; lotSize: number; quantityLost: number; quantityReworked: number }) =>
+  request<{ success: true; status: string; conformity: string; stage: string; producedQuantity: number }>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/product-release`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
 export const getProcessLabel = (input: { opCodigo: number; mpCodigo: number; companyCode: number | null }) =>
   request<ProcessLabel>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/process-label?companyCode=${input.companyCode ?? ""}`);
 export const getPrintLayout = (input: { opCodigo: number; mpCodigo: number }) =>
@@ -366,7 +376,7 @@ export const getPalletization = (input: { opCodigo: number; mpCodigo: number }) 
 export const getRpncChecklist = (input: { opCodigo: number; mpCodigo: number; machineCode: number; origin: RpncOrigin }) =>
   request<RpncChecklistData>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/rpnc?machineCode=${input.machineCode}&origin=${input.origin}`);
 export const submitRpnc = (input: { opCodigo: number; mpCodigo: number; machineCode: number; userId: number; employeeCode: number; submission: RpncSubmission }) =>
-  request<{ success: true; rpncCode: number; year: number; nonconformityCount: number; totalQuantity: number }>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/rpnc`, {
+  request<{ success: true; rpncCode: number; year: number; nonconformityCount: number; totalQuantity: number; generalSampling?: boolean }>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/rpnc`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(input),
@@ -414,7 +424,7 @@ export const startPause = (input: { opCodigo: number; mpCodigo: number; machineC
   request<{ success: true }>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/pause/start`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
 export const finishPause = (input: { opCodigo: number; mpCodigo: number; machineCode: number }) =>
   request<{ success: true }>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/pause/finish`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
-export const finishProduction = (input: { opCodigo: number; mpCodigo: number; machineCode: number; operatorId: number; quantityProduced: number; quantityLost: number; outcome: "attended" | "to_conclude" | "partial"; observation: string; lotTrace: string }) =>
+export const finishProduction = (input: { opCodigo: number; mpCodigo: number; machineCode: number; operatorId: number; quantityProduced: number; quantityLost: number; quantityPeople: number; productionDate: string; outcome: "attended" | "to_conclude" | "partial"; observation: string; lotTrace: string }) =>
   request<{ success: true; status: string; balance: number; reservation: number; allocated: number; processProductionCode: number; arrangementTotal: number; calculateProductionArrangement: boolean; calculateReservationArrangement: boolean; enteredQuantity: number; productionMultiplier: number; productionQuantity: number; reservationMultiplier: number; reservationQuantity: number }>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/finish-production`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
 export const getProcessOptions = () => request<ProcessOption[]>("/v1/programming/processes");
 export const getEligibleProcessMachines = (input: { opCodigo: number; mpCodigo: number }) =>
