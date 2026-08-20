@@ -27,7 +27,7 @@ const proxyToken = required("FIREBIRD_PROXY_TOKEN");
 const proxyHost = process.env.FIREBIRD_PROXY_HOST?.trim() || "127.0.0.1";
 const proxyPort = numberFromEnv("FIREBIRD_PROXY_PORT", 8787);
 const firebirdEncoding = process.env.FIREBIRD_ENCODING?.trim() || "WIN1252";
-const proxyBuild = "2026-08-20-label-print-v3";
+const proxyBuild = "2026-08-20-product-label-v1";
 const processInspectionIntervalMinutes = numberFromEnv("PRODUCTION_PROCESS_INSPECTION_INTERVAL_MINUTES", 20);
 const processInspectionTimestampSql = "substring(cast(current_timestamp as varchar(24)) from 9 for 2) || '/' || substring(cast(current_timestamp as varchar(24)) from 6 for 2) || '/' || substring(cast(current_timestamp as varchar(24)) from 1 for 4) || ' - ' || substring(cast(current_timestamp as varchar(24)) from 12 for 8)";
 const processLabelPrinters = String(process.env.PRODUCTION_LABEL_PRINTERS ?? "").split(/[;,]/).map((printer) => printer.trim()).filter(Boolean);
@@ -1121,6 +1121,66 @@ app.post("/v1/process-label/print", ensureAuthorized, async (req, res, next) => 
     const copies = Number(req.body?.copies ?? 1);
     const pdfBase64 = String(req.body?.pdfBase64 ?? "").trim();
     if (!printer || !Number.isInteger(copies) || copies < 1 || copies > 99 || !pdfBase64) return res.status(400).json({ error: "Dados inválidos para impressão direta da etiqueta." });
+    const available = await getWindowsPrinters();
+    const selected = available.find((item) => item.name.localeCompare(printer, "pt-BR", { sensitivity: "accent" }) === 0);
+    if (!selected) return res.status(404).json({ error: "A impressora selecionada não foi encontrada nesta estação Windows." });
+    if (selected.offline) return res.status(409).json({ error: "A impressora selecionada está offline." });
+    const pdfBuffer = Buffer.from(pdfBase64, "base64");
+    if (pdfBuffer.length < 64 || pdfBuffer.subarray(0, 4).toString("ascii") !== "%PDF") return res.status(400).json({ error: "O PDF da etiqueta é inválido." });
+    await printPdfDirectly(pdfBuffer, selected.name, copies);
+    res.json({ success: true });
+  } catch (error) { next(error); }
+});
+
+app.get("/v1/pointing/:opCodigo/:mpCodigo/product-finished-label", ensureAuthorized, async (req, res, next) => {
+  try {
+    const opCodigo = Number(req.params.opCodigo);
+    const mpCodigo = Number(req.params.mpCodigo);
+    const companyCode = Number(req.query.companyCode);
+    if (![opCodigo, mpCodigo].every((value) => Number.isInteger(value) && value > 0)) return res.status(400).json({ error: "Dados inválidos para a Etiqueta de Produto Acabado." });
+    const rows = await query(`select first 1
+      pve.pve_codigo as stock_code, pve.op_codigo as operation_code, pve.pv_codigo as product_code, pve.pv_revisao as revision,
+      pve.pve_saldo as stock_quantity, pve.pve_lote as lot, pve.pve_data_producao as manufacturing_date,
+      pes.pes_razao_social as customer_legal_name, pes.pes_fantasia as customer_name,
+      case when coalesce(trim(pv.pv_cod_prod_cli), '') <> '' and coalesce(trim(pv.pv_referencia), '') <> '' then pv.pv_cod_prod_cli || ' - ' || pv.pv_referencia
+           when coalesce(trim(pv.pv_cod_prod_cli), '') <> '' then pv.pv_cod_prod_cli else pv.pv_referencia end as reference,
+      cast(pv.pv_medida_comp as varchar(30)) || ' x ' || cast(pv.pv_medida_larg as varchar(30)) || ' x ' || cast(pv.pv_medida_alt as varchar(30)) as internal_measures,
+      coalesce(pvp.pvp_palete_total_produtos, 0) as quantity_per_pallet
+      from mov_processos mp
+      inner join prod_vendas_estoque pve on pve.op_codigo = mp.op_codigo and pve.pv_codigo = mp.pv_codigo and pve.pv_revisao = mp.pv_revisao
+      left join pessoa pes on pes.pes_codigo = pve.pes_codigo
+      inner join produtos_vendas pv on pv.pv_codigo = pve.pv_codigo and pv.pv_revisao = pve.pv_revisao
+      left join ultimo_mov_est_venda_lote umev on umev.pv_codigo = pve.pv_codigo and umev.pv_revisao = pve.pv_revisao and umev.codtabela = pve.pve_codigo
+      left join prod_vendas_paletizacao pvp on pvp.pv_codigo = pve.pv_codigo and pvp.pv_revisao = pve.pv_revisao
+        and (pvp.pes_codigo = pve.pes_codigo or (pvp.pes_codigo = 0 and not exists (select 1 from prod_vendas_paletizacao pvp2 where pvp2.pv_codigo = pvp.pv_codigo and pvp2.pv_revisao = pvp.pv_revisao and pvp2.pes_codigo = pve.pes_codigo)))
+      where mp.op_codigo = ? and mp.mp_codigo = ? and umev.pv_codigo is not null and coalesce(pve.pve_saldo, 0) > 0
+      order by pve.pve_codigo desc`, [opCodigo, mpCodigo]);
+    const row = rows[0];
+    if (!row) return res.status(404).json({ error: "Não existe estoque acabado disponível para esta OP. Aponte a produção antes de imprimir a etiqueta." });
+    const companyPayload = Number.isInteger(companyCode) && companyCode > 0 ? await pool.withConnection(async (db) => {
+      const companyRows = await db.queryAsync(`select first 1 emp_fantasia as fantasy_name, emp_razao_social as legal_name, emp_logo as logo_blob from empresa where emp_codigo = ?`, [companyCode]);
+      const company = companyRows[0];
+      const logo = await readBlobImageDataUri(company?.logo_blob ?? company?.LOGO_BLOB, "a logomarca da empresa");
+      return { company, logo };
+    }) : { company: null, logo: { dataUri: null, error: null } };
+    const company = companyPayload.company;
+    res.json({
+      stockCode: Number(row.stock_code), operationCode: Number(row.operation_code), productCode: Number(row.product_code), revision: Number(row.revision ?? 0),
+      customerLegalName: row.customer_legal_name ?? null, customerName: row.customer_name ?? null, reference: row.reference ?? null,
+      stockQuantity: Number(row.stock_quantity ?? 0), lot: row.lot == null ? null : String(row.lot), manufacturingDate: row.manufacturing_date ?? null,
+      internalMeasures: row.internal_measures ?? null, quantityPerPallet: row.quantity_per_pallet == null ? null : Number(row.quantity_per_pallet),
+      companyName: company?.fantasy_name ?? company?.FANTASY_NAME ?? company?.legal_name ?? company?.LEGAL_NAME ?? null,
+      companyLogoDataUri: companyPayload.logo.dataUri, companyLogoError: companyPayload.logo.error, printerOptions: processLabelPrinters,
+    });
+  } catch (error) { next(error); }
+});
+
+app.post("/v1/product-finished-label/print", ensureAuthorized, async (req, res, next) => {
+  try {
+    const printer = String(req.body?.printer ?? "").trim();
+    const copies = Number(req.body?.copies ?? 1);
+    const pdfBase64 = String(req.body?.pdfBase64 ?? "").trim();
+    if (!printer || !Number.isInteger(copies) || copies < 1 || copies > 99 || !pdfBase64) return res.status(400).json({ error: "Dados inválidos para impressão direta da etiqueta de Produto Acabado." });
     const available = await getWindowsPrinters();
     const selected = available.find((item) => item.name.localeCompare(printer, "pt-BR", { sensitivity: "accent" }) === 0);
     if (!selected) return res.status(404).json({ error: "A impressora selecionada não foi encontrada nesta estação Windows." });

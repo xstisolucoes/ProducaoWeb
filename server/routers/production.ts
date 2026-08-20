@@ -9,6 +9,8 @@ import {
   finishProductRelease,
   getProcessLabel,
   printProcessLabelPdf,
+  getProductFinishedLabel,
+  printProductFinishedLabelPdf,
   getPrintLayout,
   getPalletization,
   getRpncChecklist,
@@ -46,7 +48,7 @@ import {
   updateOrderStatus,
   validateRawMaterialLot,
 } from "../firebirdProxy";
-import { renderProcessLabelPdf } from "../processLabelPdf";
+import { renderProcessLabelPdf, renderProductFinishedLabelPdf } from "../processLabelPdf";
 import { localProtectedProcedure, operatorProcedure, programmerProcedure, router } from "../_core/trpc";
 
 const pageInput = z.object({
@@ -135,6 +137,19 @@ export const productionRouter = router({
       const label = await getProcessLabel({ ...input, companyCode: ctx.localUser.companyCode });
       const pdf = await renderProcessLabelPdf(label, input);
       return printProcessLabelPdf({ printer: input.printer, copies: input.copies, pdfBase64: pdf.toString("base64") });
+    }),
+    productFinishedLabel: localProtectedProcedure.input(processInput).query(({ ctx, input }) => {
+      return getProductFinishedLabel({ ...input, companyCode: ctx.localUser.companyCode });
+    }),
+    previewProductFinishedLabel: localProtectedProcedure.input(processInput.extend({ palletQuantity: z.number().int().positive().max(999) })).mutation(async ({ ctx, input }) => {
+      const label = await getProductFinishedLabel({ ...input, companyCode: ctx.localUser.companyCode });
+      const pdf = await renderProductFinishedLabelPdf(label, input);
+      return { pdfDataUrl: `data:application/pdf;base64,${pdf.toString("base64")}` };
+    }),
+    printProductFinishedLabel: localProtectedProcedure.input(processInput.extend({ printer: z.string().trim().min(1), copies: z.number().int().min(1).max(99), palletQuantity: z.number().int().positive().max(999) })).mutation(async ({ ctx, input }) => {
+      const label = await getProductFinishedLabel({ ...input, companyCode: ctx.localUser.companyCode });
+      const pdf = await renderProductFinishedLabelPdf(label, input);
+      return printProductFinishedLabelPdf({ printer: input.printer, copies: input.copies, pdfBase64: pdf.toString("base64") });
     }),
     approvedQuantities: localProtectedProcedure.input(processInput).query(({ ctx, input }) => {
       return getApprovedProcessQuantities(input);

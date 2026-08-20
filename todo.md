@@ -415,4 +415,5 @@
 - [x] Restaurar o bloco OP/QR Code e a identificação do processo na Etiqueta PDF sem criar segunda página.
 - [x] Completar a Etiqueta PDF com todos os dados e campos presentes no modelo FastReport de referência.
 - [x] Corrigir a grade da Etiqueta PDF para exibir Próximo Processo, OP e QR Code sem cortar os campos inferiores.
+- [x] Implementar Etiqueta de Produto Acabado na Programação e ao finalizar apontamentos, com quantidade de paletes, prévia PDF e impressão Windows.
 - [ ] Gravar início de limpeza e fim de período em MOTIVOS_OCIOSIDADE após confirmar os campos e regras do legado.

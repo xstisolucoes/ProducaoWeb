@@ -123,6 +123,24 @@ export type ProcessLabel = {
   companyLogoError: string | null;
   printerOptions: string[];
 };
+export type ProductFinishedLabel = {
+  stockCode: number;
+  operationCode: number;
+  productCode: number;
+  revision: number;
+  customerLegalName: string | null;
+  customerName: string | null;
+  reference: string | null;
+  stockQuantity: number;
+  lot: string | null;
+  manufacturingDate: string | null;
+  internalMeasures: string | null;
+  quantityPerPallet: number | null;
+  companyName: string | null;
+  companyLogoDataUri: string | null;
+  companyLogoError: string | null;
+  printerOptions: string[];
+};
 export type LocalPrinter = { name: string; isDefault: boolean; offline: boolean };
 export type LocalCompany = { code: number; fantasyName: string | null; legalName: string | null };
 export type RawMaterialTraceItem = { structureCode: number; productCode: number; productName: string; lot: string | null; requiresValidity: boolean };
@@ -371,6 +389,10 @@ export const getProcessLabel = (input: { opCodigo: number; mpCodigo: number; com
   request<ProcessLabel>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/process-label?companyCode=${input.companyCode ?? ""}`);
 export const printProcessLabelPdf = (input: { printer: string; copies: number; pdfBase64: string }) =>
   request<{ success: true }>("/v1/process-label/print", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
+export const getProductFinishedLabel = (input: { opCodigo: number; mpCodigo: number; companyCode: number | null }) =>
+  request<ProductFinishedLabel>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/product-finished-label?companyCode=${input.companyCode ?? ""}`);
+export const printProductFinishedLabelPdf = (input: { printer: string; copies: number; pdfBase64: string }) =>
+  request<{ success: true }>("/v1/product-finished-label/print", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
 export const getPrintLayout = (input: { opCodigo: number; mpCodigo: number }) =>
   request<PrintLayout>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/print-layout`);
 export const getPalletization = (input: { opCodigo: number; mpCodigo: number }) =>

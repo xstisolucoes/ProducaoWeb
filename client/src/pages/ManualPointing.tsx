@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { OperationalConfirmDialog, OperationalMessageDialog } from "@/components/OperationalConfirmDialog";
 import { ProductPalletizationDialog, ProductPrintLayoutDialog } from "@/components/ProductVisualDialogs";
 import { ProductReleaseRpncDialog } from "@/components/ProductReleaseRpncDialog";
+import { ProductFinishedLabelDialog } from "@/components/ProductFinishedLabelDialog";
 
 type FinishKind = "attended" | "partial";
 
@@ -53,6 +54,7 @@ export default function ManualPointing() {
   const [showPalletization, setShowPalletization] = useState(false);
   const [showLayout, setShowLayout] = useState(false);
   const [showRpnc, setShowRpnc] = useState(false);
+  const [showProductFinishedLabel, setShowProductFinishedLabel] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const manualStartKeyRef = useRef<string | null>(null);
   const isManualUser = ["manual-pointing", "manual-production", "quality-release"].includes(user?.operationalProfile ?? "");
@@ -61,6 +63,8 @@ export default function ManualPointing() {
   const approved = trpc.production.pointing.approvedQuantities.useQuery({ opCodigo, mpCodigo }, { enabled: Boolean(pointing.data), retry: false });
   const palletization = trpc.production.pointing.palletization.useQuery({ opCodigo, mpCodigo }, { enabled: showPalletization, retry: false });
   const printLayout = trpc.production.pointing.printLayout.useQuery({ opCodigo, mpCodigo }, { enabled: showLayout, retry: false });
+  const productFinishedLabel = trpc.production.pointing.productFinishedLabel.useQuery({ opCodigo, mpCodigo }, { enabled: showProductFinishedLabel, retry: false });
+  const localPrinters = trpc.production.printers.list.useQuery(undefined, { enabled: showProductFinishedLabel, retry: false });
   const startManual = trpc.production.pointing.startManual.useMutation({
     onSuccess: () => pointing.refetch(),
     onError: (error) => { manualStartKeyRef.current = null; setMessage(error.message); },
@@ -68,7 +72,7 @@ export default function ManualPointing() {
   const finish = trpc.production.pointing.finishProduction.useMutation({
     onSuccess: (result) => {
       toast.success(result.status === "Atendido" ? "Processo atendido com sucesso." : "Processo registrado como parcial.");
-      setLocation("/");
+      setShowProductFinishedLabel(true);
     },
     onError: (error) => setMessage(error.message),
   });
@@ -157,6 +161,7 @@ export default function ManualPointing() {
     {finishKind ? <OperationalConfirmDialog open tone="question" title={finishKind === "attended" ? "Atender processo" : "Gerar parcial"} description={`Confirma ${finishKind === "attended" ? "o atendimento" : "a finalização parcial"} com ${quantityProduced || "0"} produzidas e ${quantityLost || "0"} perdidas${requiresPeople ? `, com ${quantityPeople || "0"} pessoa(s)` : ""}${pointingGroup ? `, na data ${productionDate.split("-").reverse().join("/")}` : ""}?`} confirmLabel={finishKind === "attended" ? "Atender" : "Confirmar parcial"} pending={finish.isPending} onCancel={() => setFinishKind(null)} onConfirm={confirmFinish} /> : null}
     <ProductReleaseRpncDialog open={showRpnc} onOpenChange={setShowRpnc} opCodigo={opCodigo} mpCodigo={mpCodigo} onRegistered={(code, year) => toast.success(`RPNC ${code}/${year} registrada.`)} />
     <ProductPalletizationDialog open={showPalletization} onOpenChange={setShowPalletization} data={palletization.data} loading={palletization.isLoading} error={palletization.error} productLabel={item.referencia ?? undefined} />
+    <ProductFinishedLabelDialog open={showProductFinishedLabel} onOpenChange={(next) => { setShowProductFinishedLabel(next); if (!next) setLocation("/"); }} data={productFinishedLabel.data} loading={productFinishedLabel.isLoading || localPrinters.isLoading} error={productFinishedLabel.error || localPrinters.error} printers={localPrinters.data?.printers ?? []} printerSource={localPrinters.data?.source} opCodigo={opCodigo} mpCodigo={mpCodigo} />
     <ProductPrintLayoutDialog open={showLayout} onOpenChange={setShowLayout} data={printLayout.data} loading={printLayout.isLoading} error={printLayout.error} productLabel={String(item.productCode ?? "")} revision={item.revision} />
     {message ? <OperationalMessageDialog open tone="caution" title="Apontamento Manual" description={message} onClose={() => setMessage(null)} /> : null}
   </div>;

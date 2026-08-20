@@ -18,6 +18,7 @@ const proxy = vi.hoisted(() => ({
   finishSetup: vi.fn(),
   getPauseReasons: vi.fn(),
   getProcessLabel: vi.fn(),
+  getProductFinishedLabel: vi.fn(),
   getApprovedProcessQuantities: vi.fn(),
   getPrintLayout: vi.fn(),
   getPalletization: vi.fn(),
@@ -136,6 +137,14 @@ describe("procedimentos de produção", () => {
     expect(proxy.getApprovedProcessQuantities).toHaveBeenCalledWith({ opCodigo: 21, mpCodigo: 8 });
     expect(proxy.getPrintLayout).toHaveBeenCalledWith({ opCodigo: 21, mpCodigo: 8 });
     expect(proxy.getPalletization).toHaveBeenCalledWith({ opCodigo: 21, mpCodigo: 8 });
+  });
+
+  it("consulta a Etiqueta de Produto Acabado com a empresa da sessão local", async () => {
+    proxy.getProductFinishedLabel.mockResolvedValue({ operationCode: 21, stockQuantity: 600, quantityPerPallet: 300 });
+    const caller = productionRouter.createCaller({ ...ctx, localUser: { ...ctx.localUser, companyCode: 4 } });
+
+    await expect(caller.pointing.productFinishedLabel({ opCodigo: 21, mpCodigo: 8 })).resolves.toMatchObject({ operationCode: 21, stockQuantity: 600 });
+    expect(proxy.getProductFinishedLabel).toHaveBeenCalledWith({ opCodigo: 21, mpCodigo: 8, companyCode: 4 });
   });
 
   it("encaminha a finalização de setup com o resultado escolhido pelo operador", async () => {

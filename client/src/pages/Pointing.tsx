@@ -7,6 +7,7 @@ import { ProductReservationDialog } from "@/components/ProductReservationDialog"
 import { ApprovedProcessQuantitiesDialog } from "@/components/ApprovedProcessQuantitiesDialog";
 import { RequestDialog } from "@/components/RequestDialog";
 import { ProcessLabelDialog } from "@/components/ProcessLabelDialog";
+import { ProductFinishedLabelDialog } from "@/components/ProductFinishedLabelDialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ConfirmationTone, OperationalConfirmDialog, OperationalMessageDialog } from "@/components/OperationalConfirmDialog";
@@ -47,6 +48,7 @@ export default function Pointing() {
   const [showPrintLayout, setShowPrintLayout] = useState(false);
   const [showPalletization, setShowPalletization] = useState(false);
   const [showProcessLabel, setShowProcessLabel] = useState(false);
+  const [showProductFinishedLabel, setShowProductFinishedLabel] = useState(false);
   const [showRpnc, setShowRpnc] = useState(false);
   const [rpncOrigin, setRpncOrigin] = useState<RpncOrigin>("product");
   const [rpncSelections, setRpncSelections] = useState<Record<string, RpncSelection>>({});
@@ -60,7 +62,8 @@ export default function Pointing() {
   const printLayout = trpc.production.pointing.printLayout.useQuery({ opCodigo, mpCodigo }, { enabled: showPrintLayout && Number.isInteger(opCodigo) && Number.isInteger(mpCodigo), retry: false });
   const palletization = trpc.production.pointing.palletization.useQuery({ opCodigo, mpCodigo }, { enabled: showPalletization && Number.isInteger(opCodigo) && Number.isInteger(mpCodigo), retry: false });
   const processLabel = trpc.production.pointing.processLabel.useQuery({ opCodigo, mpCodigo }, { enabled: showProcessLabel && Number.isInteger(opCodigo) && Number.isInteger(mpCodigo), retry: false });
-  const localPrinters = trpc.production.printers.list.useQuery(undefined, { enabled: showProcessLabel, retry: false });
+  const productFinishedLabel = trpc.production.pointing.productFinishedLabel.useQuery({ opCodigo, mpCodigo }, { enabled: showProductFinishedLabel && Number.isInteger(opCodigo) && Number.isInteger(mpCodigo), retry: false });
+  const localPrinters = trpc.production.printers.list.useQuery(undefined, { enabled: showProcessLabel || showProductFinishedLabel, retry: false });
   const rpncChecklist = trpc.production.pointing.rpncChecklist.useQuery({ opCodigo, mpCodigo, origin: rpncOrigin }, { enabled: showRpnc && Number.isInteger(opCodigo) && Number.isInteger(mpCodigo), retry: false });
   const reservation = trpc.production.pointing.reservation.useQuery({ opCodigo, mpCodigo }, { enabled: Boolean(pointing.data?.queuePosition === "PI") && Number.isInteger(opCodigo) && Number.isInteger(mpCodigo), retry: false });
   const reservationDetails = trpc.production.queue.reservations.useQuery({ opCode: opCodigo }, { enabled: showReservationDetails && Number.isInteger(opCodigo), retry: false });
@@ -89,7 +92,7 @@ export default function Pointing() {
     onError: (error) => toast.error("Não foi possível finalizar a parada", { description: error.message }),
   });
   const finishProduction = trpc.production.pointing.finishProduction.useMutation({
-    onSuccess: async (result) => { await utils.production.programming.list.invalidate(); await utils.production.pointing.reservation.invalidate({ opCodigo, mpCodigo }); setShowFinish(false); toast.success(`Produção finalizada: ${result.status}. Saldo: ${result.balance}.`, { description: `PVPP ${result.processProductionCode || "não localizado"} · arranjo ${result.arrangementTotal}× · informado ${result.enteredQuantity} · produzido ${result.productionQuantity} · reserva ${result.reservationQuantity}.` }); setLocation("/"); },
+    onSuccess: async (result) => { await utils.production.programming.list.invalidate(); await utils.production.pointing.reservation.invalidate({ opCodigo, mpCodigo }); setShowFinish(false); toast.success(`Produção finalizada: ${result.status}. Saldo: ${result.balance}.`, { description: `PVPP ${result.processProductionCode || "não localizado"} · arranjo ${result.arrangementTotal}× · informado ${result.enteredQuantity} · produzido ${result.productionQuantity} · reserva ${result.reservationQuantity}.` }); setShowProductFinishedLabel(true); },
     onError: (error) => toast.error("Não foi possível finalizar a produção", { description: error.message }),
   });
   const completeInspection = trpc.production.pointing.completeInspection.useMutation({
@@ -364,6 +367,7 @@ export default function Pointing() {
         </section>
         <QueueConsultationDialog open={showQueueConsultation} onClose={() => setShowQueueConsultation(false)} />
         <ProcessLabelDialog open={showProcessLabel} onOpenChange={setShowProcessLabel} data={processLabel.data} loading={processLabel.isLoading || localPrinters.isLoading} error={processLabel.error || localPrinters.error} printers={localPrinters.data?.printers ?? []} printerSource={localPrinters.data?.source} opCodigo={opCodigo} mpCodigo={mpCodigo} />
+        <ProductFinishedLabelDialog open={showProductFinishedLabel} onOpenChange={(next) => { setShowProductFinishedLabel(next); if (!next) setLocation("/"); }} data={productFinishedLabel.data} loading={productFinishedLabel.isLoading || localPrinters.isLoading} error={productFinishedLabel.error || localPrinters.error} printers={localPrinters.data?.printers ?? []} printerSource={localPrinters.data?.source} opCodigo={opCodigo} mpCodigo={mpCodigo} />
         <RequestDialog open={showRequests} onOpenChange={setShowRequests} />
         <ProductReservationDialog open={showReservationDetails} onOpenChange={setShowReservationDetails} opCode={opCodigo} data={reservationDetails.data} loading={reservationDetails.isLoading} error={reservationDetails.error} />
         <ApprovedProcessQuantitiesDialog open={showApprovedQuantities} onOpenChange={setShowApprovedQuantities} data={approvedQuantities.data} loading={approvedQuantities.isLoading} error={approvedQuantities.error} />
