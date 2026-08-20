@@ -1,11 +1,11 @@
 {
   "::1": {
-    "machineCode": 35,
-    "updatedAt": "2026-08-19T15:15:40.252Z"
+    "machineCode": 36,
+    "updatedAt": "2026-08-20T12:31:04.224Z"
   },
   "192.168.0.200": {
-    "machineCode": 4,
-    "updatedAt": "2026-08-19T10:41:36.257Z"
+    "machineCode": 36,
+    "updatedAt": "2026-08-20T12:41:30.986Z"
   },
   "192.168.0.201": {
     "machineCode": 36,

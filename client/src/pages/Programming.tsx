@@ -257,7 +257,7 @@ export default function Programming() {
     <ProductReservationDialog open={showReservation} onOpenChange={setShowReservation} opCode={selectedItem?.op_codigo} data={selectedReservations.data} loading={selectedReservations.isLoading} error={selectedReservations.error} />
     <ApprovedProcessQuantitiesDialog open={showApprovedQuantities} onOpenChange={setShowApprovedQuantities} data={selectedApprovedQuantities.data} loading={selectedApprovedQuantities.isLoading} error={selectedApprovedQuantities.error} />
     <RequestDialog open={showRequests} onOpenChange={setShowRequests} />
-    <ProcessLabelDialog open={showProcessLabel} onOpenChange={setShowProcessLabel} data={selectedLabel.data} loading={selectedLabel.isLoading} error={selectedLabel.error} printers={localPrinters.data?.printers ?? []} printerSource={localPrinters.data?.source} />
+    <ProcessLabelDialog open={showProcessLabel} onOpenChange={setShowProcessLabel} data={selectedLabel.data} loading={selectedLabel.isLoading} error={selectedLabel.error} printers={localPrinters.data?.printers ?? []} printerSource={localPrinters.data?.source} opCodigo={selectedCodes?.opCodigo ?? 1} mpCodigo={selectedCodes?.mpCodigo ?? 1} />
   </div>;
 }
 

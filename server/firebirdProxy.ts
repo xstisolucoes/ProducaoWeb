@@ -369,6 +369,8 @@ export const finishProductRelease = (input: { opCodigo: number; mpCodigo: number
   request<{ success: true; status: string; conformity: string; stage: string; producedQuantity: number }>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/product-release`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
 export const getProcessLabel = (input: { opCodigo: number; mpCodigo: number; companyCode: number | null }) =>
   request<ProcessLabel>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/process-label?companyCode=${input.companyCode ?? ""}`);
+export const printProcessLabelPdf = (input: { printer: string; copies: number; pdfBase64: string }) =>
+  request<{ success: true }>("/v1/process-label/print", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
 export const getPrintLayout = (input: { opCodigo: number; mpCodigo: number }) =>
   request<PrintLayout>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/print-layout`);
 export const getPalletization = (input: { opCodigo: number; mpCodigo: number }) =>

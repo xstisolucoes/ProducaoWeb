@@ -406,4 +406,13 @@
 - [x] Restaurar Atendido e Parcial na Amostragem Geral, mantendo somente a opção Conforme indisponível.
 - [x] Diagnosticar e corrigir o login pelo celular com configuração de estação protegida na aplicação central.
 - [x] Corrigir a submissão do primeiro login PCP no celular e abrir o configurador de estação após autenticação.
+- [x] Corrigir a exportação do módulo pdf-to-printer no Windows e alinhar a prévia HTML ao template PDF final da Etiqueta.
+- [x] Garantir que o Windows execute a versão atual do proxy de impressão e da prévia PDF, substituindo o código antigo printerModule.print.
+- [x] Corrigir a configuração do jsreport que usa transporte silent inválido e bloqueia a prévia PDF da Etiqueta.
+- [x] Detectar automaticamente Chrome ou Microsoft Edge instalado no Windows para o jsreport gerar a Etiqueta PDF.
+- [x] Normalizar cópias, quantidade por palete e conteúdo PDF na prévia da Etiqueta para evitar erro de tipo no navegador.
+- [x] Ajustar a Etiqueta PDF para página única, QR Code OP<numero>, sem nome Bikraft e com bloco de lote compacto.
+- [x] Restaurar o bloco OP/QR Code e a identificação do processo na Etiqueta PDF sem criar segunda página.
+- [x] Completar a Etiqueta PDF com todos os dados e campos presentes no modelo FastReport de referência.
+- [x] Corrigir a grade da Etiqueta PDF para exibir Próximo Processo, OP e QR Code sem cortar os campos inferiores.
 - [ ] Gravar início de limpeza e fim de período em MOTIVOS_OCIOSIDADE após confirmar os campos e regras do legado.

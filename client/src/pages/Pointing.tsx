@@ -363,7 +363,7 @@ export default function Pointing() {
 
         </section>
         <QueueConsultationDialog open={showQueueConsultation} onClose={() => setShowQueueConsultation(false)} />
-        <ProcessLabelDialog open={showProcessLabel} onOpenChange={setShowProcessLabel} data={processLabel.data} loading={processLabel.isLoading || localPrinters.isLoading} error={processLabel.error || localPrinters.error} printers={localPrinters.data?.printers ?? []} printerSource={localPrinters.data?.source} />
+        <ProcessLabelDialog open={showProcessLabel} onOpenChange={setShowProcessLabel} data={processLabel.data} loading={processLabel.isLoading || localPrinters.isLoading} error={processLabel.error || localPrinters.error} printers={localPrinters.data?.printers ?? []} printerSource={localPrinters.data?.source} opCodigo={opCodigo} mpCodigo={mpCodigo} />
         <RequestDialog open={showRequests} onOpenChange={setShowRequests} />
         <ProductReservationDialog open={showReservationDetails} onOpenChange={setShowReservationDetails} opCode={opCodigo} data={reservationDetails.data} loading={reservationDetails.isLoading} error={reservationDetails.error} />
         <ApprovedProcessQuantitiesDialog open={showApprovedQuantities} onOpenChange={setShowApprovedQuantities} data={approvedQuantities.data} loading={approvedQuantities.isLoading} error={approvedQuantities.error} />

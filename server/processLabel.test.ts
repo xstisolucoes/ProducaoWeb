@@ -32,19 +32,18 @@ describe("Etiqueta de Processo", () => {
     expect(pointing).toContain('event.key === "F10"');
   });
 
-  it("pede os parâmetros de impressão e cria a etiqueta vertical com QR Code", () => {
+  it("pede os parâmetros de impressão e gera a etiqueta PDF vertical com QR Code", () => {
     expect(dialog).toContain("Qtde. por Palete");
     expect(dialog).toContain("Cópias");
     expect(dialog).toContain("Impressora");
-    expect(dialog).toContain("function LocalQrCode");
-    expect(dialog).toContain("function qrVersion1Low");
-    expect(dialog).not.toContain('from "qrcode"');
-    expect(dialog).toContain("MATERIAL EM PROCESSO");
-    expect(dialog).toContain("size: 145mm 210mm");
-    expect(dialog).toContain("window.print()");
-    expect(dialog).toContain("OP. (Lote):");
-    expect(dialog).toContain("text-center text-[26px]");
-    expect(dialog).toContain("companyLogoDataUri");
+    expect(dialog).toContain("previewProcessLabel");
+    expect(dialog).toContain("printProcessLabel");
+    expect(dialog).toContain("pdfDataUrl");
+    expect(dialog).toContain("PDF final");
+    expect(router).toContain("previewProcessLabel: localProtectedProcedure");
+    expect(router).toContain("printProcessLabel: localProtectedProcedure");
+    expect(proxy).toContain('app.post("/v1/process-label/print"');
+    expect(proxy).toContain("printPdfDirectly");
     expect(dialog).toContain("maxLength={5}");
     expect(dialog).toContain('slice(0, 5)');
   });
@@ -55,7 +54,7 @@ describe("Etiqueta de Processo", () => {
     expect(proxy).toContain('execFileAsync("powershell.exe"');
     expect(contracts).toContain("export const getLocalPrinters");
     expect(router).toContain("printers: router");
-    expect(dialog).toContain("Lista obtida das impressoras instaladas no Windows desta estação.");
+    expect(dialog).toContain("etiqueta será enviada diretamente à impressora Windows selecionada");
   });
 
   it("obtém a empresa selecionada no login e a logomarca da etiqueta pelo cadastro EMPRESA", () => {

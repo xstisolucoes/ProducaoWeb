@@ -3,10 +3,12 @@ import express from "express";
 import Firebird from "node-firebird";
 import bcrypt from "bcryptjs";
 import os from "node:os";
-import { readFile } from "node:fs/promises";
+import { readFile, unlink, writeFile } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import path from "node:path";
+import { tmpdir } from "node:os";
+import { randomUUID } from "node:crypto";
 import { reservePolicy, selectApplicableReservations } from "./reservationPolicy.mjs";
 
 const required = (name) => {
@@ -25,10 +27,22 @@ const proxyToken = required("FIREBIRD_PROXY_TOKEN");
 const proxyHost = process.env.FIREBIRD_PROXY_HOST?.trim() || "127.0.0.1";
 const proxyPort = numberFromEnv("FIREBIRD_PROXY_PORT", 8787);
 const firebirdEncoding = process.env.FIREBIRD_ENCODING?.trim() || "WIN1252";
+const proxyBuild = "2026-08-20-label-print-v3";
 const processInspectionIntervalMinutes = numberFromEnv("PRODUCTION_PROCESS_INSPECTION_INTERVAL_MINUTES", 20);
 const processInspectionTimestampSql = "substring(cast(current_timestamp as varchar(24)) from 9 for 2) || '/' || substring(cast(current_timestamp as varchar(24)) from 6 for 2) || '/' || substring(cast(current_timestamp as varchar(24)) from 1 for 4) || ' - ' || substring(cast(current_timestamp as varchar(24)) from 12 for 8)";
 const processLabelPrinters = String(process.env.PRODUCTION_LABEL_PRINTERS ?? "").split(/[;,]/).map((printer) => printer.trim()).filter(Boolean);
 const execFileAsync = promisify(execFile);
+
+async function printPdfDirectly(pdfBuffer, printer, copies) {
+  if (process.platform !== "win32") throw new Error("A impressão direta está disponível somente no proxy instalado no Windows.");
+  const module = await import("pdf-to-printer");
+  const print = module.print ?? module.default?.print ?? module.default;
+  if (typeof print !== "function") throw new Error("Não foi encontrada a função de impressão do conector Windows.");
+  const temporaryPath = path.join(tmpdir(), `xpaper-etiqueta-${randomUUID()}.pdf`);
+  await writeFile(temporaryPath, pdfBuffer);
+  try { await print(temporaryPath, { printer, copies, silent: true, scale: "noscale" }); }
+  finally { await unlink(temporaryPath).catch(() => undefined); }
+}
 
 const pool = Firebird.pool(5, {
   host: required("FIREBIRD_HOST"),
@@ -45,7 +59,7 @@ const pool = Firebird.pool(5, {
 
 const app = express();
 app.disable("x-powered-by");
-app.use(express.json({ limit: "32kb" }));
+app.use(express.json({ limit: "8mb" }));
 
 function ensureAuthorized(req, res, next) {
   const authorization = req.get("authorization");
@@ -1101,6 +1115,23 @@ app.get("/v1/pointing/:opCodigo/:mpCodigo/process-label", ensureAuthorized, asyn
   } catch (error) { next(error); }
 });
 
+app.post("/v1/process-label/print", ensureAuthorized, async (req, res, next) => {
+  try {
+    const printer = String(req.body?.printer ?? "").trim();
+    const copies = Number(req.body?.copies ?? 1);
+    const pdfBase64 = String(req.body?.pdfBase64 ?? "").trim();
+    if (!printer || !Number.isInteger(copies) || copies < 1 || copies > 99 || !pdfBase64) return res.status(400).json({ error: "Dados inválidos para impressão direta da etiqueta." });
+    const available = await getWindowsPrinters();
+    const selected = available.find((item) => item.name.localeCompare(printer, "pt-BR", { sensitivity: "accent" }) === 0);
+    if (!selected) return res.status(404).json({ error: "A impressora selecionada não foi encontrada nesta estação Windows." });
+    if (selected.offline) return res.status(409).json({ error: "A impressora selecionada está offline." });
+    const pdfBuffer = Buffer.from(pdfBase64, "base64");
+    if (pdfBuffer.length < 64 || pdfBuffer.subarray(0, 4).toString("ascii") !== "%PDF") return res.status(400).json({ error: "O PDF da etiqueta é inválido." });
+    await printPdfDirectly(pdfBuffer, selected.name, copies);
+    res.json({ success: true });
+  } catch (error) { next(error); }
+});
+
 app.get("/v1/pointing/:opCodigo/:mpCodigo/product-release-plan", ensureAuthorized, async (req, res, next) => {
   try {
     const opCodigo = Number(req.params.opCodigo); const mpCodigo = Number(req.params.mpCodigo); const machineCode = Number(req.query.machineCode);
@@ -1681,7 +1712,7 @@ app.use((error, _req, res, _next) => {
 });
 
 const server = app.listen(proxyPort, proxyHost, () => {
-  console.log(`Proxy Firebird local ativo em http://${proxyHost}:${proxyPort}`);
+  console.log(`Proxy Firebird local ativo em http://${proxyHost}:${proxyPort} · build ${proxyBuild}`);
 });
 
 for (const signal of ["SIGINT", "SIGTERM"]) {

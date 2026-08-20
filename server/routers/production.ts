@@ -8,6 +8,7 @@ import {
   getProductReleaseSamplingPlan,
   finishProductRelease,
   getProcessLabel,
+  printProcessLabelPdf,
   getPrintLayout,
   getPalletization,
   getRpncChecklist,
@@ -45,6 +46,7 @@ import {
   updateOrderStatus,
   validateRawMaterialLot,
 } from "../firebirdProxy";
+import { renderProcessLabelPdf } from "../processLabelPdf";
 import { localProtectedProcedure, operatorProcedure, programmerProcedure, router } from "../_core/trpc";
 
 const pageInput = z.object({
@@ -123,6 +125,16 @@ export const productionRouter = router({
     }),
     processLabel: localProtectedProcedure.input(processInput).query(({ ctx, input }) => {
       return getProcessLabel({ ...input, companyCode: ctx.localUser.companyCode });
+    }),
+    previewProcessLabel: localProtectedProcedure.input(processInput.extend({ quantityPerPallet: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const label = await getProcessLabel({ ...input, companyCode: ctx.localUser.companyCode });
+      const pdf = await renderProcessLabelPdf(label, input);
+      return { pdfDataUrl: `data:application/pdf;base64,${pdf.toString("base64")}` };
+    }),
+    printProcessLabel: localProtectedProcedure.input(processInput.extend({ printer: z.string().trim().min(1), copies: z.number().int().min(1).max(99), quantityPerPallet: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const label = await getProcessLabel({ ...input, companyCode: ctx.localUser.companyCode });
+      const pdf = await renderProcessLabelPdf(label, input);
+      return printProcessLabelPdf({ printer: input.printer, copies: input.copies, pdfBase64: pdf.toString("base64") });
     }),
     approvedQuantities: localProtectedProcedure.input(processInput).query(({ ctx, input }) => {
       return getApprovedProcessQuantities(input);

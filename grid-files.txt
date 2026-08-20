@@ -1,0 +1,8 @@
+client/src/components/ProductReservationDialog.tsx
+client/src/components/QueueConsultationDialog.tsx
+client/src/components/ui/table.tsx
+client/src/pages/Orders.tsx
+client/src/pages/ProductionDashboard.tsx
+client/src/pages/Products.tsx
+client/src/pages/Programming.tsx
+client/src/pages/Stock.tsx
