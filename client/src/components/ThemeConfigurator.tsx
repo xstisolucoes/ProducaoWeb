@@ -12,7 +12,7 @@ export function ThemeConfigurator({ compact = false }: { compact?: boolean }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className={`theme-config-trigger h-9 shrink-0 rounded-lg border-2 px-3 text-sm font-semibold ${compact ? "" : ""}`}>
+        <Button variant="outline" className={`theme-config-trigger h-9 shrink-0 rounded-lg border-2 !border-white !bg-white !px-3 text-sm font-black shadow-[0_2px_10px_rgba(0,0,0,.32)] ${brandTheme === "xsti" ? "!text-[#7d1520] hover:!bg-[#ffe9eb] hover:!text-[#530a10]" : "!text-[#123c30] hover:!bg-[#e7f7ed] hover:!text-[#08271e]"} ${compact ? "" : ""}`}>
           <Palette className="h-4 w-4" />
           {!compact ? "Configurar tema" : "Tema"}
         </Button>
@@ -20,7 +20,7 @@ export function ThemeConfigurator({ compact = false }: { compact?: boolean }) {
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Configurador de temas</DialogTitle>
-          <DialogDescription>Escolha a identidade visual desta estação. A preferência fica salva neste computador.</DialogDescription>
+          <DialogDescription>Escolha a identidade visual desta Máquina/Processo. A preferência fica salva neste computador.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 sm:grid-cols-2">
           <button onClick={() => setBrandTheme("verde")} className={`overflow-hidden rounded-xl border-2 text-left transition ${brandTheme === "verde" ? "border-[#177458] ring-2 ring-[#95cfab]" : "border-[#d6e2d9] hover:border-[#76ad89]"}`}>
@@ -32,7 +32,7 @@ export function ThemeConfigurator({ compact = false }: { compact?: boolean }) {
             <div className="flex items-center justify-between bg-white p-4"><span className="text-sm font-semibold text-[#4e3638]">Preto, branco e vermelho operacional</span>{brandTheme === "xsti" ? <Check className="h-5 w-5 text-[#b6222a]" /> : null}</div>
           </button>
         </div>
-        <DialogFooter><span className="mr-auto text-xs font-medium text-[#68736c]">O tema é aplicado imediatamente a esta estação.</span><DialogClose asChild><Button className="bg-[#cf3f3f] text-white hover:bg-[#ad2e2e]">Fechar</Button></DialogClose></DialogFooter>
+        <DialogFooter><span className="mr-auto text-xs font-medium text-[#68736c]">O tema é aplicado imediatamente a esta Máquina/Processo.</span><DialogClose asChild><Button className="bg-[#cf3f3f] text-white hover:bg-[#ad2e2e]">Fechar</Button></DialogClose></DialogFooter>
       </DialogContent>
     </Dialog>
   );

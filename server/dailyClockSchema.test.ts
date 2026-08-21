@@ -13,6 +13,9 @@ describe("estrutura confirmada do contador diário", () => {
     expect(proxySource).toContain("cdp_data = current_date");
     expect(proxySource).toContain("cdp_inicio, cdp_cronometro, cdp_status");
     expect(proxySource).toContain("cdp_fim = coalesce(cdp_cronometro, current_timestamp)");
+    expect(proxySource).toContain("select current_timestamp as clock_value from rdb$database");
+    expect(proxySource).toContain("set cdp_cronometro = ? where cdp_codigo = ?");
+    expect(proxySource).toContain("return currentClock;");
     expect(proxySource).toContain("mp_fim = ?");
     expect(proxySource).toContain("mph_fim = ?");
   });

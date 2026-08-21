@@ -19,6 +19,7 @@ const proxy = vi.hoisted(() => ({
   getPauseReasons: vi.fn(),
   getProcessLabel: vi.fn(),
   getProductFinishedLabel: vi.fn(),
+  getSpecialProduction: vi.fn(),
   getApprovedProcessQuantities: vi.fn(),
   getPrintLayout: vi.fn(),
   getPalletization: vi.fn(),
@@ -85,7 +86,15 @@ describe("procedimentos de produção", () => {
     const caller = productionRouter.createCaller(operatorCtx);
 
     await expect(caller.programming.list({ page: 1, limit: 20, search: "" })).resolves.toMatchObject({ total: 0 });
-    expect(proxy.getProgramming).toHaveBeenCalledWith(14, 1, 20, "", true, "Todos");
+    expect(proxy.getProgramming).toHaveBeenCalledWith(14, 1, 20, "", true, "Todos", false);
+  });
+
+  it("encaminha o Status selecionado para o Operador da Coladeira", async () => {
+    proxy.getProgramming.mockResolvedValue({ items: [], total: 0, page: 1, limit: 8 });
+    const caller = productionRouter.createCaller(operatorCtx);
+
+    await expect(caller.programming.list({ page: 1, limit: 8, search: "", status: "Parcial" })).resolves.toMatchObject({ total: 0 });
+    expect(proxy.getProgramming).toHaveBeenCalledWith(14, 1, 8, "", true, "Parcial", false);
   });
 
   it("encaminha o filtro manual do Apontador sem impor a fila padrão do Operador", async () => {
@@ -96,7 +105,7 @@ describe("procedimentos de produção", () => {
     });
 
     await expect(caller.programming.list({ page: 1, limit: 7, search: "", status: "Liberado/Parcial/Em Produção" })).resolves.toMatchObject({ total: 0 });
-    expect(proxy.getProgramming).toHaveBeenCalledWith(14, 1, 7, "", false, "Liberado/Parcial/Em Produção");
+    expect(proxy.getProgramming).toHaveBeenCalledWith(14, 1, 7, "", false, "Liberado/Parcial/Em Produção", false);
   });
 
   it("permite que Programador sem MQP_LOGON selecione uma máquina controlada", async () => {
@@ -106,7 +115,7 @@ describe("procedimentos de produção", () => {
 
     await expect(caller.programming.machines()).resolves.toEqual([{ code: 21, description: "Impressora de teste", manualProcess: null }]);
     await expect(caller.programming.list({ page: 1, limit: 7, search: "", machineCode: 21, status: "Liberado" })).resolves.toMatchObject({ total: 0 });
-    expect(proxy.getProgramming).toHaveBeenCalledWith(21, 1, 7, "", false, "Liberado");
+    expect(proxy.getProgramming).toHaveBeenCalledWith(21, 1, 7, "", false, "Liberado", false);
   });
 
   it("encaminha o início de setup com operador e máquina da sessão", async () => {
@@ -145,6 +154,14 @@ describe("procedimentos de produção", () => {
 
     await expect(caller.pointing.productFinishedLabel({ opCodigo: 21, mpCodigo: 8 })).resolves.toMatchObject({ operationCode: 21, stockQuantity: 600 });
     expect(proxy.getProductFinishedLabel).toHaveBeenCalledWith({ opCodigo: 21, mpCodigo: 8, companyCode: 4 });
+  });
+
+  it("consulta as OPs componentes da Produção Especial pela máquina selecionada", async () => {
+    proxy.getSpecialProduction.mockResolvedValue({ isSpecial: true, specialCode: 41, primaryOpCode: 21, components: [{ opCode: 22, mpCode: 8 }] });
+    const caller = productionRouter.createCaller(ctx);
+
+    await expect(caller.pointing.specialProduction({ opCodigo: 21, mpCodigo: 8, machineCode: 14 })).resolves.toMatchObject({ isSpecial: true, specialCode: 41 });
+    expect(proxy.getSpecialProduction).toHaveBeenCalledWith({ opCodigo: 21, mpCodigo: 8, machineCode: 14 });
   });
 
   it("encaminha a finalização de setup com o resultado escolhido pelo operador", async () => {

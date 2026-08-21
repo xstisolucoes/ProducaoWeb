@@ -8,6 +8,7 @@ import {
   getProductReleaseSamplingPlan,
   finishProductRelease,
   getProcessLabel,
+  getSpecialProduction,
   printProcessLabelPdf,
   getProductFinishedLabel,
   printProductFinishedLabelPdf,
@@ -31,6 +32,7 @@ import {
   getLocalPrinters,
   getProgramming,
   getCleaningReasons,
+  recordIdleEvent,
   getQueue,
   getQueueProcesses,
   getQueueReservations,
@@ -59,6 +61,7 @@ const pageInput = z.object({
 const programmingInput = pageInput.extend({
   machineCode: z.number().int().positive().optional(),
   status: z.string().trim().max(60).default("Todos"),
+  releaseStartedOnly: z.boolean().default(false),
 });
 
 const processInput = z.object({
@@ -87,7 +90,7 @@ export const productionRouter = router({
       const operatorOnly = ctx.localUser.operationalProfile === "operator";
       const machineCode = operatorOnly || manualPointing ? ctx.localUser.machine?.code : (input.machineCode ?? ctx.localUser.machine?.code);
       if (!machineCode) throw new Error(operatorOnly || manualPointing ? "Nenhuma máquina foi vinculada a este operador." : "Selecione uma máquina controlada.");
-      return getProgramming(machineCode, input.page, input.limit, input.search, operatorOnly, manualPointing ? input.status : operatorOnly ? "Todos" : input.status);
+      return getProgramming(machineCode, input.page, input.limit, input.search, operatorOnly, input.status, ctx.localUser.operationalProfile === "quality-release" && input.releaseStartedOnly);
     }),
     machines: programmerProcedure.query(() => getControlledMachines()),
     active: operatorProcedure.query(({ ctx }) => {
@@ -97,6 +100,11 @@ export const productionRouter = router({
     cleaningReasons: operatorProcedure.query(({ ctx }) => {
       if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
       return getCleaningReasons(ctx.localUser.machine.code);
+    }),
+    recordIdleEvent: operatorProcedure.input(z.object({ eventType: z.enum(["cleaning", "end-period"]), reasonCode: z.number().int().positive().optional() })).mutation(({ ctx, input }) => {
+      if (!ctx.localUser.machine) throw new Error("Nenhuma máquina foi vinculada a este operador.");
+      if (input.eventType === "cleaning" && !input.reasonCode) throw new Error("Selecione o motivo de limpeza.");
+      return recordIdleEvent({ machineCode: ctx.localUser.machine.code, operatorId: ctx.localUser.id, eventType: input.eventType, reasonCode: input.reasonCode });
     }),
     processes: programmerProcedure.query(() => getProcessOptions()),
     eligibleMachines: programmerProcedure.input(processInput).query(({ input }) => getEligibleProcessMachines(input)),
@@ -127,6 +135,11 @@ export const productionRouter = router({
     }),
     processLabel: localProtectedProcedure.input(processInput).query(({ ctx, input }) => {
       return getProcessLabel({ ...input, companyCode: ctx.localUser.companyCode });
+    }),
+    specialProduction: localProtectedProcedure.input(processInput.extend({ machineCode: z.number().int().positive().optional() })).query(({ ctx, input }) => {
+      const machineCode = input.machineCode ?? ctx.localUser.machine?.code;
+      if (!machineCode) throw new Error("Nenhuma máquina foi vinculada ou selecionada.");
+      return getSpecialProduction({ opCodigo: input.opCodigo, mpCodigo: input.mpCodigo, machineCode });
     }),
     previewProcessLabel: localProtectedProcedure.input(processInput.extend({ quantityPerPallet: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
       const label = await getProcessLabel({ ...input, companyCode: ctx.localUser.companyCode });

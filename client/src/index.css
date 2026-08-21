@@ -223,6 +223,7 @@
   .theme-grid-row:nth-child(even) { background: var(--theme-grid-row-alt); }
   .theme-grid-row:hover { background: color-mix(in srgb, var(--theme-grid-selected) 72%, white); }
   .theme-grid-row-selected { background: var(--theme-grid-selected) !important; box-shadow: inset 5px 0 0 var(--theme-grid-selected-ring); }
+  .programming-coladeira .programming-grid :is(thead tr, tbody tr) > :first-child { display: none; }
   .theme-btn-primary { border-color: var(--theme-btn-primary); background: linear-gradient(112deg, var(--theme-btn-primary), color-mix(in srgb, var(--theme-btn-primary) 70%, #e34b54)); color: white; box-shadow: 0 6px 16px color-mix(in srgb, var(--theme-btn-primary) 28%, transparent); }
   .theme-btn-primary:hover { border-color: var(--theme-btn-primary-hover); background: linear-gradient(112deg, var(--theme-btn-primary-hover), var(--theme-btn-primary)); color: white; }
   .theme-btn-soft { border-color: color-mix(in srgb, var(--theme-btn-primary) 55%, var(--theme-border)); background: var(--theme-btn-soft); color: var(--theme-btn-primary-hover); }
@@ -231,8 +232,10 @@
   .theme-modal-header { border-color: var(--theme-border); background: linear-gradient(105deg, var(--operation-deep) 0%, var(--operation-mid) 58%, color-mix(in srgb, var(--operation-deep) 78%, black) 100%); color: white; }
   .theme-modal-footer { border-color: var(--theme-border); background: var(--theme-surface-muted); }
   .theme-search-field { border-color: var(--theme-border); background: var(--theme-surface); color: var(--theme-text); }
-  .theme-config-trigger { border-color: color-mix(in srgb, var(--operation-bright) 65%, white); background: color-mix(in srgb, var(--operation-soft) 76%, white); color: var(--operation-ink); }
-  .theme-config-trigger:hover { background: var(--operation-soft); color: var(--operation-ink); }
+  .theme-machine-band .theme-config-trigger { border-color: #fff !important; background: #fff !important; color: #123c30 !important; box-shadow: 0 3px 12px rgb(0 0 0 / 34%) !important; }
+  .theme-machine-band .theme-config-trigger:hover { border-color: #fff !important; background: #e7f7ed !important; color: #08271e !important; }
+  :root[data-brand-theme="xsti"] .theme-machine-band .theme-config-trigger { border-color: #fff !important; background: #fff !important; color: #7d1520 !important; }
+  :root[data-brand-theme="xsti"] .theme-machine-band .theme-config-trigger:hover { border-color: #fff !important; background: #ffe9eb !important; color: #530a10 !important; }
   .theme-login-header { background: linear-gradient(112deg, var(--operation-deep), var(--operation-mid)); }
   .theme-login-submit { background: var(--operation-mid); color: white; }
   .theme-login-submit:hover { background: var(--operation-deep); }

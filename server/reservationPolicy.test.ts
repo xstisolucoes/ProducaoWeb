@@ -34,14 +34,15 @@ describe("política de reservas do apontamento", () => {
     expect(proxySource).toContain("mq.mqp_descricao as machine_description");
   });
 
-  it("usa o saldo geral apenas quando não existe reserva aplicável à finalização", () => {
+  it("usa o saldo do processo anterior quando não existe reserva aplicável à finalização", () => {
     const proxySource = readFileSync(resolve(process.cwd(), "local-firebird-proxy/server.mjs"), "utf8");
     const pointingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Pointing.tsx"), "utf8");
 
-    expect(proxySource).toContain("if (!reservation.applies && netQuantity > currentBalance)");
-    expect(proxySource).toContain("const nextBalance = reservation.applies ? Math.max(0, currentBalance - netQuantity) : currentBalance - netQuantity");
+    expect(proxySource).toContain("const quantityToPoint = reservation.applies ? currentBalance : Math.max(0, Number(reservation.indicatorQuantity ?? currentBalance))");
+    expect(proxySource).toContain("if (!reservation.applies && netQuantity > quantityToPoint)");
+    expect(proxySource).toContain("const nextBalance = reservation.applies ? Math.max(0, currentBalance - netQuantity) : Math.max(0, quantityToPoint - netQuantity)");
     expect(pointingSource).toContain("Com reserva vinculada, a baixa considera");
-    expect(pointingSource).toContain("será usado o saldo geral do processo");
+    expect(pointingSource).toContain("Quantidade a apontar");
   });
 
   it("calcula produção e baixa de reserva separadamente conforme PROD_VENDAS_PROC_PROD", () => {

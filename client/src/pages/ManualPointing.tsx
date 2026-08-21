@@ -10,6 +10,7 @@ import { OperationalConfirmDialog, OperationalMessageDialog } from "@/components
 import { ProductPalletizationDialog, ProductPrintLayoutDialog } from "@/components/ProductVisualDialogs";
 import { ProductReleaseRpncDialog } from "@/components/ProductReleaseRpncDialog";
 import { ProductFinishedLabelDialog } from "@/components/ProductFinishedLabelDialog";
+import { SpecialProductionPanel } from "@/components/SpecialProductionPanel";
 
 type FinishKind = "attended" | "partial";
 
@@ -60,6 +61,8 @@ export default function ManualPointing() {
   const isManualUser = ["manual-pointing", "manual-production", "quality-release"].includes(user?.operationalProfile ?? "");
   const requiresPeople = user?.operationalProfile === "manual-production";
   const pointing = trpc.production.pointing.get.useQuery({ opCodigo, mpCodigo }, { enabled: isManualUser && Number.isInteger(opCodigo) && Number.isInteger(mpCodigo), retry: false });
+  const specialProduction = trpc.production.pointing.specialProduction.useQuery({ opCodigo, mpCodigo }, { enabled: Boolean(pointing.data), retry: false });
+  const isPointingMachineGroup = String(pointing.data?.machineGroup ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLocaleUpperCase("pt-BR") === "APONTAMENTO";
   const approved = trpc.production.pointing.approvedQuantities.useQuery({ opCodigo, mpCodigo }, { enabled: Boolean(pointing.data), retry: false });
   const palletization = trpc.production.pointing.palletization.useQuery({ opCodigo, mpCodigo }, { enabled: showPalletization, retry: false });
   const printLayout = trpc.production.pointing.printLayout.useQuery({ opCodigo, mpCodigo }, { enabled: showLayout, retry: false });
@@ -71,8 +74,10 @@ export default function ManualPointing() {
   });
   const finish = trpc.production.pointing.finishProduction.useMutation({
     onSuccess: (result) => {
-      toast.success(result.status === "Atendido" ? "Processo atendido com sucesso." : "Processo registrado como parcial.");
-      setShowProductFinishedLabel(true);
+      const synchronized = result.specialProduction?.updated?.length ?? 0;
+      toast.success(result.status === "Atendido" ? "Processo atendido com sucesso." : "Processo registrado como parcial.", synchronized ? { description: `${synchronized} OP(s) componente(s) da Produção Especial foram atualizadas.` } : undefined);
+      if (isPointingMachineGroup) setShowProductFinishedLabel(true);
+      else setLocation("/");
     },
     onError: (error) => setMessage(error.message),
   });
@@ -147,6 +152,7 @@ export default function ManualPointing() {
 
   return <div className="theme-pointing min-h-dvh bg-[#eef4ef] p-3 lg:p-4">
     <header className="manual-pointing-header theme-machine-band rounded-2xl border px-5 py-4 text-white shadow-lg"><p className="text-xs font-black uppercase tracking-[.18em] text-white/75">{requiresPeople ? "Operador Manual · pessoas obrigatórias" : "Grupo Apontamento · acabamento manual"}</p><div className="mt-1 flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-3xl font-black">Apontamento Manual</h1><p className="mt-1 text-base font-semibold text-white/85">{item.machineDescription}</p></div>{pointingGroup ? <div className="manual-production-date rounded-xl px-4 py-2 text-right"><p className="text-xs font-bold uppercase tracking-wider">Data de produção</p><p className="text-2xl font-black">{productionDate ? productionDate.split("-").reverse().join("/") : "—"}</p></div> : null}</div></header>
+    <div className="mt-3"><SpecialProductionPanel data={specialProduction.data} loading={specialProduction.isLoading} error={specialProduction.error} /></div>
     <main className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1fr)_330px]">
       <section className="space-y-3">
         <section className="theme-surface rounded-2xl border p-4 shadow-sm"><div className="grid gap-3 md:grid-cols-[1fr_1fr_90px_1.3fr]"><Meta label="Ordem de produção" value={String(item.op_codigo)} /><Meta label="Produto" value={String(item.productCode ?? "—")} /><Meta label="Revisão" value={String(item.revision ?? "—")} /><Meta label="CPC" value={item.customerProductCode || "—"} /></div><div className="mt-3 grid gap-3 md:grid-cols-2"><Meta label="Cliente" value={item.client || item.clientLegalName || "—"} /><Meta label="Referência" value={item.produto_referencia || item.referencia || "—"} /></div></section>

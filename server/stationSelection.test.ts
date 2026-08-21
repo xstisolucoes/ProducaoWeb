@@ -26,7 +26,7 @@ describe("seleção persistida de estação", () => {
     expect(proxy).toContain('PRODUCTION_STATION_CONFIGURATOR_GROUPS');
     expect(proxy).toContain('Esta estação ainda não está configurada. Solicite ao PCP, Programador ou Administrador');
     expect(programming).toContain('canConfigureStation === true');
-    expect(programming).toContain('Configurar estação deste posto');
+    expect(programming).toContain('Configurar Máquina/Processo deste posto');
     expect(binding).toContain('production-station-bindings.json');
     expect(binding).toContain('STATION_COOKIE');
   });

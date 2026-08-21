@@ -416,4 +416,47 @@
 - [x] Completar a Etiqueta PDF com todos os dados e campos presentes no modelo FastReport de referência.
 - [x] Corrigir a grade da Etiqueta PDF para exibir Próximo Processo, OP e QR Code sem cortar os campos inferiores.
 - [x] Implementar Etiqueta de Produto Acabado na Programação e ao finalizar apontamentos, com quantidade de paletes, prévia PDF e impressão Windows.
-- [ ] Gravar início de limpeza e fim de período em MOTIVOS_OCIOSIDADE após confirmar os campos e regras do legado.
+- [x] Implementar Produção Especial: identificar OP principal e componentes, exibir o conjunto na Programação e sincronizar apontamentos, Liberação de Produto e processos manuais.
+- [x] Corrigir Produção Especial: mostrar somente OPs principais no grid, ocultar componentes e abrir o conjunto por botão com grid próprio.
+- [x] Corrigir Conjunto Especial: remover barra inferior duplicada, gravar MOV_PROCESSOS_HORARIOS nas componentes e limitar o tratamento conjunto a Liberação, Apontamento e Manual.
+- [x] Restringir a abertura automática da Etiqueta de Produto Acabado após a finalização ao grupo de máquina Apontamento.
+- [x] Restaurar a Reserva ao padrão visual de Quantidade aprovada nos temas Verde e XSTI e cobrir a regressão.
+- [x] Restaurar a ordenação por cabeçalho em todos os grids operacionais e cobrir a regressão.
+- [x] Restaurar na Programação de Liberação os indicadores Lote, Amostra, N e NC e o filtro de processos já iniciados ou atendidos.
+- [x] Gerar somente pacotes LAN completos, com verificação de conteúdo e regressão antes da entrega.
+- [x] Ajustar a Programação de Liberação para mostrar oito linhas e manter a tela operacional inteira.
+- [x] Igualar tipografia, cabeçalho, valores e espaçamento da Reserva ao padrão de Quantidades aprovadas nos temas Verde e XSTI.
+- [x] Garantir que MPH_INICIO nunca seja posterior a MPH_FIM em MOV_PROCESSOS_HORARIOS, incluindo início e fechamento de conjuntos especiais.
+- [x] Ajustar a Programação de Operadores para oito linhas, com uma única barra de botões inferior e sem Sequência da máquina.
+- [x] Corrigir o contraste e a legibilidade do botão Tema nos dois temas operacionais.
+- [x] Tratar Coladeira sem obrigatoriedade de Fila 1 e ocultar a coluna Fila para esse grupo de máquina.
+- [x] Cobrir os ajustes de Programação e Coladeira contra regressões das funcionalidades já entregues.
+- [x] Retornar à Programação ao cancelar ou deixar setup A Concluir no Apontamento de Operadores.
+- [x] Limpar e revalidar obrigatoriamente os lotes de rastreabilidade a cada nova OP aberta.
+- [x] Cobrir retorno de setup e rastreabilidade por OP contra regressões.
+- [x] Calcular e mostrar a Quantidade a apontar sem reserva pelo processo anterior menos a produção atual, identificando o nome do processo anterior.
+- [x] Exigir resultado Atendido quando a produção informada cobrir ou superar o saldo a apontar.
+- [x] Cobrir os cálculos de saldo sem reserva e a validação de atendimento obrigatório contra regressões.
+- [x] Exibir a Quantidade a apontar somente no painel inferior quando não houver reserva, mantendo o cartão superior exclusivo para Reserva aplicável.
+- [x] Bloquear clique externo e Esc no modal de rastreabilidade, permitindo saída somente pelo botão Voltar.
+- [x] Incluir OPs Parciais na seleção e programação de máquinas do grupo Coladeira.
+- [x] Adicionar combobox Status na Programação da Coladeira e na Programação Manual.
+- [x] Corrigir definitivamente o contraste do botão Tema nos temas Verde e XSTI.
+- [x] Cobrir filtros de Coladeira e Manual e legibilidade do Tema contra regressões.
+- [x] Padronizar os valores totais dos ajustes com a mesma fonte das medidas em todas as Programações.
+- [x] Exibir o botão Etiqueta PA somente para máquinas do grupo Apontamento.
+- [x] Simplificar o combobox Status para Liberado, Parcial e Em Produção, posicionando-o antes da busca.
+- [x] Corrigir os filtros por Status e Cliente em todas as Programações e cobrir contra regressões.
+- [x] Corrigir a atualização do filtro Status na Coladeira e remover a faixa vazia acima da grade, preservando a Liberação que já funciona.
+- [x] Cobrir a atualização visual e funcional do filtro Status contra regressões.
+- [x] Fixar a Programação de Operadores em oito linhas, mantendo ajustes e barra operacional no fim da tela.
+- [x] Cobrir o layout de oito linhas do Operador contra regressões.
+- [x] Alterar o status de Parcial para Liberado ao confirmar mudança de fila e cobrir a transição contra regressões.
+- [x] Reorganizar a fila da máquina após finalizar como Atendido, subindo uma posição os processos posteriores.
+- [x] Cobrir a compactação automática da fila após atendimento contra regressões.
+- [x] Exibir saldo e processo anterior no modal de finalização quando a reserva não possuir saldo utilizável.
+- [x] Cobrir a distinção entre reserva aplicável e reserva sem saldo contra regressões.
+- [x] Implementar Iniciar limpeza e Fim do período com gravação em MOTIVOS_OCIOSIDADE após confirmar os campos e regras do legado.
+- [x] Padronizar o cabeçalho verde do modal de encerramento com o contraste de Quantidades aprovadas.
+- [x] Cobrir os fluxos de limpeza e fim de período contra regressões.
+- [x] Substituir a legenda Estação por Máquina/Processo em todas as telas e mensagens operacionais.

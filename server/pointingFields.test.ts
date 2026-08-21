@@ -41,6 +41,14 @@ describe("campos técnicos do apontamento", () => {
     expect(page).toContain('if (event.key === "F5")');
     expect(page).toContain("Visualizar layout");
     expect(page).not.toContain("Voltar à fila");
+    expect(page).toContain('variables.outcome === "to_conclude" || variables.outcome === "cancelled"');
+    expect(page).toContain('setLocation("/")');
+    expect(page).toContain("setLotInputs({});");
+    expect(page).toContain("setValidatedStructures({});");
+    expect(page).toContain("}, [opCodigo, mpCodigo]);");
+    expect(page).toContain('const first = savedInput?.first ?? ""');
+    expect(page).toContain('const last = savedInput?.last ?? ""');
+    expect(page).not.toContain("const storedDigits = String(material.lot ?? \"\").replace");
     expect(app).toContain('<Route path={"/apontamento/:opCodigo/:mpCodigo"}><Pointing /></Route>');
   });
 });

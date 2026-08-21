@@ -3,13 +3,13 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("fluxo de programação do operador", () => {
-  it("filtra e autoriza somente Aberto, A Concluir e Setup a Concluir", () => {
+  it("filtra e autoriza os status operacionais, incluindo Parcial apenas na Coladeira", () => {
     const proxySource = readFileSync(resolve(process.cwd(), "local-firebird-proxy/server.mjs"), "utf8");
     const pageSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
 
-    expect(proxySource).toContain("upper(trim(coalesce(mp.mp_status, ''))) in ('LIBERADO', 'ABERTO', 'A CONCLUIR', 'SETUP A CONCLUIR')");
-    expect(proxySource).toContain("if (!['Liberado', 'Aberto', 'A Concluir', 'Setup a Concluir'].includes(String(movement.mp_status)))");
-    expect(pageSource).toContain('["Liberado", "Aberto", "A Concluir", "Setup a Concluir"].includes(item.status ?? "")');
+    expect(proxySource).toContain("'SETUP A CONCLUIR'${coladeiraMachine ? \", 'PARCIAL'\" : \"\"}");
+    expect(proxySource).toContain("const startableStatuses = ['Liberado', 'Aberto', 'A Concluir', 'Setup a Concluir', ...(coladeiraMachine ? ['Parcial'] : [])]");
+    expect(pageSource).toContain('["Liberado", "Aberto", "A Concluir", "Setup a Concluir", ...(coladeiraMachine ? ["Parcial"] : [])].includes(item.status ?? "")');
     expect(pageSource).not.toContain('item.status === "Liberado" && item.fila === 1');
   });
 
@@ -17,7 +17,9 @@ describe("fluxo de programação do operador", () => {
     const pageSource = readFileSync(resolve(process.cwd(), "client/src/pages/Pointing.tsx"), "utf8");
     const homeSource = readFileSync(resolve(process.cwd(), "client/src/pages/Home.tsx"), "utf8");
 
-    expect(pageSource).toContain('toast.success(`Produção finalizada: ${result.status}. Saldo: ${result.balance}.`, { description: `PVPP ${result.processProductionCode || "não localizado"}');
+    expect(pageSource).toContain('toast.success(`Produção finalizada: ${result.status}. Saldo: ${result.balance}.`');
+    expect(pageSource).toContain('const synchronized = result.specialProduction?.updated?.length ?? 0');
+    expect(pageSource).toContain('PVPP ${result.processProductionCode || "não localizado"}');
     expect(pageSource).toContain('setLocation("/")');
     expect(homeSource).toContain('import Programming from "./Programming"');
     expect(homeSource).toContain("return <Programming />");
@@ -27,7 +29,7 @@ describe("fluxo de programação do operador", () => {
     const proxySource = readFileSync(resolve(process.cwd(), "local-firebird-proxy/server.mjs"), "utf8");
     const pageSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
 
-    expect(pageSource).toContain('const eligibleStatus = ["Liberado", "Aberto", "A Concluir", "Setup a Concluir"]');
+    expect(pageSource).toContain('const eligibleStatus = ["Liberado", "Aberto", "A Concluir", "Setup a Concluir", ...(coladeiraMachine ? ["Parcial"] : [])]');
     expect(proxySource).toContain('const resumingToConclude = String(movement.mp_status) === "A Concluir"');
     expect(proxySource).toContain("mp_posicao = 'PI', mp_inicio = current_timestamp, mp_fim = null");
     expect(proxySource).toContain("insert into mov_processos_horarios (mph_data, usu_codigo, mph_inicio, op_codigo");
@@ -39,7 +41,8 @@ describe("fluxo de programação do operador", () => {
 
     expect(proxySource).toContain("async function consumeDailyClock(executor, machineCode)");
     expect(proxySource).toContain("where mqp_codigo = ? and cdp_status = 'Iniciado'");
-    expect(proxySource).toContain("update contador_diario_processos set cdp_cronometro = current_timestamp");
+    expect(proxySource).toContain("select current_timestamp as clock_value from rdb$database");
+    expect(proxySource).toContain("update contador_diario_processos set cdp_cronometro = ? where cdp_codigo = ?");
     expect(proxySource).toContain("const setupClock = await consumeDailyClockForMachine(machineCode)");
     expect(proxySource).toContain("mp_inicio_ajuste = ?, mp_fim_ajuste = null, mp_inicio = null, mp_fim = null");
     expect(proxySource).toContain("mph_inicio_setup, op_codigo");
@@ -50,7 +53,7 @@ describe("fluxo de programação do operador", () => {
     expect(resumeBlock).not.toContain("consumeDailyClock");
   });
 
-  it("restringe o início à fila 1 e mantém A Concluir prioritária com cronômetro de produção", () => {
+  it("restringe máquinas regulares à fila 1 e mantém A Concluir prioritária com cronômetro de produção", () => {
     const proxySource = readFileSync(resolve(process.cwd(), "local-firebird-proxy/server.mjs"), "utf8");
     const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
     const pointingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Pointing.tsx"), "utf8");
@@ -58,7 +61,7 @@ describe("fluxo de programação do operador", () => {
     expect(proxySource).toContain("Somente a fila 1 pode iniciar a produção.");
     expect(proxySource).toContain("Existe uma ordem A Concluir prioritária nesta máquina.");
     expect(programmingSource).toContain("const hasPriorityToConclude");
-    expect(programmingSource).toContain("const isPriorityRow = Number(item.fila) === 1");
+    expect(programmingSource).toContain("const isPriorityRow = coladeiraMachine || Number(item.fila) === 1");
     expect(pointingSource).toContain("const resumedToConclude = productionStarted && !item?.activeSetupStartedAt");
     expect(pointingSource).toContain('setupStarted && !productionStarted ? "Início do setup" : "Início da produção"');
     expect(pointingSource).toContain('setupStarted && !productionStarted ? "Fim do setup" : "Fim da produção"');
@@ -113,7 +116,25 @@ describe("fluxo de programação do operador", () => {
     expect(programmingSource).toContain("Iniciar limpeza");
     expect(programmingSource).toContain("Trocar operador");
     expect(programmingSource).toContain("Fim do período");
-    expect(programmingSource).toContain("Checklist de limpeza");
+    expect(programmingSource).toContain("Iniciar limpeza");
+  });
+
+  it("grava limpeza e fim de período no histórico de ociosidade da Máquina/Processo", () => {
+    const proxySource = readFileSync(resolve(process.cwd(), "local-firebird-proxy/server.mjs"), "utf8");
+    const contractSource = readFileSync(resolve(process.cwd(), "server/firebirdProxy.ts"), "utf8");
+    const routerSource = readFileSync(resolve(process.cwd(), "server/routers/production.ts"), "utf8");
+    const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
+
+    expect(proxySource).toContain('app.post("/v1/programming/idle-event"');
+    expect(proxySource).toContain("insert into motivo_ociosidade (mqp_codigo, mo_codigo, mto_data, mto_hora_inicio, usu_codigo, mto_hora_fim)");
+    expect(proxySource).toContain("eventType === \"cleaning\" ? Number(req.body?.reasonCode) : 63");
+    expect(proxySource).toContain("mqp_status_processo = 'Em Fila'");
+    expect(contractSource).toContain("export const recordIdleEvent");
+    expect(routerSource).toContain("recordIdleEvent: operatorProcedure");
+    expect(programmingSource).toContain("trpc.production.programming.recordIdleEvent.useMutation");
+    expect(programmingSource).toContain('recordIdleEvent.mutate({ eventType: "cleaning", reasonCode: selectedCleaningReason })');
+    expect(programmingSource).toContain('recordIdleEvent.mutate({ eventType: "end-period" })');
+    expect(programmingSource).toContain("Máquina/Processo");
   });
 
   it("mantém os campos operacionais no grid, busca superior, barra de chamadas e sequência de processos", () => {
@@ -125,11 +146,12 @@ describe("fluxo de programação do operador", () => {
     expect(proxySource).toContain("pv.pv_cod_prod_cli");
     expect(proxySource).toContain("varchar(255)");
     expect(proxySource).toContain("p.pes_fantasia");
+    expect(proxySource).toContain("coalesce(mp.mp_fantasia, p.pes_fantasia, mp.mp_cliente, '') containing ?");
     expect(proxySource).toContain("mp.mp_situacao_lib as process_situation");
     expect(proxySource).toContain("pv.pv_total_larg_cn as adjustment_width_total");
     expect(proxySource).toContain('app.get("/v1/programming/cleaning-reasons"');
     expect(proxySource).toContain("mp.mp_op_mestre as master_order");
-    expect(programmingSource).toContain("Código prod. cliente, OP ou referência");
+    expect(programmingSource).toContain("Cliente, código prod., OP ou referência");
     expect(programmingSource).toContain("Qtde. OP");
     expect(programmingSource).toContain("Produzida");
     expect(programmingSource).toContain("Saldo");
@@ -143,19 +165,56 @@ describe("fluxo de programação do operador", () => {
     expect(programmingSource).toContain("user?.name");
     expect(programmingSource).toContain("Ajuste largura");
     expect(programmingSource).toContain("Clichês / facas");
+    expect(programmingSource).toContain('placeholder="Cliente, código prod., OP ou referência"');
+    expect(programmingSource).toContain('const OPERATIONAL_STATUS_FILTER_OPTIONS = ["Liberado", "Parcial", "Em Produção"]');
+    expect(programmingSource).toContain("const pointingMachine = operator && isApontamentoMachineGroup(machine?.groupDescription)");
+    expect(programmingSource).toContain('{pointingMachine ? <OperatorCallButton label="Etiqueta PA"');
+    expect(programmingSource).toContain('text-2xl font-black text-[#135440]">· total');
     expect(programmingSource).toContain("selectedPrintLayout.data?.colors");
     expect(contractSource).toContain("export const getCleaningReasons");
     expect(routerSource).toContain("cleaningReasons: operatorProcedure");
   });
 
-  it("mantém sete linhas nos perfis padrão e amplia a grade para dez linhas em Qualidade", () => {
+  it("mantém oito linhas na Programação de Operadores e na Liberação, sem Sequência da máquina", () => {
     const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
 
-    expect(programmingSource).toContain("{ page, limit: qualityRelease ? 10 : 7, search, machineCode: activeMachineCode");
-    expect(programmingSource).toContain("limit={7}");
-    expect(programmingSource).toContain('description=""');
+    expect(programmingSource).toContain("const programmingLimit = qualityRelease || (operator && !manualPointing) ? 8 : 7");
+    expect(programmingSource).toContain("limit={programmingLimit}");
+    expect(programmingSource).toContain('theme-programming ${operator ? "flex min-h-dvh flex-col gap-3" : "space-y-4"}');
+    expect(programmingSource).toContain('operator ? "flex min-h-0 flex-1 flex-col" : ""');
+    expect(programmingSource).toContain('operator ? "min-h-[440px] flex-1"');
+    expect(programmingSource).not.toContain('title="Sequência da máquina"');
     expect(programmingSource).toContain("onClick={() => setSelectedProcess({ opCode: item.op_codigo");
     expect(programmingSource).toContain('cursor-pointer transition-colors');
+  });
+
+  it("permite iniciar Coladeira em qualquer fila e oculta sua coluna de fila", () => {
+    const proxySource = readFileSync(resolve(process.cwd(), "local-firebird-proxy/server.mjs"), "utf8");
+    const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
+    const themeSource = readFileSync(resolve(process.cwd(), "client/src/index.css"), "utf8");
+
+    expect(proxySource).toContain("function isColadeiraMachineGroup(groupName)");
+    expect(proxySource).toContain("if (!coladeiraMachine && Number(movement.mp_fila) !== 1)");
+    expect(proxySource).toContain("if (!isColadeiraMachineGroup(current.group_description ?? current.GROUP_DESCRIPTION) && Number(current.mp_fila ?? current.MP_FILA) !== 1)");
+    expect(programmingSource).toContain("function isColadeiraMachineGroup(groupName: string | null | undefined)");
+    expect(programmingSource).toContain("const coladeiraMachine = operator && isColadeiraMachineGroup(machine?.groupDescription)");
+    expect(programmingSource).toContain("manualPointing || coladeiraMachine ? \"\" : ` · Fila");
+    expect(programmingSource).toContain("const isPriorityRow = coladeiraMachine || Number(item.fila) === 1");
+    expect(themeSource).toContain(".programming-coladeira .programming-grid :is(thead tr, tbody tr) > :first-child { display: none; }");
+    expect(programmingSource).toContain("const OPERATIONAL_STATUS_FILTER_OPTIONS");
+    expect(programmingSource).toContain("manualPointing || coladeiraMachine ? statusFilter");
+    expect(programmingSource).toContain("flex w-full max-w-2xl flex-col gap-2 sm:flex-row sm:items-end");
+    expect(programmingSource).not.toContain('manualPointing || coladeiraMachine ? <section className="theme-filter-band');
+    expect(themeSource).toContain(".theme-machine-band .theme-config-trigger { border-color: #fff !important; background: #fff !important;");
+  });
+
+  it("libera processo Parcial movido de fila e compacta a fila após atendimento do Operador", () => {
+    const proxySource = readFileSync(resolve(process.cwd(), "local-firebird-proxy/server.mjs"), "utf8");
+
+    expect(proxySource).toContain('const releasedFromPartial = currentStatus.toLocaleLowerCase("pt-BR") === "parcial"');
+    expect(proxySource).toContain('const nextStatus = releasedFromQueue2000 || releasedFromPartial ? "Liberado" : currentStatus');
+    expect(proxySource).toContain('if (outcome === "attended" && !manualProcess && Number.isInteger(completedQueue) && completedQueue > 0 && completedQueue < 2000)');
+    expect(proxySource).toContain('where mqp_codigo = ? and mp_fila > ? and mp_fila < 2000');
   });
 
   it("renova o contador diário vencido antes de fornecer o horário de fechamento", () => {
@@ -186,10 +245,10 @@ describe("fluxo de programação do operador", () => {
     expect(programmingSource).toContain("firstDisplayName(user?.name)");
   });
 
-  it("compacta o Programador sem títulos redundantes e preserva a altura de sete linhas no grid", () => {
+  it("remove a faixa Sequência da máquina e preserva a grade compacta da Programação", () => {
     const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
 
-    expect(programmingSource).toContain('{operator && !manualPointing ? <PageHeading eyebrow="" title="Sequência da máquina" description="" compact /> : null}');
+    expect(programmingSource).not.toContain('title="Sequência da máquina"');
     expect(programmingSource).not.toContain('title={operator ? "Sequência da máquina" : "Programação e fila"}');
     expect(programmingSource).toContain('programmer ? "min-h-[388px]" : ""');
   });
@@ -219,10 +278,11 @@ describe("fluxo de programação do operador", () => {
     expect(proxySource).toContain('if (error?.statusCode) return res.status(error.statusCode).json({ error: error.message }); next(error);');
     expect(proxySource).toContain("const temporaryOffset = 1000000");
     expect(proxySource).toContain('const releasedFromQueue2000 = currentStatus.toLocaleLowerCase("pt-BR") === "a liberar" && currentQueue === 2000 && targetQueue < 2000');
-    expect(proxySource).toContain('const nextStatus = releasedFromQueue2000 ? "Liberado" : currentStatus');
+    expect(proxySource).toContain('const releasedFromPartial = currentStatus.toLocaleLowerCase("pt-BR") === "parcial"');
+    expect(proxySource).toContain('const nextStatus = releasedFromQueue2000 || releasedFromPartial ? "Liberado" : currentStatus');
     expect(proxySource).toContain("update mov_processos set mp_fila = ?, mp_status = ?");
     expect(programmingSource).toContain("window.setTimeout(reloadProgrammingPreservingMachine, 180)");
-    expect(programmingSource).toContain("result.releasedFromQueue2000 ? \" e liberada para produção.\" : \".\"");
+    expect(programmingSource).toContain('result.releasedFromPartial ? " e atualizada de Parcial para Liberado." : "."');
     expect(contractSource).toContain("export const changeOrderQueue");
     expect(routerSource).toContain("changeQueue: programmerProcedure");
     expect(programmingSource).toContain("trpc.production.programming.changeQueue.useMutation");
@@ -272,8 +332,26 @@ describe("fluxo de programação do operador", () => {
     expect(programmingSource).toContain("const refreshProgramming = async () =>");
     expect(programmingSource).toContain("Programação atualizada");
     expect(programmingSource).toContain("onClick={manualPointing ? signOut : operator ? () => setShowExitOptions(true) : signOut}");
-    expect(programmingSource).toContain('manualPointing ? "flex min-h-dvh flex-col gap-3" : "space-y-4"');
+    expect(programmingSource).toContain('operator ? "flex min-h-dvh flex-col gap-3" : "space-y-4"');
     expect(programmingSource).toContain('selectedItem ? <section className="theme-details-panel');
     expect(programmingSource).not.toContain(">Deslogar</Button>");
+  });
+
+  it("restaura a Programação de Liberação com os indicadores e o filtro de processos iniciados", () => {
+    const proxySource = readFileSync(resolve(process.cwd(), "local-firebird-proxy/server.mjs"), "utf8");
+    const contractSource = readFileSync(resolve(process.cwd(), "server/firebirdProxy.ts"), "utf8");
+    const routerSource = readFileSync(resolve(process.cwd(), "server/routers/production.ts"), "utf8");
+    const programmingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Programming.tsx"), "utf8");
+
+    expect(proxySource).toContain("const releaseStartedOnly = String(req.query.releaseStartedOnly");
+    expect(proxySource).toContain("if (releaseStartedOnly) filterParts.push");
+    expect(contractSource).toContain("releaseStartedOnly = false");
+    expect(routerSource).toContain("releaseStartedOnly: z.boolean().default(false)");
+    expect(programmingSource).toContain("const [releaseStartedOnly, setReleaseStartedOnly] = useState(false)");
+    expect(programmingSource).toContain("Mostrar apenas processos já iniciados ou atendidos anteriormente");
+    expect(programmingSource).toContain("Lote {displayValue(selectedReleasePlan.data?.lotSize)}");
+    expect(programmingSource).toContain("Amostra {displayValue(selectedReleasePlan.data?.sampleSize)}");
+    expect(programmingSource).toContain("N {displayValue(selectedReleasePlan.data?.acceptableLimit)}");
+    expect(programmingSource).toContain("NC {displayValue(selectedReleasePlan.data?.nonConformingLimit)}");
   });
 });

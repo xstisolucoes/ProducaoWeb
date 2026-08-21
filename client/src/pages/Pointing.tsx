@@ -8,6 +8,7 @@ import { ApprovedProcessQuantitiesDialog } from "@/components/ApprovedProcessQua
 import { RequestDialog } from "@/components/RequestDialog";
 import { ProcessLabelDialog } from "@/components/ProcessLabelDialog";
 import { ProductFinishedLabelDialog } from "@/components/ProductFinishedLabelDialog";
+import { SpecialProductionPanel } from "@/components/SpecialProductionPanel";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ConfirmationTone, OperationalConfirmDialog, OperationalMessageDialog } from "@/components/OperationalConfirmDialog";
@@ -38,6 +39,7 @@ export default function Pointing() {
   const mpCodigo = Number(params?.mpCodigo);
   const utils = trpc.useUtils();
   const pointing = trpc.production.pointing.get.useQuery({ opCodigo, mpCodigo }, { enabled: Number.isInteger(opCodigo) && Number.isInteger(mpCodigo), retry: false });
+  const specialProduction = trpc.production.pointing.specialProduction.useQuery({ opCodigo, mpCodigo }, { enabled: Boolean(pointing.data), retry: false });
   const [pauseOpen, setPauseOpen] = useState(false);
   const [pauseModalOpen, setPauseModalOpen] = useState(false);
   const [showTrace, setShowTrace] = useState(false);
@@ -80,7 +82,16 @@ export default function Pointing() {
     onError: (error) => toast.error("Não foi possível iniciar o setup", { description: error.message }),
   });
   const finishSetup = trpc.production.pointing.finishSetup.useMutation({
-    onSuccess: async () => { await refresh(); toast.success("Setup finalizado."); },
+    onSuccess: async (_result, variables) => {
+      await utils.production.programming.list.invalidate();
+      if (variables.outcome === "to_conclude" || variables.outcome === "cancelled") {
+        toast.success(variables.outcome === "to_conclude" ? "Setup mantido A Concluir. Retornando à Programação." : "Setup cancelado. Retornando à Programação.");
+        setLocation("/");
+        return;
+      }
+      await refresh();
+      toast.success("Setup finalizado.");
+    },
     onError: (error) => toast.error("Não foi possível finalizar o setup", { description: error.message }),
   });
   const startPause = trpc.production.pointing.startPause.useMutation({
@@ -92,7 +103,7 @@ export default function Pointing() {
     onError: (error) => toast.error("Não foi possível finalizar a parada", { description: error.message }),
   });
   const finishProduction = trpc.production.pointing.finishProduction.useMutation({
-    onSuccess: async (result) => { await utils.production.programming.list.invalidate(); await utils.production.pointing.reservation.invalidate({ opCodigo, mpCodigo }); setShowFinish(false); toast.success(`Produção finalizada: ${result.status}. Saldo: ${result.balance}.`, { description: `PVPP ${result.processProductionCode || "não localizado"} · arranjo ${result.arrangementTotal}× · informado ${result.enteredQuantity} · produzido ${result.productionQuantity} · reserva ${result.reservationQuantity}.` }); setShowProductFinishedLabel(true); },
+    onSuccess: async (result) => { await utils.production.programming.list.invalidate(); await utils.production.pointing.reservation.invalidate({ opCodigo, mpCodigo }); setShowFinish(false); const synchronized = result.specialProduction?.updated?.length ?? 0; toast.success(`Produção finalizada: ${result.status}. Saldo: ${result.balance}.`, { description: `${synchronized ? `${synchronized} OP(s) componente(s) da Produção Especial foram atualizadas. · ` : ""}PVPP ${result.processProductionCode || "não localizado"} · arranjo ${result.arrangementTotal}× · informado ${result.enteredQuantity} · produzido ${result.productionQuantity} · reserva ${result.reservationQuantity}.` }); if (isPointingMachineGroup) setShowProductFinishedLabel(true); else setLocation("/"); },
     onError: (error) => toast.error("Não foi possível finalizar a produção", { description: error.message }),
   });
   const completeInspection = trpc.production.pointing.completeInspection.useMutation({
@@ -157,6 +168,14 @@ export default function Pointing() {
   function confirmFinish(outcome: ProductionOutcome) {
     if (invalidQuantity) return;
     if (outcome === "attended" && belowReservation) return;
+    if (!hasReservation && mustAttendWhenCovered && outcome !== "attended") {
+      toast.error("Atendimento obrigatório", { description: `A produção de ${netProducedQuantity} cobre a Quantidade a apontar de ${quantityToPoint} do processo ${previousProcessName}. Finalize como Atendido.` });
+      return;
+    }
+    if (!hasReservation && outcome === "attended" && insufficientToAttendWithoutReservation) {
+      toast.error("Saldo ainda pendente", { description: `A Quantidade a apontar do processo ${previousProcessName} é ${quantityToPoint}. Use Parcial ou A Concluir enquanto a produção for menor.` });
+      return;
+    }
     const labels: Record<ProductionOutcome, string> = { attended: "Atendido", to_conclude: "A Concluir", partial: "Parcial" };
     const reservationNote = reservation.data?.applicable ? aboveReservation ? ` A baixa de reserva está ${excessPercent}% acima da reserva de ${reservation.data.balance}.` : ` Reserva considerada: ${reservation.data.balance}.` : " Este processo não possui reserva obrigatória.";
     askConfirmation({ tone: aboveReservation ? "caution" : outcome === "attended" ? "caution" : "warning", title: "Finalizar produção", description: `Confirma finalizar como ${labels[outcome]} com ${produced} informado(s), produção calculada de ${productionQuantity} e perda calculada de ${productionLost}?${reservationNote}`, confirmLabel: `Finalizar como ${labels[outcome]}`, action: () => finishProduction.mutate({ opCodigo, mpCodigo, quantityProduced: produced, quantityLost: lost, outcome, observation, lotTrace: traceSummary }) });
@@ -195,6 +214,7 @@ export default function Pointing() {
   }
 
   const item = pointing.data;
+  const isPointingMachineGroup = String(item?.machineGroup ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLocaleUpperCase("pt-BR") === "APONTAMENTO";
   const setupStarted = item?.queuePosition === "SI" || Boolean(item?.setupStartedAt);
   const productionStarted = item?.queuePosition === "PI";
   const resumedToConclude = productionStarted && !item?.activeSetupStartedAt && Boolean(item?.activeProcessStartedAt);
@@ -213,6 +233,12 @@ export default function Pointing() {
   const belowReservation = Boolean(reservation.data?.applicable && reservationQuantity < reservationBalance);
   const aboveReservation = Boolean(reservation.data?.applicable && reservationQuantity > reservationBalance);
   const excessPercent = reservationBalance > 0 ? Math.round(((reservationQuantity - reservationBalance) / reservationBalance) * 100) : 0;
+  const hasReservation = Boolean(reservation.data?.applicable);
+  const quantityToPoint = hasReservation ? reservationBalance : Math.max(0, Number(item?.previousProcessBalance ?? item?.saldo ?? 0));
+  const previousProcessName = item?.previousProcessName || reservation.data?.previousProcessDescription || "processo anterior";
+  const netProducedQuantity = productionQuantity - productionLost;
+  const mustAttendWhenCovered = !hasReservation && quantityToPoint > 0 && netProducedQuantity >= quantityToPoint;
+  const insufficientToAttendWithoutReservation = !hasReservation && quantityToPoint > 0 && netProducedQuantity < quantityToPoint;
   const allInspectionItemsConfirmed = (inspectionChecklist.data?.length ?? 0) === confirmedInspectionCodes.length;
   const processInspectionItems = processInspectionChecklist.data?.items ?? [];
   const allProcessInspectionItemsConfirmed = processInspectionItems.length > 0 && processInspectionItems.length === confirmedProcessInspectionCodes.length;
@@ -227,8 +253,16 @@ export default function Pointing() {
   const activeRpncChecklist = (rpncChecklist.data?.checklists ?? []).find((checklist) => checklist.code === selectedRpncChecklistCode) ?? rpncChecklist.data?.checklists[0] ?? null;
   const activeRpncItem = activeRpncChecklist?.items.find((checklistItem) => checklistItem.code === selectedRpncItemCode) ?? activeRpncChecklist?.items[0] ?? null;
   const activeRpncSelection = activeRpncChecklist && activeRpncItem ? rpncSelections[rpncKey(activeRpncChecklist.code, activeRpncItem.code)] ?? null : null;
-  const allLotsRecorded = traceMaterials.length === 0 || traceMaterials.every((material) => { const saved = lotInputs[material.structureCode]; const stored = String(material.lot ?? "").replace(/\D/g, ""); const currentLot = (saved?.first ?? stored.slice(0, 4)).length === 4 && (saved?.last ?? stored.slice(4, 8)).length === 4 ? `${saved?.first ?? stored.slice(0, 4)}.${saved?.last ?? stored.slice(4, 8)}` : ""; return validatedStructures[material.structureCode] === currentLot; });
-  const traceSummary = traceMaterials.map((material) => `${material.productCode}:${material.lot ?? ""}`).filter((item) => !item.endsWith(":" )).join(" | ") || lotTrace;
+  const allLotsRecorded = traceMaterials.length === 0 || traceMaterials.every((material) => {
+    const saved = lotInputs[material.structureCode];
+    const currentLot = saved?.first?.length === 4 && saved?.last?.length === 4 ? `${saved.first}.${saved.last}` : "";
+    return validatedStructures[material.structureCode] === currentLot;
+  });
+  const traceSummary = traceMaterials.map((material) => {
+    const saved = lotInputs[material.structureCode];
+    const currentLot = saved?.first?.length === 4 && saved?.last?.length === 4 ? `${saved.first}.${saved.last}` : "";
+    return validatedStructures[material.structureCode] === currentLot ? `${material.productCode}:${currentLot}` : "";
+  }).filter(Boolean).join(" | ") || lotTrace;
 
   function toggleInspection(code: number) {
     setConfirmedInspectionCodes((current) => current.includes(code) ? current.filter((itemCode) => itemCode !== code) : [...current, code]);
@@ -271,6 +305,16 @@ export default function Pointing() {
     resetLayoutView();
     setShowPrintLayout(true);
   }
+
+  useEffect(() => {
+    setShowTrace(false);
+    setShowFinish(false);
+    setPendingTraceConformance(false);
+    setResumeTraceAfterRpnc(false);
+    setLotTrace("");
+    setLotInputs({});
+    setValidatedStructures({});
+  }, [opCodigo, mpCodigo]);
 
   useEffect(() => {
     if (showTrace && !rawMaterials.isLoading && !rawMaterials.error && rawMaterials.data && rawMaterials.data.length === 0) {
@@ -349,10 +393,13 @@ export default function Pointing() {
           </div>
         </section>
 
+        <SpecialProductionPanel data={specialProduction.data} loading={specialProduction.isLoading} error={specialProduction.error} />
+
         <section className="theme-surface rounded-2xl border-2 border-[#d5e0d6] bg-white p-3 shadow-[0_6px_14px_rgba(31,42,34,.035)]">
           <div className="grid gap-x-5 gap-y-2 border-b border-[#e5ece5] pb-2 md:grid-cols-5"><Info label="Produto" value={item.productCode} prominent /><Info label="Revisão" value={item.revision} /><Info label="Referência" value={item.produto_referencia || item.referencia} /><Info label="CPC" value={item.customerProductCode} prominent /><Info label="Cliente" value={item.clientFantasy || item.client} /></div>
           <div className="mt-2 grid gap-x-5 gap-y-2 border-b border-[#e5ece5] pb-2 md:grid-cols-4"><div className="md:col-span-2"><Info label="Razão social" value={item.clientLegalName} /></div><Info label="Sentido de onda" value={item.waveDirection} /><Info label="Papelão ondulado" value={item.internalComposition} /><Info label="Fechamento" value={item.closing} /><Info label="Fechamento do LAP" value={item.lapClosing} /><Info label="Impressão" value={item.print} /><Info label="Quantidade de cores" value={item.colorCount} /><Info label="Quantidade de grampos" value={item.stapleQuantity} /></div>
-          <div className="mt-2 grid gap-4 md:grid-cols-3"><Info label="Quantidade da OP" value={item.quantity} prominent /><Info label="Saldo a produzir" value={item.saldo} prominent />{reservation.data?.indicatorQuantity != null ? <div className="rounded-xl border-2 border-[#d7ab2b] bg-gradient-to-r from-[#fff3bc] via-[#fff9df] to-[#fffdf1] px-3 py-2 shadow-[0_4px_10px_rgba(151,111,14,.12)]"><p className="font-mono text-[10px] font-black uppercase tracking-[.14em] text-[#8a6512]">{reservation.data.indicatorLabel || "Quantidade reservada"}</p><p className="mt-0.5 font-mono text-2xl font-black leading-none text-[#5b4405]">{displayValue(reservation.data.indicatorQuantity)}</p><p className="mt-1 text-xs font-bold text-[#87651a]">Reserva de matéria-prima vinculada a esta OP</p></div> : null}</div>
+          <div className="mt-2 grid gap-4 md:grid-cols-3"><Info label="Quantidade da OP" value={item.quantity} prominent /><Info label="Saldo a produzir" value={item.saldo} prominent />{reservation.data?.applicable && reservation.data.indicatorQuantity != null ? <div className="rounded-xl border-2 border-[#d7ab2b] bg-gradient-to-r from-[#fff3bc] via-[#fff9df] to-[#fffdf1] px-3 py-2 shadow-[0_4px_10px_rgba(151,111,14,.12)]"><p className="font-mono text-[10px] font-black uppercase tracking-[.14em] text-[#8a6512]">{reservation.data.indicatorLabel || "Quantidade reservada"}</p><p className="mt-0.5 font-mono text-2xl font-black leading-none text-[#5b4405]">{displayValue(reservation.data.indicatorQuantity)}</p><p className="mt-1 text-xs font-bold text-[#87651a]">Reserva de matéria-prima vinculada a esta OP</p></div> : null}</div>
+          {!hasReservation ? <QuantityToPointNotice processName={previousProcessName} quantity={quantityToPoint} compact /> : null}
         </section>
 
         <section className="grid gap-2 xl:grid-cols-[1fr_240px]"><div className="theme-surface-muted rounded-2xl border-2 border-[#d5e0d6] bg-[#f9fcf9] p-3"><div className="flex items-center gap-2 text-base font-black text-[#234437]"><Factory className="h-5 w-5 text-[#28765d]" />Especificações de ajuste</div><div className="mt-2 grid gap-2"><MeasureWithComplement label="Ajuste da largura" value={item.adjustmentWidth} complement={item.cutSheetWidth} accent="blue" /><MeasureWithComplement label="Ajuste do comprimento" value={item.adjustmentLength} complement={item.cutSheetLength} accent="red" /></div></div><div className="theme-surface rounded-2xl border-2 border-[#d5e0d6] bg-white p-3"><p className="font-mono text-[10px] font-bold uppercase tracking-[.18em] text-[#6f8075]">Cronômetros</p><div className="mt-2 grid gap-3 sm:grid-cols-2 xl:grid-cols-1"><Timer label={setupStarted && !productionStarted ? "Início do setup" : "Início da produção"} value={formatTimestamp(setupStarted && !productionStarted ? item.setupStartedAt : (resumedToConclude ? item.activeProcessStartedAt : item.processStartedAt))} /><Timer label={setupStarted && !productionStarted ? "Fim do setup" : "Fim da produção"} value={setupStarted && !productionStarted ? (item.setupFinishedAt ? formatTimestamp(item.setupFinishedAt) : "—") : (item.processFinishedAt ? formatTimestamp(item.processFinishedAt) : "—")} /></div></div></section>
@@ -443,10 +490,10 @@ export default function Pointing() {
             <div className="mt-5 flex justify-end"><Button variant="outline" onClick={() => setPauseModalOpen(false)} className="h-14 border-2 border-[#cf3f3f] bg-[#cf3f3f] px-6 text-lg font-black text-white hover:bg-[#ad2e2e] hover:text-white">Cancelar</Button></div>
           </DialogContent>
         </Dialog>
-        <Dialog open={showTrace} onOpenChange={setShowTrace}>
-          <DialogContent className="max-h-[88vh] w-[calc(100vw-2rem)] max-w-none overflow-y-auto border-2 border-[#177458] bg-[#f5fbf6] p-5 sm:max-w-[1120px] sm:p-6">
+        <Dialog open={showTrace} onOpenChange={(open) => { if (open) setShowTrace(true); }}>
+          <DialogContent onPointerDownOutside={(event) => event.preventDefault()} onEscapeKeyDown={(event) => event.preventDefault()} className="max-h-[88vh] w-[calc(100vw-2rem)] max-w-none overflow-y-auto border-2 border-[#177458] bg-[#f5fbf6] p-5 sm:max-w-[1120px] sm:p-6">
             <DialogHeader><DialogTitle className="text-2xl font-black text-[#173b2e]">Rastreio de matérias-primas</DialogTitle><DialogDescription className="text-base font-bold text-[#607568]">Informe e valide o lote de cada matéria-prima antes de finalizar a produção.</DialogDescription></DialogHeader>
-            <div className="mt-4 grid gap-3">{rawMaterials.isLoading ? <p className="text-base font-bold text-[#607568]">Carregando estrutura da ordem…</p> : traceMaterials.map((material) => { const storedDigits = String(material.lot ?? "").replace(/\D/g, ""); const savedInput = lotInputs[material.structureCode]; const first = savedInput?.first ?? storedDigits.slice(0, 4); const last = savedInput?.last ?? storedDigits.slice(4, 8); const currentLot = first.length === 4 && last.length === 4 ? `${first}.${last}` : ""; const validated = validatedStructures[material.structureCode] === currentLot; return <div key={material.structureCode} className="overflow-x-auto rounded-xl border-2 border-[#c8dfcf] bg-white p-4"><div className="grid min-w-[860px] grid-cols-[minmax(330px,1fr)_auto] items-center gap-4"><p className="whitespace-nowrap text-lg font-black text-[#284535]">{material.productName}</p><div className="flex items-center gap-2"><input inputMode="numeric" pattern="[0-9]*" maxLength={4} value={first} onChange={(event) => setLotInputs((current) => ({ ...current, [material.structureCode]: { first: event.target.value.replace(/\D/g, "").slice(0, 4), last } }))} placeholder="0000" aria-label={`Primeiros quatro dígitos do lote de ${material.productName}`} className="h-12 w-20 rounded-lg border-2 border-[#8ab69a] px-2 text-center font-mono text-base font-black text-[#193d2c]" /><span className="font-mono text-xl font-black text-[#28765d]">.</span><input inputMode="numeric" pattern="[0-9]*" maxLength={4} value={last} onChange={(event) => setLotInputs((current) => ({ ...current, [material.structureCode]: { first, last: event.target.value.replace(/\D/g, "").slice(0, 4) } }))} placeholder="0000" aria-label={`Últimos quatro dígitos do lote de ${material.productName}`} className="h-12 w-20 rounded-lg border-2 border-[#8ab69a] px-2 text-center font-mono text-base font-black text-[#193d2c]" /><Button disabled={validateLot.isPending || !currentLot} onClick={() => confirmAction(`Confirma o lote ${currentLot} para ${material.productName}?`, () => validateLot.mutate({ opCodigo, structureCode: material.structureCode, lot: currentLot }))} className="h-12 min-w-28 bg-[#177458] px-5 text-base font-black hover:bg-[#0f6248]">{validated ? "Validado" : "Validar"}</Button></div></div></div>; })}</div>
+            <div className="mt-4 grid gap-3">{rawMaterials.isLoading ? <p className="text-base font-bold text-[#607568]">Carregando estrutura da ordem…</p> : traceMaterials.map((material) => { const savedInput = lotInputs[material.structureCode]; const first = savedInput?.first ?? ""; const last = savedInput?.last ?? ""; const currentLot = first.length === 4 && last.length === 4 ? `${first}.${last}` : ""; const validated = validatedStructures[material.structureCode] === currentLot; return <div key={material.structureCode} className="overflow-x-auto rounded-xl border-2 border-[#c8dfcf] bg-white p-4"><div className="grid min-w-[860px] grid-cols-[minmax(330px,1fr)_auto] items-center gap-4"><p className="whitespace-nowrap text-lg font-black text-[#284535]">{material.productName}</p><div className="flex items-center gap-2"><input inputMode="numeric" pattern="[0-9]*" maxLength={4} value={first} onChange={(event) => setLotInputs((current) => ({ ...current, [material.structureCode]: { first: event.target.value.replace(/\D/g, "").slice(0, 4), last } }))} placeholder="0000" aria-label={`Primeiros quatro dígitos do lote de ${material.productName}`} className="h-12 w-20 rounded-lg border-2 border-[#8ab69a] px-2 text-center font-mono text-base font-black text-[#193d2c]" /><span className="font-mono text-xl font-black text-[#28765d]">.</span><input inputMode="numeric" pattern="[0-9]*" maxLength={4} value={last} onChange={(event) => setLotInputs((current) => ({ ...current, [material.structureCode]: { first, last: event.target.value.replace(/\D/g, "").slice(0, 4) } }))} placeholder="0000" aria-label={`Últimos quatro dígitos do lote de ${material.productName}`} className="h-12 w-20 rounded-lg border-2 border-[#8ab69a] px-2 text-center font-mono text-base font-black text-[#193d2c]" /><Button disabled={validateLot.isPending || !currentLot} onClick={() => confirmAction(`Confirma o lote ${currentLot} para ${material.productName}?`, () => validateLot.mutate({ opCodigo, structureCode: material.structureCode, lot: currentLot }))} className="h-12 min-w-28 bg-[#177458] px-5 text-base font-black hover:bg-[#0f6248]">{validated ? "Validado" : "Validar"}</Button></div></div></div>; })}</div>
             {rawMaterials.error ? <p className="mt-3 rounded-lg border-2 border-[#d68b8b] bg-[#fff1f1] p-3 text-base font-bold text-[#9b2525]">Erro do rastreio: {rawMaterials.error.message}</p> : null}
             {!rawMaterials.isLoading && !traceMaterials.length ? <p className="mt-3 rounded-lg border border-[#c8dfcf] bg-white p-3 text-base font-bold text-[#28765d]">Nenhuma matéria-prima foi encontrada na estrutura desta ordem.</p> : null}
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end"><Button variant="outline" onClick={() => setShowTrace(false)} className="h-14 border-2 border-[#98b8a3] px-6 text-lg font-black">Voltar</Button><Button disabled={!allLotsRecorded || rawMaterials.isLoading} onClick={() => { setShowTrace(false); setShowFinish(true); }} className="h-14 bg-[#177458] px-6 text-lg font-black hover:bg-[#0f6248]">Avançar para finalização</Button></div>
@@ -455,13 +502,14 @@ export default function Pointing() {
         <Dialog open={showFinish} onOpenChange={setShowFinish}>
           <DialogContent className="max-h-[92vh] w-[calc(100vw-2rem)] max-w-4xl overflow-x-hidden overflow-y-auto border-2 border-[#177458] bg-[#f5fbf6] p-3 min-[780px]:p-5">
             <DialogHeader><DialogTitle className="text-xl font-black text-[#173b2e] min-[780px]:text-2xl">Finalizar produção</DialogTitle><DialogDescription className="text-sm font-bold text-[#607568] min-[780px]:text-base">Registre as quantidades e escolha o resultado operacional da produção.</DialogDescription></DialogHeader>
-            {reservation.isLoading ? <div className="mt-3 animate-pulse rounded-xl bg-[#e8f5eb] p-3 text-sm font-bold text-[#28613a]">Consultando reserva de estoque…</div> : reservation.data?.applicable ? <div className="mt-3 rounded-xl border-2 border-[#b8d9c0] bg-white p-3"><p className="font-mono text-xs font-black uppercase tracking-[.13em] text-[#4e7a5b]">Reserva de estoque · {reservation.data.groupLabel}</p><div className="mt-1 grid gap-1 min-[780px]:grid-cols-3"><p className="text-base font-black text-[#284535]">Quantidade reservada: <span className="font-mono text-xl text-[#177458]">{reservation.data.quantity}</span></p><p className="text-base font-black text-[#284535]">Saldo reservado: <span className="font-mono text-xl text-[#177458]">{reservation.data.balance}</span></p><p className="text-base font-black text-[#284535]">Arranjo da reserva: <span className="font-mono text-xl text-[#8b6413]">{reservation.data.arrangementLength} × {reservation.data.arrangementColumns}</span></p></div><p className="mt-1 text-xs font-bold text-[#56705c]">Com reserva vinculada, a baixa considera a quantidade informada; o arranjo da reserva calcula a produção quando habilitado pelo processo.</p></div> : <div className="mt-3 rounded-xl border border-[#c8dfcf] bg-white p-3 text-sm font-bold text-[#607568]">Este processo não exige reserva de estoque para finalizar; será usado o saldo geral do processo.</div>}
+            {reservation.isLoading ? <div className="mt-3 animate-pulse rounded-xl bg-[#e8f5eb] p-3 text-sm font-bold text-[#28613a]">Consultando reserva de estoque…</div> : reservation.data?.applicable ? <div className="mt-3 rounded-xl border-2 border-[#b8d9c0] bg-white p-3"><p className="font-mono text-xs font-black uppercase tracking-[.13em] text-[#4e7a5b]">Reserva de estoque · {reservation.data.groupLabel}</p><div className="mt-1 grid gap-1 min-[780px]:grid-cols-3"><p className="text-base font-black text-[#284535]">Quantidade reservada: <span className="font-mono text-xl text-[#177458]">{reservation.data.quantity}</span></p><p className="text-base font-black text-[#284535]">Saldo reservado: <span className="font-mono text-xl text-[#177458]">{reservation.data.balance}</span></p><p className="text-base font-black text-[#284535]">Arranjo da reserva: <span className="font-mono text-xl text-[#8b6413]">{reservation.data.arrangementLength} × {reservation.data.arrangementColumns}</span></p></div><p className="mt-1 text-xs font-bold text-[#56705c]">Com reserva vinculada, a baixa considera a quantidade informada; o arranjo da reserva calcula a produção quando habilitado pelo processo.</p></div> : reservation.data?.indicatorQuantity != null ? <QuantityToPointNotice processName={reservation.data.previousProcessDescription ?? "processo anterior"} quantity={reservation.data.indicatorQuantity} /> : <div className="mt-3 rounded-xl border border-[#c8dfcf] bg-white p-3 text-sm font-bold text-[#607568]">Este processo não exige reserva de estoque para finalizar; será usado o saldo geral do processo.</div>}
             {productionMultiplier > 1 || reservationMultiplier > 1 ? <div className="mt-3 grid gap-2 rounded-xl border-2 border-[#94b8a1] bg-[#edf7ef] p-3 text-sm font-bold text-[#284535] min-[780px]:grid-cols-3"><p>Arranjo produtivo: <strong>{productionMultiplier}×</strong></p><p>Produção resultante: <strong className="font-mono text-[#177458]">{productionQuantity}</strong></p><p>Baixa de reserva: <strong className="font-mono text-[#8b6413]">{reservationQuantity}</strong></p></div> : null}
             <div className="mt-3 grid grid-cols-1 gap-3 min-[780px]:grid-cols-2"><label className="grid min-w-0 gap-1 text-base font-black text-[#284535]">Quantidade produzida <span className="text-[#b82727]">*</span><input required inputMode="numeric" value={quantityProduced} onChange={(event) => setQuantityProduced(event.target.value.replace(/\D/g, ""))} className="h-14 w-full min-w-0 rounded-lg border-2 border-[#8ab69a] bg-white px-3 text-2xl font-black" /></label><label className="grid min-w-0 gap-1 text-base font-black text-[#284535]">Perda <span className="text-[#b82727]">*</span><input required inputMode="numeric" value={quantityLost} onChange={(event) => setQuantityLost(event.target.value.replace(/\D/g, ""))} className="h-14 w-full min-w-0 rounded-lg border-2 border-[#8ab69a] bg-white px-3 text-2xl font-black" /></label><label className="grid min-w-0 gap-1 text-sm font-black text-[#284535] min-[780px]:col-span-2">Observação<textarea value={observation} onChange={(event) => setObservation(event.target.value)} className="min-h-16 w-full min-w-0 rounded-lg border-2 border-[#8ab69a] bg-white px-3 py-2 text-sm" /></label></div>
             {invalidQuantity ? <p className="mt-2 rounded-lg border-2 border-[#d68b8b] bg-[#fff1f1] p-2 text-sm font-bold leading-snug text-[#b82727]">Informe quantidade produzida e perda. A produção deve ser maior que zero e a perda não pode superar a quantidade.</p> : null}
             {belowReservation ? <p className="mt-2 rounded-lg border-2 border-[#e3b272] bg-[#fff7e7] p-2 text-sm font-bold leading-snug text-[#985808]">A baixa de reserva calculada é menor que o saldo reservado de {reservationBalance}. Selecione <strong>Parcial</strong> ou <strong>A concluir</strong>; não é possível atender a OP abaixo da reserva.</p> : null}
             {aboveReservation ? <p className="mt-2 rounded-lg border-2 border-[#d68b8b] bg-[#fff1f1] p-2 text-sm font-bold leading-snug text-[#a12727]">A baixa de reserva está {reservationQuantity - reservationBalance} acima da reserva ({excessPercent}% excedente). O sistema permitirá a operação, mas confirmará esse excedente antes da gravação.</p> : null}
-            <div className="mt-3"><p className="mb-2 text-base font-black text-[#284535]">Resultado da produção</p><div className="grid grid-cols-1 gap-2 min-[780px]:grid-cols-3"><FinishButton label="Atendido" description="Concluir produção" tone="attended" disabled={invalidQuantity || belowReservation || finishProduction.isPending} onClick={() => finishWith("attended")} /><FinishButton label="A concluir" description="Manter produção pendente" tone="to_conclude" disabled={invalidQuantity || finishProduction.isPending} onClick={() => finishWith("to_conclude")} /><FinishButton label="Parcial" description="Registrar produção parcial" tone="partial" disabled={invalidQuantity || finishProduction.isPending} onClick={() => finishWith("partial")} /></div></div>
+            {mustAttendWhenCovered ? <p className="mt-2 rounded-lg border-2 border-[#d7ab2b] bg-[#fff7d9] p-2 text-sm font-bold leading-snug text-[#7a5710]">A produção calculada de {netProducedQuantity} cobre a Quantidade a apontar de {quantityToPoint}. O processo deve ser finalizado como <strong>Atendido</strong>.</p> : null}
+            <div className="mt-3"><p className="mb-2 text-base font-black text-[#284535]">Resultado da produção</p><div className="grid grid-cols-1 gap-2 min-[780px]:grid-cols-3"><FinishButton label="Atendido" description="Concluir produção" tone="attended" disabled={invalidQuantity || belowReservation || insufficientToAttendWithoutReservation || finishProduction.isPending} onClick={() => finishWith("attended")} /><FinishButton label="A concluir" description="Manter produção pendente" tone="to_conclude" disabled={invalidQuantity || mustAttendWhenCovered || finishProduction.isPending} onClick={() => finishWith("to_conclude")} /><FinishButton label="Parcial" description="Registrar produção parcial" tone="partial" disabled={invalidQuantity || mustAttendWhenCovered || finishProduction.isPending} onClick={() => finishWith("partial")} /></div></div>
             <div className="sticky bottom-0 z-10 -mx-3 mt-3 border-t border-[#c8dfcf] bg-[#f5fbf6] px-3 pt-3"><Button variant="outline" onClick={() => setShowFinish(false)} className="h-12 w-full border-2 border-[#98b8a3] px-6 text-base font-black min-[560px]:ml-auto min-[560px]:w-auto">Voltar</Button></div>
           </DialogContent>
         </Dialog>
@@ -480,6 +528,10 @@ function PalletizationImage({ title, description, imageDataUri, imageError }: { 
 
 function LegacyField({ label, value, grow = false }: { label: string; value: string | number | null | undefined; grow?: boolean }) { return <span className={grow ? "min-w-[220px] flex-1" : undefined}>{label} <strong className="ml-1 text-xl font-black text-[#c83333]">{displayValue(value)}</strong></span>; }
 function LegacyCheckbox({ label, checked }: { label: string; checked: boolean }) { return <label className="flex items-center gap-2"><input type="checkbox" checked={checked} readOnly className="h-4 w-4 accent-[#177458]" /><span>{label}</span></label>; }
+
+function QuantityToPointNotice({ processName, quantity, compact = false }: { processName: string; quantity: number; compact?: boolean }) {
+  return <div className={`${compact ? "mt-3" : "mt-3"} rounded-xl border-2 border-[#d7ab2b] bg-gradient-to-r from-[#fff3bc] via-[#fff9df] to-[#fffdf1] px-3 py-2 shadow-[0_4px_10px_rgba(151,111,14,.12)]`}><p className="font-mono text-[10px] font-black uppercase tracking-[.14em] text-[#8a6512]">Quantidade a apontar · {processName}</p><p className="mt-0.5 text-base font-black text-[#284535]">Produzida no processo anterior menos a já apontada neste processo: <span className="font-mono text-2xl leading-none text-[#5b4405]">{quantity}</span></p>{compact ? <p className="mt-1 text-xs font-bold text-[#87651a]">Saldo originado no processo {processName}.</p> : <p className="mt-1 text-xs font-bold text-[#87651a]">Ao atingir esse saldo, finalize obrigatoriamente como <strong>Atendido</strong>.</p>}</div>;
+}
 
 function SetupButton({ label, description, shortcut, intent, disabled, onClick }: { label: string; description: string; shortcut: string; intent: SetupOutcome; disabled: boolean; onClick: () => void }) {
   const styles: Record<SetupOutcome, string> = { attended: "bg-[#177458] hover:bg-[#0f6248]", to_conclude: "bg-[#bb7515] hover:bg-[#965b09]", cancelled: "bg-[#b82727] hover:bg-[#951a1a]" };

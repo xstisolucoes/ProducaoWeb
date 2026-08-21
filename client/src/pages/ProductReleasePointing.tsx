@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { OperationalConfirmDialog, OperationalMessageDialog } from "@/components/OperationalConfirmDialog";
 import { ProductPalletizationDialog, ProductPrintLayoutDialog } from "@/components/ProductVisualDialogs";
 import { ProductReleaseRpncDialog } from "@/components/ProductReleaseRpncDialog";
+import { SpecialProductionPanel } from "@/components/SpecialProductionPanel";
 
 type Outcome = "attended" | "partial";
 type Conformity = "Conforme" | "Não Conforme";
@@ -43,6 +44,7 @@ export default function ProductReleasePointing() {
   const releaseStartKeyRef = useRef<string | null>(null);
   const isManualUser = ["manual-pointing", "manual-production", "quality-release"].includes(user?.operationalProfile ?? "");
   const pointing = trpc.production.pointing.get.useQuery({ opCodigo, mpCodigo }, { enabled: isManualUser && Number.isInteger(opCodigo) && Number.isInteger(mpCodigo), retry: false });
+  const specialProduction = trpc.production.pointing.specialProduction.useQuery({ opCodigo, mpCodigo }, { enabled: Boolean(pointing.data), retry: false });
   const plan = trpc.production.pointing.productReleasePlan.useQuery({ opCodigo, mpCodigo }, { enabled: Boolean(pointing.data && isReleaseGroup(pointing.data.machineGroup)), retry: false });
   const approved = trpc.production.pointing.approvedQuantities.useQuery({ opCodigo, mpCodigo }, { enabled: Boolean(pointing.data), retry: false });
   const palletization = trpc.production.pointing.palletization.useQuery({ opCodigo, mpCodigo }, { enabled: showPalletization, retry: false });
@@ -50,7 +52,8 @@ export default function ProductReleasePointing() {
   const startManual = trpc.production.pointing.startManual.useMutation({ onSuccess: () => pointing.refetch(), onError: error => { releaseStartKeyRef.current = null; setMessage(error.message); } });
   const finish = trpc.production.pointing.finishProductRelease.useMutation({
     onSuccess: result => {
-      toast.success(result.status === "Liberado" ? "Produto encaminhado para Amostragem Geral." : "Liberação de Produto finalizada.");
+      const synchronized = result.specialProduction?.updated?.length ?? 0;
+      toast.success(result.status === "Liberado" ? "Produto encaminhado para Amostragem Geral." : "Liberação de Produto finalizada.", synchronized ? { description: `${synchronized} OP(s) componente(s) da Produção Especial foram atualizadas.` } : undefined);
       setLocation("/");
     },
     onError: error => setMessage(error.message),
@@ -121,6 +124,8 @@ export default function ProductReleasePointing() {
           </div>
         </div>
       </header>
+
+      <div className="mt-3"><SpecialProductionPanel data={specialProduction.data} loading={specialProduction.isLoading} error={specialProduction.error} /></div>
 
       <main className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1fr)_330px]">
         <section className="space-y-3">

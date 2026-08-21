@@ -214,6 +214,8 @@ export type ProgrammingOrder = ProductionOrder & {
   adjustmentWidthTotal: string | null;
   adjustmentLengthTotal: string | null;
   master_order: number | null;
+  specialCode: number | null;
+  specialPrimary: boolean;
 };
 export type ControlledMachine = { code: number; description: string; manualProcess: string | null };
 export type EligibleProcessMachine = { code: number; description: string };
@@ -263,6 +265,8 @@ export type QueueProcess = {
 export type RequestSector = { code: number; description: string; areaCode: number | null };
 export type ApprovedProcessQuantity = { processGroup: number | null; arrangement: string | null; approvedQuantity: number | null; status: string | null };
 export type ProductReleaseSamplingPlan = { lotSize: number; sampleSize: number | null; acceptableLimit: number | null; nonConformingLimit: number | null; planCode: number | null; stage: "1º Amostragem" | "Amostragem Geral" };
+export type SpecialProductionComponent = { opCode: number; mpCode: number; productCode: number | null; product: string | null; revision: number | null; customerProductCode: string | null; client: string | null; status: string | null; queuePosition: string | null; balance: number; producedQuantity: number; piecesPerSet: number; reference: string | null; machineDescription: string | null };
+export type SpecialProduction = { isSpecial: boolean; specialCode: number | null; primaryOpCode: number; components: SpecialProductionComponent[]; updated?: { opCode: number; mpCode: number; factor: number; producedQuantity: number; lostQuantity: number; netQuantity: number }[]; skipped?: number[] };
 
 export type PointingOrder = ProgrammingOrder & {
   productCode: number | null;
@@ -294,6 +298,7 @@ export type PointingOrder = ProgrammingOrder & {
   calculateProductionArrangement: boolean;
   calculateReservationArrangement: boolean;
   activePause: boolean;
+  specialProduction?: SpecialProduction;
 };
 
 type ProxyEnvironment = {
@@ -363,10 +368,16 @@ export const getStock = (page: number, limit: number, search: string) =>
   request<PagedResult<StockBalance>>(`/v1/stock?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`);
 export const getStockHistory = (page: number, limit: number) =>
   request<PagedResult<StockMovement>>(`/v1/stock/history?page=${page}&limit=${limit}`);
-export const getProgramming = (machineCode: number, page: number, limit: number, search: string, operatorOnly = false, status = "Todos") =>
-  request<PagedResult<ProgrammingOrder>>(`/v1/programming?machineCode=${machineCode}&page=${page}&limit=${limit}&search=${encodeURIComponent(search)}&operatorOnly=${operatorOnly}&status=${encodeURIComponent(status)}`);
+export const getProgramming = (machineCode: number, page: number, limit: number, search: string, operatorOnly = false, status = "Todos", releaseStartedOnly = false) =>
+  request<PagedResult<ProgrammingOrder>>(`/v1/programming?machineCode=${machineCode}&page=${page}&limit=${limit}&search=${encodeURIComponent(search)}&operatorOnly=${operatorOnly}&status=${encodeURIComponent(status)}&releaseStartedOnly=${releaseStartedOnly}`);
 export const getControlledMachines = () => request<ControlledMachine[]>("/v1/programming/machines");
 export const getCleaningReasons = (machineCode: number) => request<PauseReason[]>(`/v1/programming/cleaning-reasons?machineCode=${machineCode}`);
+export const recordIdleEvent = (input: { machineCode: number; operatorId: number; eventType: "cleaning" | "end-period"; reasonCode?: number }) =>
+  request<{ success: true; eventType: "cleaning" | "end-period"; reasonCode: number; recordedAt: string }>("/v1/programming/idle-event", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
 export const getActiveProduction = (machineCode: number) =>
   request<ActiveProductionRecovery | null>(`/v1/programming/active?machineCode=${machineCode}`);
 export const getQueue = (machineCode: number, page: number, limit: number, search: string) =>
@@ -381,10 +392,12 @@ export const getApprovedProcessQuantities = (input: { opCodigo: number; mpCodigo
   request<ApprovedProcessQuantity[]>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/approved-quantities`);
 export const getPointingOrder = (opCodigo: number, mpCodigo: number, machineCode: number) =>
   request<PointingOrder>(`/v1/pointing/${opCodigo}/${mpCodigo}?machineCode=${machineCode}`);
+export const getSpecialProduction = (input: { opCodigo: number; mpCodigo: number; machineCode: number }) =>
+  request<SpecialProduction>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/special-production?machineCode=${input.machineCode}`);
 export const getProductReleaseSamplingPlan = (input: { opCodigo: number; mpCodigo: number; machineCode: number }) =>
   request<ProductReleaseSamplingPlan>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/product-release-plan?machineCode=${input.machineCode}`);
 export const finishProductRelease = (input: { opCodigo: number; mpCodigo: number; machineCode: number; operatorId: number; outcome: "attended" | "partial"; conformity: "Conforme" | "Não Conforme"; stage: "1º Amostragem" | "Amostragem Geral"; lotSize: number; quantityLost: number; quantityReworked: number }) =>
-  request<{ success: true; status: string; conformity: string; stage: string; producedQuantity: number }>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/product-release`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
+  request<{ success: true; status: string; conformity: string; stage: string; producedQuantity: number; specialProduction?: SpecialProduction }>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/product-release`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
 export const getProcessLabel = (input: { opCodigo: number; mpCodigo: number; companyCode: number | null }) =>
   request<ProcessLabel>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/process-label?companyCode=${input.companyCode ?? ""}`);
 export const printProcessLabelPdf = (input: { printer: string; copies: number; pdfBase64: string }) =>
@@ -449,7 +462,7 @@ export const startPause = (input: { opCodigo: number; mpCodigo: number; machineC
 export const finishPause = (input: { opCodigo: number; mpCodigo: number; machineCode: number }) =>
   request<{ success: true }>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/pause/finish`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
 export const finishProduction = (input: { opCodigo: number; mpCodigo: number; machineCode: number; operatorId: number; quantityProduced: number; quantityLost: number; quantityPeople: number; productionDate: string; outcome: "attended" | "to_conclude" | "partial"; observation: string; lotTrace: string }) =>
-  request<{ success: true; status: string; balance: number; reservation: number; allocated: number; processProductionCode: number; arrangementTotal: number; calculateProductionArrangement: boolean; calculateReservationArrangement: boolean; enteredQuantity: number; productionMultiplier: number; productionQuantity: number; reservationMultiplier: number; reservationQuantity: number }>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/finish-production`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
+  request<{ success: true; status: string; balance: number; reservation: number; allocated: number; processProductionCode: number; arrangementTotal: number; calculateProductionArrangement: boolean; calculateReservationArrangement: boolean; enteredQuantity: number; productionMultiplier: number; productionQuantity: number; reservationMultiplier: number; reservationQuantity: number; specialProduction?: SpecialProduction }>(`/v1/pointing/${input.opCodigo}/${input.mpCodigo}/finish-production`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
 export const getProcessOptions = () => request<ProcessOption[]>("/v1/programming/processes");
 export const getEligibleProcessMachines = (input: { opCodigo: number; mpCodigo: number }) =>
   request<EligibleProcessMachine[]>(`/v1/programming/${input.opCodigo}/${input.mpCodigo}/eligible-machines`);
@@ -460,7 +473,7 @@ export const changeOrderProcess = (input: { opCodigo: number; mpCodigo: number; 
     body: JSON.stringify(input),
   });
 export const changeOrderQueue = (input: { opCodigo: number; mpCodigo: number; machineCode: number; queue: number }) =>
-  request<{ success: true; queue: number; status: string; releasedFromQueue2000: boolean }>(`/v1/programming/${input.opCodigo}/${input.mpCodigo}/queue`, {
+  request<{ success: true; queue: number; status: string; releasedFromQueue2000: boolean; releasedFromPartial: boolean }>(`/v1/programming/${input.opCodigo}/${input.mpCodigo}/queue`, {
     method: "PATCH",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(input),

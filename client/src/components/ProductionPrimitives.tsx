@@ -1,5 +1,6 @@
-import { AlertCircle, ChevronLeft, ChevronRight, Search, WifiOff } from "lucide-react";
+import { AlertCircle, ArrowDownAZ, ArrowUpAZ, ArrowUpDown, ChevronLeft, ChevronRight, Search, WifiOff } from "lucide-react";
 import type { ReactNode, Ref } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -77,4 +78,38 @@ export const displayValue = (value: string | number | null | undefined, fallback
 
 export function LoadingRows({ columns, rows = 4 }: { columns: number; rows?: number }) {
   return <>{Array.from({ length: rows }).map((_, row) => <tr key={row} className="animate-pulse">{Array.from({ length: columns }).map((__, column) => <td className="px-5 py-4" key={column}><div className="h-3.5 rounded bg-[#edf0eb]" style={{ width: `${58 + ((row + column) % 4) * 10}%` }} /></td>)}</tr>)}</>;
+}
+
+export type GridSortDirection = "asc" | "desc";
+
+export function useGridSort<T extends object>(items: T[] | undefined) {
+  const [sort, setSort] = useState<{ key: keyof T & string; direction: GridSortDirection } | null>(null);
+  const sortedItems = useMemo(() => {
+    const rows = [...(items ?? [])];
+    if (!sort) return rows;
+    const multiplier = sort.direction === "asc" ? 1 : -1;
+    return rows.sort((left, right) => {
+      const a = (left as Record<string, unknown>)[sort.key];
+      const b = (right as Record<string, unknown>)[sort.key];
+      const aEmpty = a === null || a === undefined || a === "";
+      const bEmpty = b === null || b === undefined || b === "";
+      if (aEmpty || bEmpty) return aEmpty === bEmpty ? 0 : aEmpty ? 1 : -1;
+      if (typeof a === "number" && typeof b === "number") return (a - b) * multiplier;
+      return String(a).localeCompare(String(b), "pt-BR", { numeric: true, sensitivity: "base" }) * multiplier;
+    });
+  }, [items, sort]);
+  const toggleSort = (key: keyof T & string) => setSort((current) => current?.key === key ? { key, direction: current.direction === "asc" ? "desc" : "asc" } : { key, direction: "asc" });
+  return { sortedItems, sortKey: sort?.key ?? null, sortDirection: sort?.direction ?? null, toggleSort };
+}
+
+export function SortableHeader({ label, column, sortKey, sortDirection, onSort, className = "" }: { label: string; column: string; sortKey: string | null; sortDirection: GridSortDirection | null; onSort: (column: string) => void; className?: string }) {
+  const active = sortKey === column;
+  const Icon = active ? sortDirection === "asc" ? ArrowDownAZ : ArrowUpAZ : ArrowUpDown;
+  return <th className={`p-0 ${className}`} aria-sort={active ? sortDirection === "asc" ? "ascending" : "descending" : "none"}><button type="button" onClick={() => onSort(column)} className="flex w-full items-center gap-1 px-3 py-3 text-left transition hover:bg-black/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-current"><span>{label}</span><Icon className={`h-3.5 w-3.5 shrink-0 ${active ? "opacity-100" : "opacity-45"}`} /></button></th>;
+}
+
+export function SortableGridButton({ label, column, sortKey, sortDirection, onSort, className = "" }: { label: string; column: string; sortKey: string | null; sortDirection: GridSortDirection | null; onSort: (column: string) => void; className?: string }) {
+  const active = sortKey === column;
+  const Icon = active ? sortDirection === "asc" ? ArrowDownAZ : ArrowUpAZ : ArrowUpDown;
+  return <button type="button" onClick={() => onSort(column)} className={`flex items-center gap-1 text-left transition hover:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current ${className}`}><span>{label}</span><Icon className={`h-3.5 w-3.5 ${active ? "opacity-100" : "opacity-45"}`} /></button>;
 }

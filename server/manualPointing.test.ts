@@ -42,16 +42,16 @@ describe("Apontamento Manual", () => {
     expect(localAuthSource).toContain("Processo Manual");
     expect(programmingSource).toContain("/apontamento-manual/");
     expect(programmingSource).toContain('const manualEligible = ["Liberado", "Parcial", "Em Produção"]');
-    expect(programmingSource).toContain('status: manualPointing ? "Liberado/Parcial/Em Produção" : operator ? "Todos" : statusFilter');
+    expect(programmingSource).toContain('const operationalStatusFilter = manualPointing || coladeiraMachine ? statusFilter : operator ? "Todos" : statusFilter');
     expect(programmingSource).toContain('processSequence.data?.length ? <div className="flex gap-2 overflow-x-auto');
-    expect(programmingSource).toContain('status: manualPointing ? "Liberado/Parcial/Em Produção" : operator ? "Todos" : statusFilter');
+    expect(programmingSource).toContain('if ((manualPointing || coladeiraMachine) && !OPERATIONAL_STATUS_FILTER_OPTIONS.includes(statusFilter)) setStatusFilter("Liberado")');
     expect(programmingSource).toContain('processSequence.data?.length ? <div className="flex gap-2 overflow-x-auto');
     expect(programmingSource).toContain('enabled: Boolean(user?.machine) && operator && !manualPointing');
     expect(sessionSource).toContain('payload.operationalProfile === "programmer" || payload.operationalProfile === "manual-pointing" || payload.operationalProfile === "manual-production" || payload.operationalProfile === "quality-release"');
     expect(programmingSource).toContain('["manual-pointing", "manual-production", "quality-release"]');
     expect(programmingSource).toContain('manualPointing ? "Ordens para apontamento" : "Fila operacional"');
     expect(programmingSource).toContain('selectedItem ? <section className="theme-details-panel');
-    expect(programmingSource).toContain('!manualPointing ? <><th className="px-3 py-3">Situação M.P.</th><th className="px-3 py-3">Solicitação</th></> : null');
+    expect(programmingSource).toContain('!manualPointing ? <><SortableHeader label="Situação M.P."');
     expect(programmingSource).toContain('onClick={manualPointing ? signOut : operator ? () => setShowExitOptions(true) : signOut}');
     expect(manualSource).toContain("Apontamento Manual");
     expect(manualSource).toContain('label="Quantidade produzida"');
@@ -92,7 +92,7 @@ describe("Apontamento Manual", () => {
     expect(themeSource).toContain("font-size: 5rem !important");
     expect(themeSource).toContain('.manual-production-date');
     expect(themeSource).toContain('.reservation-dialog');
-    expect(reservationSource).toContain('Quantidade</th>');
+    expect(reservationSource).toContain('header("Quantidade", "quantity", "text-right")');
     expect(reservationSource).toContain('reservation-quantity');
     expect(proxySource).toContain('product-release-plan');
     expect(proxySource).toContain('plano_amostragem');

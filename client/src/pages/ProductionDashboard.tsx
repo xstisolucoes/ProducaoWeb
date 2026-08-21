@@ -1,5 +1,5 @@
 import { Activity, CheckCircle2, CircleDotDashed, ClipboardList, PlayCircle, TimerReset } from "lucide-react";
-import { ConnectionNotice, LoadingRows, PageHeading, StatusPill, displayValue } from "@/components/ProductionPrimitives";
+import { ConnectionNotice, LoadingRows, PageHeading, SortableHeader, StatusPill, displayValue, useGridSort } from "@/components/ProductionPrimitives";
 import { trpc } from "@/lib/trpc";
 
 const metrics = [
@@ -14,6 +14,7 @@ export default function ProductionDashboard() {
   const orders = trpc.production.orders.list.useQuery({ page: 1, limit: 5, search: "" }, { retry: false });
   const error = dashboard.error || orders.error;
   const data = dashboard.data;
+  const { sortedItems, sortKey, sortDirection, toggleSort } = useGridSort(orders.data?.items);
 
   return (
     <div className="space-y-7">
@@ -42,8 +43,8 @@ export default function ProductionDashboard() {
           <ClipboardList className="h-5 w-5 text-[#8d968d]" />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[680px] text-left text-sm"><thead className="bg-[#fafbf9] text-[10px] uppercase tracking-[0.1em] text-[#899189]"><tr><th className="px-5 py-3 font-bold">Ordem</th><th className="px-5 py-3 font-bold">Produto</th><th className="px-5 py-3 font-bold">Processo</th><th className="px-5 py-3 font-bold">Fila</th><th className="px-5 py-3 font-bold">Status</th></tr></thead>
-            <tbody className="divide-y divide-[#edf0eb]">{orders.isLoading ? <LoadingRows columns={5} /> : orders.data?.items.map((item) => <tr key={`${item.op_codigo}-${item.mp_codigo}`} className="transition-colors hover:bg-[#fbfcfa]"><td className="px-5 py-3.5 font-mono text-xs font-medium text-[#334139]">OP {item.op_codigo}</td><td className="px-5 py-3.5 text-[#465148]">{displayValue(item.produto_referencia || item.referencia)}</td><td className="px-5 py-3.5 text-[#465148]">{displayValue(item.processo)}</td><td className="px-5 py-3.5 font-mono text-xs text-[#617066]">{displayValue(item.fila)}</td><td className="px-5 py-3.5"><StatusPill status={item.status} /></td></tr>)}</tbody>
+          <table className="w-full min-w-[680px] text-left text-sm"><thead className="bg-[#fafbf9] text-[10px] uppercase tracking-[0.1em] text-[#899189]"><tr><SortableHeader label="Ordem" column="op_codigo" sortKey={sortKey} sortDirection={sortDirection} onSort={(key) => toggleSort(key as never)} /><SortableHeader label="Produto" column="referencia" sortKey={sortKey} sortDirection={sortDirection} onSort={(key) => toggleSort(key as never)} /><SortableHeader label="Processo" column="processo" sortKey={sortKey} sortDirection={sortDirection} onSort={(key) => toggleSort(key as never)} /><SortableHeader label="Fila" column="fila" sortKey={sortKey} sortDirection={sortDirection} onSort={(key) => toggleSort(key as never)} /><SortableHeader label="Status" column="status" sortKey={sortKey} sortDirection={sortDirection} onSort={(key) => toggleSort(key as never)} /></tr></thead>
+            <tbody className="divide-y divide-[#edf0eb]">{orders.isLoading ? <LoadingRows columns={5} /> : sortedItems.map((item) => <tr key={`${item.op_codigo}-${item.mp_codigo}`} className="transition-colors hover:bg-[#fbfcfa]"><td className="px-5 py-3.5 font-mono text-xs font-medium text-[#334139]">OP {item.op_codigo}</td><td className="px-5 py-3.5 text-[#465148]">{displayValue(item.produto_referencia || item.referencia)}</td><td className="px-5 py-3.5 text-[#465148]">{displayValue(item.processo)}</td><td className="px-5 py-3.5 font-mono text-xs text-[#617066]">{displayValue(item.fila)}</td><td className="px-5 py-3.5"><StatusPill status={item.status} /></td></tr>)}</tbody>
           </table>
         </div>
         {!orders.isLoading && !orders.data?.items.length && <div className="px-5 py-12 text-center text-sm text-[#899189]">Os processos aparecerão aqui quando o proxy Firebird local estiver disponível.</div>}
