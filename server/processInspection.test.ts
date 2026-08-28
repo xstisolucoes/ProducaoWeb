@@ -27,8 +27,8 @@ describe("Inspeção de Processo periódica", () => {
     expect(router).toContain("processInspectionChecklist: operatorProcedure.query");
     expect(router).toContain("completeProcessInspection: operatorProcedure.input");
     expect(pointing).toContain("window.setTimeout");
-    expect(pointing).toContain("PRODUÇÃO em andamento".replace("PRODUÇÃO", "Produção"));
-    expect(pointing).toContain("Inspeção de Processo obrigatória");
+    expect(pointing).toContain("Produção em Andamento");
+    expect(pointing).toContain("Inspeção de Processo Obrigatória");
   });
 
   it("impede o fechamento até que todos os itens obrigatórios sejam confirmados", () => {

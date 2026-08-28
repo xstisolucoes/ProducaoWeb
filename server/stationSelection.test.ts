@@ -14,7 +14,7 @@ describe("seleção persistida de estação", () => {
     expect(login).toContain('aria-busy={submitting || signIn.isPending}');
     expect(login).toContain('machineCode');
     expect(login).toContain('className="hidden"');
-    expect(login).toContain('primeiro acesso deve ser realizado por PCP, Programador ou Administrador');
+    expect(login).toContain('Primeiro Acesso Deve Ser Realizado por PCP, Programador ou Administrador');
     expect(login).not.toContain('id="station"');
     expect(authRouter).toContain('stations: publicProcedure.query');
     expect(authRouter).toContain('machineCode: z.number().int().positive().nullable()');
@@ -26,7 +26,7 @@ describe("seleção persistida de estação", () => {
     expect(proxy).toContain('PRODUCTION_STATION_CONFIGURATOR_GROUPS');
     expect(proxy).toContain('Esta estação ainda não está configurada. Solicite ao PCP, Programador ou Administrador');
     expect(programming).toContain('canConfigureStation === true');
-    expect(programming).toContain('Configurar Máquina/Processo deste posto');
+    expect(programming).toContain('Configurar Máquina/Processo deste Posto');
     expect(binding).toContain('production-station-bindings.json');
     expect(binding).toContain('STATION_COOKIE');
   });

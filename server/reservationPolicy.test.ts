@@ -42,7 +42,7 @@ describe("política de reservas do apontamento", () => {
     expect(proxySource).toContain("if (!reservation.applies && netQuantity > quantityToPoint)");
     expect(proxySource).toContain("const nextBalance = reservation.applies ? Math.max(0, currentBalance - netQuantity) : Math.max(0, quantityToPoint - netQuantity)");
     expect(pointingSource).toContain("Com reserva vinculada, a baixa considera");
-    expect(pointingSource).toContain("Quantidade a apontar");
+    expect(pointingSource).toContain("Quantidade a Apontar");
   });
 
   it("calcula produção e baixa de reserva separadamente conforme PROD_VENDAS_PROC_PROD", () => {

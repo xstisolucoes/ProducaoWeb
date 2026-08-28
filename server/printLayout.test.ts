@@ -17,7 +17,7 @@ describe("visualização de layout de impressão", () => {
     expect(proxySource).toContain("data:image/svg+xml;base64");
     expect(proxySource).not.toContain("layoutPath, svgDataUri");
     expect(routerSource).toContain("printLayout: localProtectedProcedure.input(processInput)");
-    expect(pointingSource).toContain("Visualizar layout");
-    expect(pointingSource).toContain("Layout de impressão");
+    expect(pointingSource).toContain("Visualizar Layout");
+    expect(pointingSource).toContain("Layout de Impressão");
   });
 });

@@ -502,11 +502,35 @@ app.get("/v1/stations", ensureAuthorized, async (_req, res, next) => {
   } catch (error) { next(error); }
 });
 
+app.get("/v1/manual-machines", ensureAuthorized, async (_req, res, next) => {
+  try {
+    const rows = await query(`select mq.mqp_codigo as code, mq.mqp_descricao as description, mq.gmq_codigo as group_code,
+      gm.gmq_grupo as group_description, mq.mqp_segue_fila as follows_queue, mq.mqp_processo_manual as manual_process
+      from maquinas_processos mq
+      left join grupo_maquinas gm on gm.gmq_codigo = mq.gmq_codigo
+      where mq.mqp_status = 'Ativo' and coalesce(mq.mqp_processo_manual, 'N') = 'S'
+      order by mq.mqp_descricao`);
+    const blockedGroups = new Set(["LIBERACAO DE PRODUTO", "APONTAMENTO"]);
+    const normalizeGroup = (value) => String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase();
+    res.json(rows
+      .filter((machine) => !blockedGroups.has(normalizeGroup(machine.group_description ?? machine.GROUP_DESCRIPTION)))
+      .map((machine) => ({
+        code: Number(machine.code ?? machine.CODE),
+        description: String(machine.description ?? machine.DESCRIPTION ?? "Máquina sem descrição"),
+        groupCode: machine.group_code == null && machine.GROUP_CODE == null ? null : Number(machine.group_code ?? machine.GROUP_CODE),
+        groupDescription: machine.group_description ?? machine.GROUP_DESCRIPTION ?? null,
+        followsQueue: String(machine.follows_queue ?? machine.FOLLOWS_QUEUE ?? "S").toUpperCase() !== "N",
+        manualProcess: true,
+      })));
+  } catch (error) { next(error); }
+});
+
 app.post("/v1/auth/login", ensureAuthorized, async (req, res, next) => {
   try {
     const login = String(req.body?.login ?? "").trim();
     const password = String(req.body?.password ?? "");
     if (!login || !password) return res.status(400).json({ error: "Informe usuário e senha." });
+    const userCode = /^\d+$/.test(login) ? Number(login) : -1;
 
     const users = await query(`
       select usu.usu_codigo, usu.usu_email, usu.usu_login, usu.usu_senha,
@@ -515,8 +539,8 @@ app.post("/v1/auth/login", ensureAuthorized, async (req, res, next) => {
       from usuarios usu
       left join funcionarios fun on fun.fun_codigo = usu.fun_codigo
       left join grupo_usuarios gu on gu.gu_codigo = usu.gu_codigo
-      where lower(usu.usu_login) = lower(?) or lower(usu.usu_email) = lower(?)
-    `, [login, login]);
+      where lower(usu.usu_login) = lower(?) or lower(usu.usu_email) = lower(?) or usu.usu_codigo = ?
+    `, [login, login, userCode]);
     const user = users[0];
     if (!user || !(await bcrypt.compare(password, String(user.usu_senha ?? "").trim()))) {
       return res.status(401).json({ error: "Usuário ou senha inválidos." });

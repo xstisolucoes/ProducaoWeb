@@ -63,8 +63,8 @@ describe("fluxo de programação do operador", () => {
     expect(programmingSource).toContain("const hasPriorityToConclude");
     expect(programmingSource).toContain("const isPriorityRow = coladeiraMachine || Number(item.fila) === 1");
     expect(pointingSource).toContain("const resumedToConclude = productionStarted && !item?.activeSetupStartedAt");
-    expect(pointingSource).toContain('setupStarted && !productionStarted ? "Início do setup" : "Início da produção"');
-    expect(pointingSource).toContain('setupStarted && !productionStarted ? "Fim do setup" : "Fim da produção"');
+    expect(pointingSource).toContain('setupStarted && !productionStarted ? "Início do Setup" : "Início da Produção"');
+    expect(pointingSource).toContain('setupStarted && !productionStarted ? "Fim do Setup" : "Fim da Produção"');
   });
 
   it("retoma A Concluir pela fila e confirma a inclusão do novo horário na mesma transação", () => {
@@ -102,8 +102,8 @@ describe("fluxo de programação do operador", () => {
     expect(contractsSource).toContain("export const getActiveProduction");
     expect(routerSource).toContain("active: operatorProcedure");
     expect(programmingSource).toContain("trpc.production.programming.active.useQuery");
-    expect(programmingSource).toContain("OP em produção recuperada");
-    expect(programmingSource).toContain("Você será direcionado ao apontamento para continuar ou finalizar o processo.");
+    expect(programmingSource).toContain("OP em Produção Recuperada");
+    expect(programmingSource).toContain("Você Será Direcionado ao Apontamento para Continuar ou Finalizar o Processo.");
     expect(programmingSource).toContain('manualPointing ? "/apontamento-manual" : "/apontamento"');
     expect(programmingSource).toContain("active.opCodigo");
   });
@@ -113,10 +113,13 @@ describe("fluxo de programação do operador", () => {
     expect(programmingSource).toContain("Fechar");
     expect(programmingSource).toContain("await logout()");
     expect(programmingSource).toContain("window.close()");
-    expect(programmingSource).toContain("Iniciar limpeza");
-    expect(programmingSource).toContain("Trocar operador");
-    expect(programmingSource).toContain("Fim do período");
-    expect(programmingSource).toContain("Iniciar limpeza");
+    expect(programmingSource).toContain("Iniciar Limpeza");
+    expect(programmingSource).toContain("Trocar Operador");
+    expect(programmingSource).toContain("Fim do Período");
+    expect(programmingSource).toContain("Iniciar Limpeza");
+    expect(programmingSource).toContain("w-[min(96vw,860px)] max-w-[860px] max-h-[calc(100dvh-1rem)] overflow-y-auto");
+    expect(programmingSource).toContain("grid grid-cols-2 gap-5 p-5 sm:p-6");
+    expect(programmingSource).toContain("min-h-40");
   });
 
   it("grava limpeza e fim de período no histórico de ociosidade da Máquina/Processo", () => {
@@ -151,21 +154,21 @@ describe("fluxo de programação do operador", () => {
     expect(proxySource).toContain("pv.pv_total_larg_cn as adjustment_width_total");
     expect(proxySource).toContain('app.get("/v1/programming/cleaning-reasons"');
     expect(proxySource).toContain("mp.mp_op_mestre as master_order");
-    expect(programmingSource).toContain("Cliente, código prod., OP ou referência");
+    expect(programmingSource).toContain("Cliente, Código Prod., OP ou Referência");
     expect(programmingSource).toContain("Qtde. OP");
     expect(programmingSource).toContain("Produzida");
     expect(programmingSource).toContain("Saldo");
     expect(programmingSource).toContain("processSequence");
     expect(programmingSource).toContain("processStatusClass(process.status)");
     expect(programmingSource).toContain("Pacotes / Paletização");
-    expect(programmingSource).toContain("Visualizar layout");
-    expect(programmingSource).toContain("Qtde aprovada");
-    expect(programmingSource).toContain("Etiqueta de processo");
+    expect(programmingSource).toContain("Visualizar Layout");
+    expect(programmingSource).toContain("Qtde. Aprovada");
+    expect(programmingSource).toContain("Etiqueta de Processo");
     expect(programmingSource).toContain("sticky bottom-0");
     expect(programmingSource).toContain("user?.name");
-    expect(programmingSource).toContain("Ajuste largura");
-    expect(programmingSource).toContain("Clichês / facas");
-    expect(programmingSource).toContain('placeholder="Cliente, código prod., OP ou referência"');
+    expect(programmingSource).toContain("Ajuste Largura");
+    expect(programmingSource).toContain("Clichês / Facas");
+    expect(programmingSource).toContain('placeholder="Cliente, Código Prod., OP ou Referência"');
     expect(programmingSource).toContain('const OPERATIONAL_STATUS_FILTER_OPTIONS = ["Liberado", "Parcial", "Em Produção"]');
     expect(programmingSource).toContain("const pointingMachine = operator && isApontamentoMachineGroup(machine?.groupDescription)");
     expect(programmingSource).toContain('{pointingMachine ? <OperatorCallButton label="Etiqueta PA"');
@@ -180,7 +183,7 @@ describe("fluxo de programação do operador", () => {
 
     expect(programmingSource).toContain("const programmingLimit = qualityRelease || (operator && !manualPointing) ? 8 : 7");
     expect(programmingSource).toContain("limit={programmingLimit}");
-    expect(programmingSource).toContain('theme-programming ${operator ? "flex min-h-dvh flex-col gap-3" : "space-y-4"}');
+    expect(programmingSource).toContain('theme-programming ${programmer ? "programming-programmer" : ""} ${operator ? "flex min-h-dvh flex-col gap-3" : "space-y-4"}');
     expect(programmingSource).toContain('operator ? "flex min-h-0 flex-1 flex-col" : ""');
     expect(programmingSource).toContain('operator ? "min-h-[440px] flex-1"');
     expect(programmingSource).not.toContain('title="Sequência da máquina"');
@@ -240,7 +243,7 @@ describe("fluxo de programação do operador", () => {
     expect(contractSource).toContain("export type ControlledMachine");
     expect(contractSource).toContain("export const getControlledMachines");
     expect(routerSource).toContain("machines: programmerProcedure");
-    expect(programmingSource).toContain("Selecionar máquina controlada");
+    expect(programmingSource).toContain("Selecionar Máquina Controlada");
     expect(programmingSource).toContain("A Lib/Lib/Parcial");
     expect(programmingSource).toContain("firstDisplayName(user?.name)");
   });
@@ -250,7 +253,7 @@ describe("fluxo de programação do operador", () => {
 
     expect(programmingSource).not.toContain('title="Sequência da máquina"');
     expect(programmingSource).not.toContain('title={operator ? "Sequência da máquina" : "Programação e fila"}');
-    expect(programmingSource).toContain('programmer ? "min-h-[388px]" : ""');
+    expect(programmingSource).toContain('programmer ? "hidden min-h-[388px] md:block" : ""');
   });
 
   it("padroniza a leitura tipográfica de todas as colunas do grid pela referência do Cliente", () => {
@@ -282,7 +285,7 @@ describe("fluxo de programação do operador", () => {
     expect(proxySource).toContain('const nextStatus = releasedFromQueue2000 || releasedFromPartial ? "Liberado" : currentStatus');
     expect(proxySource).toContain("update mov_processos set mp_fila = ?, mp_status = ?");
     expect(programmingSource).toContain("window.setTimeout(reloadProgrammingPreservingMachine, 180)");
-    expect(programmingSource).toContain('result.releasedFromPartial ? " e atualizada de Parcial para Liberado." : "."');
+    expect(programmingSource).toContain('result.releasedFromPartial ? " e Atualizada de Parcial para Liberado." : "."');
     expect(contractSource).toContain("export const changeOrderQueue");
     expect(routerSource).toContain("changeQueue: programmerProcedure");
     expect(programmingSource).toContain("trpc.production.programming.changeQueue.useMutation");
@@ -296,9 +299,9 @@ describe("fluxo de programação do operador", () => {
     expect(programmingSource).toContain('title={queueMessage.title}');
     expect(programmingSource).toContain('tone="caution"');
     expect(programmingSource).toContain("function operationalQueueMessage");
-    expect(programmingSource).toContain("Não foi possível alterar a fila neste momento.");
+    expect(programmingSource).toContain("Não Foi Possível Alterar a Fila Neste Momento.");
     expect(programmingSource).toContain("setQueueMessage(operationalQueueMessage(error.message))");
-    expect(programmingSource).toContain("Existe um processo em produção na fila 1.");
+    expect(programmingSource).toContain("Existe um Processo em Produção na Fila 1.");
     expect(programmingSource).toContain("const reloadAfterQueueWarning = () =>");
     expect(programmingSource).toContain("window.localStorage.setItem(PROGRAMMER_MACHINE_CACHE_KEY, String(machineCode))");
     expect(programmingSource).toContain("window.location.reload()");
@@ -315,8 +318,8 @@ describe("fluxo de programação do operador", () => {
     expect(proxySource).toContain("pvp.pv_codigo = source.pv_codigo and pvp.pv_revisao = source.pv_revisao");
     expect(contractSource).toContain("export const getEligibleProcessMachines");
     expect(routerSource).toContain("eligibleMachines: programmerProcedure");
-    expect(programmingSource).toContain("Alterar processo");
-    expect(programmingSource).toContain("Confirmar transferência");
+    expect(programmingSource).toContain("Alterar Processo");
+    expect(programmingSource).toContain("Confirmar Transferência");
     expect(programmingSource).not.toContain("window.prompt(\"Informe o código do novo processo/máquina:\")");
   });
 
@@ -327,10 +330,10 @@ describe("fluxo de programação do operador", () => {
     expect(programmingSource).toContain("window.localStorage.setItem(PROGRAMMER_MACHINE_CACHE_KEY");
     expect(programmingSource).toContain('const [statusFilter, setStatusFilter] = useState("A Lib/Lib/Parcial")');
     expect(programmingSource).toContain("Number(item.code) === Number(selectedMachineCode)");
-    expect(programmingSource).toContain("process.status ?? \"Sem status\"");
+    expect(programmingSource).toContain("process.status ?? \"Sem Status\"");
     expect(programmingSource).not.toContain("programmingStatusLabel");
     expect(programmingSource).toContain("const refreshProgramming = async () =>");
-    expect(programmingSource).toContain("Programação atualizada");
+    expect(programmingSource).toContain("Programação Atualizada");
     expect(programmingSource).toContain("onClick={manualPointing ? signOut : operator ? () => setShowExitOptions(true) : signOut}");
     expect(programmingSource).toContain('operator ? "flex min-h-dvh flex-col gap-3" : "space-y-4"');
     expect(programmingSource).toContain('selectedItem ? <section className="theme-details-panel');

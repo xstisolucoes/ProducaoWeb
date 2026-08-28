@@ -1,19 +1,274 @@
 import { useEffect, useState } from "react";
 import { Archive, History, SearchCheck } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ConnectionNotice, LoadingRows, PageHeading, SearchBar, SortableHeader, TablePagination, displayValue, useGridSort } from "@/components/ProductionPrimitives";
+import {
+  ConnectionNotice,
+  LoadingRows,
+  PageHeading,
+  SearchBar,
+  SortableHeader,
+  TablePagination,
+  displayValue,
+  useGridSort,
+} from "@/components/ProductionPrimitives";
 import { trpc } from "@/lib/trpc";
 
 export default function Stock() {
-  const [page, setPage] = useState(1); const [historyPage, setHistoryPage] = useState(1); const [search, setSearch] = useState(""); const [query, setQuery] = useState(""); const [tab, setTab] = useState("saldos");
-  useEffect(() => { const id = window.setTimeout(() => { setQuery(search); setPage(1); }, 300); return () => window.clearTimeout(id); }, [search]);
-  const stock = trpc.production.stock.list.useQuery({ page, limit: 20, search: query }, { retry: false });
-  const history = trpc.production.stock.history.useQuery({ page: historyPage, limit: 20 }, { retry: false, enabled: tab === "historico" });
+  const [page, setPage] = useState(1);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [query, setQuery] = useState("");
+  const [tab, setTab] = useState("saldos");
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setQuery(search);
+      setPage(1);
+    }, 300);
+    return () => window.clearTimeout(id);
+  }, [search]);
+  const stock = trpc.production.stock.list.useQuery(
+    { page, limit: 20, search: query },
+    { retry: false }
+  );
+  const history = trpc.production.stock.history.useQuery(
+    { page: historyPage, limit: 20 },
+    { retry: false, enabled: tab === "historico" }
+  );
   const stockSort = useGridSort(stock.data?.items);
   const historySort = useGridSort(history.data?.items);
   const error = stock.error || history.error;
-  return <div className="space-y-7"><PageHeading eyebrow="Transferir Estoque" title="Estoque de produtos acabados" description="Saldos do estoque acabado e histórico de produtos produzidos, conforme as entidades do sistema legado." />{error && <ConnectionNotice error={error} />}{tab === "saldos" && stock.isLoading && <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#7d887e]">Carregando saldos do Firebird…</p>}{tab === "historico" && history.isLoading && <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#7d887e]">Carregando histórico do Firebird…</p>}
-    <Tabs value={tab} onValueChange={setTab}><TabsList className="mb-4 h-10 rounded-lg bg-[#eef1ec] p-1"><TabsTrigger value="saldos" className="rounded-md px-4 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-[#1b624f] data-[state=active]:shadow-sm"><Archive className="mr-2 h-3.5 w-3.5" />Saldos</TabsTrigger><TabsTrigger value="historico" className="rounded-md px-4 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-[#1b624f] data-[state=active]:shadow-sm"><History className="mr-2 h-3.5 w-3.5" />Histórico</TabsTrigger></TabsList>
-      <TabsContent value="saldos" className="m-0 overflow-hidden rounded-2xl border border-[#e1e5de] bg-white shadow-[0_12px_32px_rgba(31,42,34,0.035)]"><div className="border-b border-[#edf0eb] px-5 py-4"><SearchBar value={search} onChange={setSearch} placeholder="Buscar por produto, referência ou cliente" /></div><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-[#fafbf9] text-[10px] uppercase tracking-[0.1em] text-[#899189]"><tr><SortableHeader label="Produto" column="produto_codigo" sortKey={stockSort.sortKey} sortDirection={stockSort.sortDirection} onSort={(key) => stockSort.toggleSort(key as never)} /><SortableHeader label="Referência" column="referencia" sortKey={stockSort.sortKey} sortDirection={stockSort.sortDirection} onSort={(key) => stockSort.toggleSort(key as never)} /><SortableHeader label="Cliente" column="cliente" sortKey={stockSort.sortKey} sortDirection={stockSort.sortDirection} onSort={(key) => stockSort.toggleSort(key as never)} /><SortableHeader label="Saldo 1" column="saldo_1" sortKey={stockSort.sortKey} sortDirection={stockSort.sortDirection} onSort={(key) => stockSort.toggleSort(key as never)} /><SortableHeader label="Saldo 2" column="saldo_2" sortKey={stockSort.sortKey} sortDirection={stockSort.sortDirection} onSort={(key) => stockSort.toggleSort(key as never)} /></tr></thead><tbody className="divide-y divide-[#edf0eb]">{stock.isLoading ? <LoadingRows columns={5} /> : stockSort.sortedItems.map((item) => <tr className="hover:bg-[#fbfcfa]" key={`${item.produto_codigo}-${item.codigo_estoque}`}><td className="px-5 py-3.5 font-mono text-xs font-medium text-[#334139]">{item.produto_codigo}</td><td className="px-5 py-3.5 font-medium text-[#47534a]">{displayValue(item.referencia)}</td><td className="px-5 py-3.5 text-[#68756b]">{displayValue(item.cliente)}</td><td className="px-5 py-3.5 font-mono text-xs text-[#2e664f]">{displayValue(item.saldo_1)}</td><td className="px-5 py-3.5 font-mono text-xs text-[#466172]">{displayValue(item.saldo_2)}</td></tr>)}</tbody></table></div>{!stock.isLoading && !stock.data?.items.length && <div className="px-5 py-12 text-center text-sm text-[#899189]">Nenhum saldo encontrado com os filtros atuais.</div>}<TablePagination page={page} total={stock.data?.total ?? 0} limit={20} onChange={setPage} /></TabsContent>
-      <TabsContent value="historico" className="m-0 overflow-hidden rounded-2xl border border-[#e1e5de] bg-white shadow-[0_12px_32px_rgba(31,42,34,0.035)]"><div className="flex items-center gap-2 border-b border-[#edf0eb] px-5 py-4 text-sm font-bold text-[#455249]"><SearchCheck className="h-4 w-4 text-[#397e6d]" />Histórico de estoque produzido</div><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-[#fafbf9] text-[10px] uppercase tracking-[0.1em] text-[#899189]"><tr><SortableHeader label="Data" column="data_producao" sortKey={historySort.sortKey} sortDirection={historySort.sortDirection} onSort={(key) => historySort.toggleSort(key as never)} /><SortableHeader label="Produto" column="produto_codigo" sortKey={historySort.sortKey} sortDirection={historySort.sortDirection} onSort={(key) => historySort.toggleSort(key as never)} /><SortableHeader label="OP" column="ordem_producao" sortKey={historySort.sortKey} sortDirection={historySort.sortDirection} onSort={(key) => historySort.toggleSort(key as never)} /><SortableHeader label="Lote" column="lote" sortKey={historySort.sortKey} sortDirection={historySort.sortDirection} onSort={(key) => historySort.toggleSort(key as never)} /><SortableHeader label="Quantidade" column="quantidade" sortKey={historySort.sortKey} sortDirection={historySort.sortDirection} onSort={(key) => historySort.toggleSort(key as never)} /><SortableHeader label="Saldo" column="saldo" sortKey={historySort.sortKey} sortDirection={historySort.sortDirection} onSort={(key) => historySort.toggleSort(key as never)} /></tr></thead><tbody className="divide-y divide-[#edf0eb]">{history.isLoading ? <LoadingRows columns={6} /> : historySort.sortedItems.map((item) => <tr className="hover:bg-[#fbfcfa]" key={item.codigo}><td className="px-5 py-3.5 text-xs text-[#68756b]">{item.data_producao ? new Date(item.data_producao).toLocaleDateString("pt-BR") : "—"}</td><td className="px-5 py-3.5 font-mono text-xs text-[#334139]">{item.produto_codigo}</td><td className="px-5 py-3.5 font-mono text-xs text-[#566359]">{displayValue(item.ordem_producao)}</td><td className="px-5 py-3.5 text-[#68756b]">{displayValue(item.lote)}</td><td className="px-5 py-3.5 font-mono text-xs text-[#566359]">{displayValue(item.quantidade)}</td><td className="px-5 py-3.5 font-mono text-xs text-[#2e664f]">{displayValue(item.saldo)}</td></tr>)}</tbody></table></div>{!history.isLoading && !history.data?.items.length && <div className="px-5 py-12 text-center text-sm text-[#899189]">Nenhum histórico disponível.</div>}<TablePagination page={historyPage} total={history.data?.total ?? 0} limit={20} onChange={setHistoryPage} /></TabsContent></Tabs></div>;
+  return (
+    <div className="space-y-7">
+      <PageHeading
+        eyebrow="Transferir Estoque"
+        title="Estoque de produtos acabados"
+        description="Saldos do estoque acabado e histórico de produtos produzidos, conforme as entidades do sistema legado."
+      />
+      {error && <ConnectionNotice error={error} />}
+      {tab === "saldos" && stock.isLoading && (
+        <p className="font-mono text-[11px] ''tracking-[0.12em] text-[#7d887e]">
+          Carregando saldos do Firebird…
+        </p>
+      )}
+      {tab === "historico" && history.isLoading && (
+        <p className="font-mono text-[11px] ''tracking-[0.12em] text-[#7d887e]">
+          Carregando histórico do Firebird…
+        </p>
+      )}
+      <Tabs value={tab} onValueChange={setTab}>
+        <TabsList className="mb-4 h-10 rounded-lg bg-[#eef1ec] p-1">
+          <TabsTrigger
+            value="saldos"
+            className="rounded-md px-4 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-[#1b624f] data-[state=active]:shadow-sm"
+          >
+            <Archive className="mr-2 h-3.5 w-3.5" />
+            Saldos
+          </TabsTrigger>
+          <TabsTrigger
+            value="historico"
+            className="rounded-md px-4 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-[#1b624f] data-[state=active]:shadow-sm"
+          >
+            <History className="mr-2 h-3.5 w-3.5" />
+            Histórico
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent
+          value="saldos"
+          className="m-0 overflow-hidden rounded-2xl border border-[#e1e5de] bg-white shadow-[0_12px_32px_rgba(31,42,34,0.035)]"
+        >
+          <div className="border-b border-[#edf0eb] px-5 py-4">
+            <SearchBar
+              value={search}
+              onChange={setSearch}
+              placeholder="Buscar por produto, referência ou cliente"
+            />
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-left text-sm">
+              <thead className="bg-[#fafbf9] text-[10px] ''tracking-[0.1em] text-[#899189]">
+                <tr>
+                  <SortableHeader
+                    label="Produto"
+                    column="produto_codigo"
+                    sortKey={stockSort.sortKey}
+                    sortDirection={stockSort.sortDirection}
+                    onSort={key => stockSort.toggleSort(key as never)}
+                  />
+                  <SortableHeader
+                    label="Referência"
+                    column="referencia"
+                    sortKey={stockSort.sortKey}
+                    sortDirection={stockSort.sortDirection}
+                    onSort={key => stockSort.toggleSort(key as never)}
+                  />
+                  <SortableHeader
+                    label="Cliente"
+                    column="cliente"
+                    sortKey={stockSort.sortKey}
+                    sortDirection={stockSort.sortDirection}
+                    onSort={key => stockSort.toggleSort(key as never)}
+                  />
+                  <SortableHeader
+                    label="Saldo 1"
+                    column="saldo_1"
+                    sortKey={stockSort.sortKey}
+                    sortDirection={stockSort.sortDirection}
+                    onSort={key => stockSort.toggleSort(key as never)}
+                  />
+                  <SortableHeader
+                    label="Saldo 2"
+                    column="saldo_2"
+                    sortKey={stockSort.sortKey}
+                    sortDirection={stockSort.sortDirection}
+                    onSort={key => stockSort.toggleSort(key as never)}
+                  />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#edf0eb]">
+                {stock.isLoading ? (
+                  <LoadingRows columns={5} />
+                ) : (
+                  stockSort.sortedItems.map(item => (
+                    <tr
+                      className="hover:bg-[#fbfcfa]"
+                      key={`${item.produto_codigo}-${item.codigo_estoque}`}
+                    >
+                      <td className="px-5 py-3.5 font-mono text-xs font-medium text-[#334139]">
+                        {item.produto_codigo}
+                      </td>
+                      <td className="px-5 py-3.5 font-medium text-[#47534a]">
+                        {displayValue(item.referencia)}
+                      </td>
+                      <td className="px-5 py-3.5 text-[#68756b]">
+                        {displayValue(item.cliente)}
+                      </td>
+                      <td className="px-5 py-3.5 font-mono text-xs text-[#2e664f]">
+                        {displayValue(item.saldo_1)}
+                      </td>
+                      <td className="px-5 py-3.5 font-mono text-xs text-[#466172]">
+                        {displayValue(item.saldo_2)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          {!stock.isLoading && !stock.data?.items.length && (
+            <div className="px-5 py-12 text-center text-sm text-[#899189]">
+              Nenhum saldo encontrado com os filtros atuais.
+            </div>
+          )}
+          <TablePagination
+            page={page}
+            total={stock.data?.total ?? 0}
+            limit={20}
+            onChange={setPage}
+          />
+        </TabsContent>
+        <TabsContent
+          value="historico"
+          className="m-0 overflow-hidden rounded-2xl border border-[#e1e5de] bg-white shadow-[0_12px_32px_rgba(31,42,34,0.035)]"
+        >
+          <div className="flex items-center gap-2 border-b border-[#edf0eb] px-5 py-4 text-sm font-bold text-[#455249]">
+            <SearchCheck className="h-4 w-4 text-[#397e6d]" />
+            Histórico de estoque produzido
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-left text-sm">
+              <thead className="bg-[#fafbf9] text-[10px] ''tracking-[0.1em] text-[#899189]">
+                <tr>
+                  <SortableHeader
+                    label="Data"
+                    column="data_producao"
+                    sortKey={historySort.sortKey}
+                    sortDirection={historySort.sortDirection}
+                    onSort={key => historySort.toggleSort(key as never)}
+                  />
+                  <SortableHeader
+                    label="Produto"
+                    column="produto_codigo"
+                    sortKey={historySort.sortKey}
+                    sortDirection={historySort.sortDirection}
+                    onSort={key => historySort.toggleSort(key as never)}
+                  />
+                  <SortableHeader
+                    label="OP"
+                    column="ordem_producao"
+                    sortKey={historySort.sortKey}
+                    sortDirection={historySort.sortDirection}
+                    onSort={key => historySort.toggleSort(key as never)}
+                  />
+                  <SortableHeader
+                    label="Lote"
+                    column="lote"
+                    sortKey={historySort.sortKey}
+                    sortDirection={historySort.sortDirection}
+                    onSort={key => historySort.toggleSort(key as never)}
+                  />
+                  <SortableHeader
+                    label="Quantidade"
+                    column="quantidade"
+                    sortKey={historySort.sortKey}
+                    sortDirection={historySort.sortDirection}
+                    onSort={key => historySort.toggleSort(key as never)}
+                  />
+                  <SortableHeader
+                    label="Saldo"
+                    column="saldo"
+                    sortKey={historySort.sortKey}
+                    sortDirection={historySort.sortDirection}
+                    onSort={key => historySort.toggleSort(key as never)}
+                  />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#edf0eb]">
+                {history.isLoading ? (
+                  <LoadingRows columns={6} />
+                ) : (
+                  historySort.sortedItems.map(item => (
+                    <tr className="hover:bg-[#fbfcfa]" key={item.codigo}>
+                      <td className="px-5 py-3.5 text-xs text-[#68756b]">
+                        {item.data_producao
+                          ? new Date(item.data_producao).toLocaleDateString(
+                              "pt-BR"
+                            )
+                          : "—"}
+                      </td>
+                      <td className="px-5 py-3.5 font-mono text-xs text-[#334139]">
+                        {item.produto_codigo}
+                      </td>
+                      <td className="px-5 py-3.5 font-mono text-xs text-[#566359]">
+                        {displayValue(item.ordem_producao)}
+                      </td>
+                      <td className="px-5 py-3.5 text-[#68756b]">
+                        {displayValue(item.lote)}
+                      </td>
+                      <td className="px-5 py-3.5 font-mono text-xs text-[#566359]">
+                        {displayValue(item.quantidade)}
+                      </td>
+                      <td className="px-5 py-3.5 font-mono text-xs text-[#2e664f]">
+                        {displayValue(item.saldo)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          {!history.isLoading && !history.data?.items.length && (
+            <div className="px-5 py-12 text-center text-sm text-[#899189]">
+              Nenhum histórico disponível.
+            </div>
+          )}
+          <TablePagination
+            page={historyPage}
+            total={history.data?.total ?? 0}
+            limit={20}
+            onChange={setHistoryPage}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
 }

@@ -347,6 +347,7 @@ export const firebirdProxyHealthCheck = () => request<FirebirdProxyHealth>("/hea
 export const getLocalPrinters = () => request<{ printers: LocalPrinter[]; source: "windows" | "unsupported" }>("/v1/system/printers");
 export const getLocalCompanies = () => request<LocalCompany[]>("/v1/companies");
 export const getLoginStations = () => request<LoginStation[]>("/v1/stations");
+export const getManualProcessMachines = () => request<ProductionMachine[]>("/v1/manual-machines");
 export const loginLocalOperator = (login: string, password: string, machineCode: number | null = null) =>
   request<LocalOperator>("/v1/auth/login", {
     method: "POST",

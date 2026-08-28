@@ -1,14 +1,164 @@
 import { SortableHeader, useGridSort } from "@/components/ProductionPrimitives";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Boxes, CheckCircle2 } from "lucide-react";
 
-type ReservationRow = { product: string | null; lot: string | null; measures: string | null; arrangement: string | null; boardType: string | null; composition: string | null; quantity: number | null; balance: number | null };
-function value(input: string | number | null | undefined) { return input === null || input === undefined || input === "" ? "—" : String(input); }
+type ReservationRow = {
+  product: string | null;
+  lot: string | null;
+  measures: string | null;
+  arrangement: string | null;
+  boardType: string | null;
+  composition: string | null;
+  quantity: number | null;
+  balance: number | null;
+};
+function value(input: string | number | null | undefined) {
+  return input === null || input === undefined || input === ""
+    ? "—"
+    : String(input);
+}
 
-export function ProductReservationDialog({ open, onOpenChange, opCode, data, loading, error }: { open: boolean; onOpenChange: (open: boolean) => void; opCode: number | null | undefined; data?: ReservationRow[]; loading?: boolean; error?: { message: string } | null }) {
-  const totalBalance = data?.reduce((total, item) => total + (item.balance ?? 0), 0) ?? 0;
+export function ProductReservationDialog({
+  open,
+  onOpenChange,
+  opCode,
+  data,
+  loading,
+  error,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  opCode: number | null | undefined;
+  data?: ReservationRow[];
+  loading?: boolean;
+  error?: { message: string } | null;
+}) {
+  const totalBalance =
+    data?.reduce((total, item) => total + (item.balance ?? 0), 0) ?? 0;
   const { sortedItems, sortKey, sortDirection, toggleSort } = useGridSort(data);
-  const header = (label: string, column: keyof ReservationRow, alignment = "") => <SortableHeader label={label} column={column} sortKey={sortKey} sortDirection={sortDirection} onSort={(key) => toggleSort(key as keyof ReservationRow & string)} className={alignment} />;
-  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="reservation-dialog theme-surface !flex !max-h-[calc(100dvh-1rem)] !w-[calc(100vw-1rem)] !max-w-[1440px] !flex-col overflow-hidden border-2 border-[#d5b85f] bg-[#fffdf6] p-0 shadow-2xl sm:!w-[calc(100vw-3rem)]"><DialogHeader className="border-b-2 border-[#ead69c] bg-gradient-to-r from-[#fff6d9] via-[#f5fbf3] to-white px-5 py-4 sm:px-6"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><DialogTitle className="flex items-center gap-2 text-2xl font-black text-[#3f513a]"><Boxes className="h-6 w-6 text-[#b88014]" />Reserva de matéria-prima · OP {opCode ?? "—"}</DialogTitle><DialogDescription className="mt-1 text-sm font-bold text-[#697a67]">Materiais com saldo reservado para a ordem selecionada.</DialogDescription></div><div className="reservation-total rounded-xl border px-4 py-2 text-right"><p className="text-[10px] font-black uppercase tracking-[.14em]">Saldo reservado</p><p className="mt-1 font-mono text-2xl font-black">{totalBalance}</p></div></div></DialogHeader><div className="min-h-0 flex-1 overflow-auto bg-[#fffdf6] p-4 sm:p-6">{loading ? <p className="rounded-xl bg-[#f4f8f1] p-5 text-base font-bold text-[#52705a]">Consultando reservas…</p> : error ? <p className="rounded-xl border-2 border-[#e3abab] bg-[#fff2f2] p-5 text-base font-bold text-[#a23434]">{error.message}</p> : !data?.length ? <p className="rounded-xl border-2 border-dashed border-[#d8c783] bg-white p-6 text-center text-base font-bold text-[#7a6937]">Não há reserva com saldo para esta OP.</p> : <div className="w-full overflow-auto rounded-xl border-2 border-[#dfe7df] bg-white"><table className="w-full min-w-[1080px] text-left text-base"><thead className="theme-grid-header sticky top-0 z-10 border-b-2 border-[#e0c976] bg-[#fff2c9] font-mono text-xs font-black uppercase tracking-[.12em] text-[#705719]"><tr>{header("Produto", "product")}{header("Lote", "lot")}{header("Medidas", "measures")}{header("Arranjo", "arrangement")}{header("Tipo", "boardType")}{header("Composição", "composition")}{header("Quantidade", "quantity", "text-right")}{header("Saldo", "balance", "text-right")}</tr></thead><tbody>{sortedItems.map((row, index) => <tr key={`${row.product}-${index}`} className={`theme-grid-row ${index % 2 ? "bg-[#fbfdfb]" : "bg-white"}`}><td className="px-4 py-3 font-mono font-bold text-[#355044]">{value(row.product)}</td><td className="px-4 py-3 font-mono font-bold text-[#56685f]">{value(row.lot)}</td><td className="px-4 py-3 font-mono font-bold text-[#56685f]">{value(row.measures)}</td><td className="px-4 py-3 font-mono font-bold text-[#56685f]">{value(row.arrangement)}</td><td className="px-4 py-3 font-bold text-[#355044]">{value(row.boardType)}</td><td className="px-4 py-3 font-bold text-[#355044]">{value(row.composition)}</td><td className="reservation-quantity px-4 py-3 text-right font-mono text-lg font-black">{value(row.quantity)}</td><td className="reservation-balance px-4 py-3 text-right font-mono text-lg font-black">{value(row.balance)}</td></tr>)}</tbody></table></div>}</div><div className="flex w-full items-center justify-between border-t border-[#e7ebdf] bg-[#fffdf6] px-5 py-4"><p className="reservation-help flex items-center gap-2 text-sm font-bold"><CheckCircle2 className="h-5 w-5" />A reserva exibida considera somente itens com saldo disponível.</p><Button onClick={() => onOpenChange(false)} className="h-12 rounded-lg bg-[#cf3f3f] px-7 text-base font-black text-white hover:bg-[#ad2e2e]">Fechar</Button></div></DialogContent></Dialog>;
+  const header = (
+    label: string,
+    column: keyof ReservationRow,
+    alignment = ""
+  ) => (
+    <SortableHeader
+      label={label}
+      column={column}
+      sortKey={sortKey}
+      sortDirection={sortDirection}
+      onSort={key => toggleSort(key as keyof ReservationRow & string)}
+      className={alignment}
+    />
+  );
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="reservation-dialog theme-surface !flex !max-h-[calc(100dvh-1rem)] !w-[calc(100vw-1rem)] !max-w-[1440px] !flex-col overflow-hidden border-2 border-[#d5b85f] bg-[#fffdf6] p-0 shadow-2xl sm:!w-[calc(100vw-3rem)]">
+        <DialogHeader className="border-b-2 border-[#ead69c] bg-gradient-to-r from-[#fff6d9] via-[#f5fbf3] to-white px-5 py-4 sm:px-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <DialogTitle className="flex items-center gap-2 text-2xl font-black text-[#3f513a]">
+                <Boxes className="h-6 w-6 text-[#b88014]" />
+                Reserva de Matéria-Prima · OP {opCode ?? "—"}
+              </DialogTitle>
+              <DialogDescription className="mt-1 text-sm font-bold text-[#697a67]">
+                Materiais com Saldo Reservado para a Ordem Selecionada.
+              </DialogDescription>
+            </div>
+            <div className="reservation-total rounded-xl border px-4 py-2 text-right">
+              <p className="text-[10px] font-black ''tracking-[.14em]">
+                Saldo Reservado
+              </p>
+              <p className="mt-1 font-mono text-2xl font-black">
+                {totalBalance}
+              </p>
+            </div>
+          </div>
+        </DialogHeader>
+        <div className="min-h-0 flex-1 overflow-auto bg-[#fffdf6] p-4 sm:p-6">
+          {loading ? (
+            <p className="rounded-xl bg-[#f4f8f1] p-5 text-base font-bold text-[#52705a]">
+              Consultando Reservas…
+            </p>
+          ) : error ? (
+            <p className="rounded-xl border-2 border-[#e3abab] bg-[#fff2f2] p-5 text-base font-bold text-[#a23434]">
+              {error.message}
+            </p>
+          ) : !data?.length ? (
+            <p className="rounded-xl border-2 border-dashed border-[#d8c783] bg-white p-6 text-center text-base font-bold text-[#7a6937]">
+              Não há Reserva com Saldo para esta OP.
+            </p>
+          ) : (
+            <div className="w-full overflow-auto rounded-xl border-2 border-[#dfe7df] bg-white">
+              <table className="w-full min-w-[1080px] text-left text-base">
+                <thead className="theme-grid-header sticky top-0 z-10 border-b-2 border-[#e0c976] bg-[#fff2c9] font-mono text-xs font-black ''tracking-[.12em] text-[#705719]">
+                  <tr>
+                    {header("Produto", "product")}
+                    {header("Lote", "lot")}
+                    {header("Medidas", "measures")}
+                    {header("Arranjo", "arrangement")}
+                    {header("Tipo", "boardType")}
+                    {header("Composição", "composition")}
+                    {header("Quantidade", "quantity", "text-right")}
+                    {header("Saldo", "balance", "text-right")}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedItems.map((row, index) => (
+                    <tr
+                      key={`${row.product}-${index}`}
+                      className={`theme-grid-row ${index % 2 ? "bg-[#fbfdfb]" : "bg-white"}`}
+                    >
+                      <td className="px-4 py-3 font-mono font-bold text-[#355044]">
+                        {value(row.product)}
+                      </td>
+                      <td className="px-4 py-3 font-mono font-bold text-[#56685f]">
+                        {value(row.lot)}
+                      </td>
+                      <td className="px-4 py-3 font-mono font-bold text-[#56685f]">
+                        {value(row.measures)}
+                      </td>
+                      <td className="px-4 py-3 font-mono font-bold text-[#56685f]">
+                        {value(row.arrangement)}
+                      </td>
+                      <td className="px-4 py-3 font-bold text-[#355044]">
+                        {value(row.boardType)}
+                      </td>
+                      <td className="px-4 py-3 font-bold text-[#355044]">
+                        {value(row.composition)}
+                      </td>
+                      <td className="reservation-quantity px-4 py-3 text-right font-mono text-lg font-black">
+                        {value(row.quantity)}
+                      </td>
+                      <td className="reservation-balance px-4 py-3 text-right font-mono text-lg font-black">
+                        {value(row.balance)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+        <div className="flex w-full items-center justify-between border-t border-[#e7ebdf] bg-[#fffdf6] px-5 py-4">
+          <p className="reservation-help flex items-center gap-2 text-sm font-bold">
+            <CheckCircle2 className="h-5 w-5" />A Reserva Exibida Considera
+            Somente Itens com Saldo Disponível.
+          </p>
+          <Button
+            onClick={() => onOpenChange(false)}
+            className="h-12 rounded-lg bg-[#cf3f3f] px-7 text-base font-black text-white hover:bg-[#ad2e2e]"
+          >
+            Fechar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }

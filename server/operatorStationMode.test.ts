@@ -9,19 +9,22 @@ describe("estação operacional restrita", () => {
 
   it("mantém o login compatível com celular sem depender de tela cheia", () => {
     expect(login).toContain('window.location.assign("/")');
-    expect(login).toContain("Validando acesso");
+    expect(login).toContain("Validando Acesso");
   });
 
-  it("remove a navegação do operador e redireciona rotas internas para a programação", () => {
-    expect(dashboard).toContain('const operatorStation = user?.operationalProfile === "operator"');
-    expect(dashboard).toContain('if (machineControlStation && location !== "/") setLocation("/");');
-    expect(dashboard).toContain('if (machineControlStation) return <main className="min-h-dvh flex-1 bg-[#f6f7f4] p-3 sm:p-4">{children}</main>;');
+  it("remove definitivamente a navegação lateral e mantém a Programação como tela direta", () => {
+    expect(dashboard).toContain("A Programação é a tela direta de todos os perfis locais.");
+    expect(dashboard).toContain('return <main className="min-h-dvh flex-1 bg-[#f6f7f4] p-3 sm:p-4">{children}</main>;');
+    expect(dashboard).not.toContain("SidebarProvider");
+    expect(dashboard).not.toContain("SidebarInset");
   });
 
-  it("mantém Programador na estação de controle de máquinas, sem sidebar", () => {
-    expect(dashboard).toContain('const programmerStation = user?.operationalProfile === "programmer"');
-    expect(dashboard).toContain("const machineControlStation = operatorStation || programmerStation");
-    expect(dashboard).toContain('if (machineControlStation) return <main className="min-h-dvh flex-1 bg-[#f6f7f4] p-3 sm:p-4">{children}</main>;');
+  it("não mantém os módulos sem uso nas rotas principais", () => {
+    const app = readFileSync(resolve(process.cwd(), "client/src/App.tsx"), "utf8");
+    expect(app).not.toContain('path={"/ordens"}');
+    expect(app).not.toContain('path={"/produtos"}');
+    expect(app).not.toContain('path={"/estoque"}');
+    expect(app).not.toContain('path={"/solicitacoes"}');
   });
 
   it("mantém a produção aberta ao tentar voltar pelo navegador e compacta o apontamento", () => {

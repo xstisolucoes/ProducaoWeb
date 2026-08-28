@@ -22,6 +22,24 @@ describe("configurador de temas operacionais", () => {
     expect(configurator).toContain("XPAPER_LOGO_SRC");
   });
 
+  it("oferece controles de tipografia persistente para cada tema", () => {
+    expect(context).toContain("TYPOGRAPHY_STORAGE_KEY");
+    expect(context).toContain("DEFAULT_TYPOGRAPHY_SETTINGS");
+    expect(context).toContain("FONT_FAMILY_CSS");
+    expect(context).toContain("setTypography");
+    expect(context).toContain("resetTypography");
+    expect(configurator).toContain("Tipografia");
+    expect(configurator).toContain("Restaurar Tahoma");
+    expect(configurator).toContain("Bold");
+    expect(configurator).toContain("Itálico");
+    expect(css).toContain("--app-font-family");
+    expect(css).toContain("--app-font-size");
+    expect(css).toContain("--app-font-weight");
+    expect(css).toContain("--app-font-style");
+    expect(css).toContain("font-weight: var(--app-font-weight) !important");
+    expect(css).toContain("font-style: var(--app-font-style) !important");
+  });
+
   it("aplica tokens de marca à Programação, ao Apontamento e aos diálogos", () => {
     expect(css).toContain(':root[data-brand-theme="xsti"]');
     expect(css).toContain(".theme-machine-band");

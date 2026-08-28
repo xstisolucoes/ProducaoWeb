@@ -6,23 +6,19 @@ import DashboardLayout from "./components/DashboardLayout";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
-import Orders from "./pages/Orders";
 import Pointing from "./pages/Pointing";
 import ManualPointing from "./pages/ManualPointing";
 import ProductReleasePointing from "./pages/ProductReleasePointing";
-import Products from "./pages/Products";
-import Requests from "./pages/Requests";
-import Stock from "./pages/Stock";
+import Programming from "./pages/Programming";
+import XPaperConsultation from "./pages/XPaperConsultation";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"}><DashboardLayout><Home /></DashboardLayout></Route>
-      <Route path={"/ordens"}><DashboardLayout><Orders /></DashboardLayout></Route>
-      <Route path={"/produtos"}><DashboardLayout><Products /></DashboardLayout></Route>
-      <Route path={"/estoque"}><DashboardLayout><Stock /></DashboardLayout></Route>
-      <Route path={"/solicitacoes"}><DashboardLayout><Requests /></DashboardLayout></Route>
+      <Route path={"/producao"}><DashboardLayout><Programming /></DashboardLayout></Route>
+      <Route path={"/xpaper/cadastros"}><DashboardLayout><XPaperConsultation /></DashboardLayout></Route>
       <Route path={"/apontamento/:opCodigo/:mpCodigo"}><Pointing /></Route>
       <Route path={"/apontamento-manual/:opCodigo/:mpCodigo"}><ManualPointing /></Route>
       <Route path={"/liberacao-produto/:opCodigo/:mpCodigo"}><ProductReleasePointing /></Route>

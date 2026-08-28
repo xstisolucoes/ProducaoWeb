@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { getLocalCompanies, getLoginStations, loginLocalOperator } from "../firebirdProxy";
+import { getLocalCompanies, getLoginStations, getManualProcessMachines, loginLocalOperator } from "../firebirdProxy";
 import { createLocalSession, getLocalSessionCookieOptions, LOCAL_SESSION_COOKIE } from "../localSession";
 import { publicProcedure, router } from "../_core/trpc";
 import { getStationBinding, readStationCookie, saveStationBinding, STATION_COOKIE, stationCookieOptions } from "../stationBinding";
@@ -27,6 +27,10 @@ export const localAuthRouter = router({
   me: publicProcedure.query(({ ctx }) => ctx.localUser ? withRules(ctx.localUser) : null),
   companies: publicProcedure.query(() => getLocalCompanies()),
   stations: publicProcedure.query(() => getLoginStations()),
+  manualMachines: publicProcedure.query(async ({ ctx }) => {
+    if (ctx.localUser?.operationalProfile !== "manual-production") throw new TRPCError({ code: "FORBIDDEN", message: "A troca de Máquina/Processo é exclusiva para o grupo Manual." });
+    return getManualProcessMachines();
+  }),
   station: publicProcedure.query(async ({ ctx }) => {
     const binding = await getStationBinding(ctx.req);
     const cookieMachineCode = readStationCookie(ctx.req);
@@ -38,7 +42,7 @@ export const localAuthRouter = router({
       try {
         const binding = await getStationBinding(ctx.req);
         const persistedMachineCode = binding?.machineCode ?? readStationCookie(ctx.req);
-        const operator = await loginLocalOperator(input.login, input.password, persistedMachineCode ?? input.machineCode);
+        const operator = await loginLocalOperator(input.login, input.password, input.machineCode ?? persistedMachineCode);
         const selectedOperator = { ...operator, companyCode: input.companyCode ?? operator.companyCode };
         const token = await createLocalSession(selectedOperator);
         ctx.res.cookie(LOCAL_SESSION_COOKIE, token, getLocalSessionCookieOptions(ctx.req));
@@ -56,6 +60,14 @@ export const localAuthRouter = router({
       const station = await saveStationBinding(ctx.req, input.machineCode);
       ctx.res.cookie(STATION_COOKIE, String(input.machineCode), stationCookieOptions(ctx.req));
       return station;
+    }),
+  switchManualMachine: publicProcedure
+    .input(z.object({ machineCode: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.localUser?.operationalProfile !== "manual-production") throw new TRPCError({ code: "FORBIDDEN", message: "A troca de Máquina/Processo é exclusiva para o grupo Manual." });
+      const machine = (await getManualProcessMachines()).find((item) => item.code === input.machineCode);
+      if (!machine) throw new TRPCError({ code: "FORBIDDEN", message: "Selecione uma Máquina/Processo Manual permitida." });
+      return { machine };
     }),
   logout: publicProcedure.mutation(({ ctx }) => {
     ctx.res.clearCookie(LOCAL_SESSION_COOKIE, getLocalSessionCookieOptions(ctx.req));

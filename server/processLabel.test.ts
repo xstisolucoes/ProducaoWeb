@@ -28,7 +28,7 @@ describe("Etiqueta de Processo", () => {
     expect(router).toContain("processLabel: localProtectedProcedure");
     expect(router).toContain("companyCode: ctx.localUser.companyCode");
     expect(pointing).toContain("ProcessLabelDialog");
-    expect(pointing).toContain("Etiqueta de processo");
+    expect(pointing).toContain("Etiqueta de Processo");
     expect(pointing).toContain('event.key === "F10"');
   });
 
@@ -39,7 +39,7 @@ describe("Etiqueta de Processo", () => {
     expect(dialog).toContain("previewProcessLabel");
     expect(dialog).toContain("printProcessLabel");
     expect(dialog).toContain("pdfDataUrl");
-    expect(dialog).toContain("PDF final");
+    expect(dialog).toContain("PDF Final");
     expect(router).toContain("previewProcessLabel: localProtectedProcedure");
     expect(router).toContain("printProcessLabel: localProtectedProcedure");
     expect(proxy).toContain('app.post("/v1/process-label/print"');
@@ -54,7 +54,7 @@ describe("Etiqueta de Processo", () => {
     expect(proxy).toContain('execFileAsync("powershell.exe"');
     expect(contracts).toContain("export const getLocalPrinters");
     expect(router).toContain("printers: router");
-    expect(dialog).toContain("etiqueta será enviada diretamente à impressora Windows selecionada");
+    expect(dialog).toContain("Etiqueta Será Enviada Diretamente à Impressora Windows Selecionada");
   });
 
   it("obtém a empresa selecionada no login e a logomarca da etiqueta pelo cadastro EMPRESA", () => {
@@ -63,8 +63,8 @@ describe("Etiqueta de Processo", () => {
     expect(proxy).toContain("readBlobImageDataUri");
     expect(proxy).toContain("from empresa");
     expect(contracts).toContain("export const getLocalCompanies");
-    expect(dialog).toContain("Visualizar etiqueta");
-    expect(dialog.indexOf("Visualizar etiqueta")).toBeLessThan(dialog.indexOf(">Fechar</Button>"));
+    expect(dialog).toContain("Visualizar Etiqueta");
+    expect(dialog.indexOf("Visualizar Etiqueta")).toBeLessThan(dialog.indexOf(">Fechar</Button>"));
     expect(dialog).not.toContain('<X className');
   });
 });

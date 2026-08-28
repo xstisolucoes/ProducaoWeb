@@ -1,7 +1,7 @@
 {
   "::1": {
-    "machineCode": 13,
-    "updatedAt": "2026-08-21T16:45:34.532Z"
+    "machineCode": 4,
+    "updatedAt": "2026-08-28T16:33:09.903Z"
   },
   "192.168.0.200": {
     "machineCode": 36,
@@ -12,7 +12,7 @@
     "updatedAt": "2026-08-19T16:48:45.916Z"
   },
   "192.168.0.81": {
-    "machineCode": 13,
-    "updatedAt": "2026-08-21T16:41:43.998Z"
+    "machineCode": 12,
+    "updatedAt": "2026-08-28T10:49:28.571Z"
   }
 }

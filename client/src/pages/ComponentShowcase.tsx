@@ -255,7 +255,7 @@ export default function ComponentsShowcase() {
                         Foreground (Default)
                       </p>
                       <p className="text-foreground text-lg">
-                        Default text color for main content
+                        Default Text Color for Main Content
                       </p>
                     </div>
                     <div>
@@ -263,7 +263,7 @@ export default function ComponentsShowcase() {
                         Muted Foreground
                       </p>
                       <p className="text-muted-foreground text-lg">
-                        Muted text for secondary information
+                        Muted Text for Secondary Information
                       </p>
                     </div>
                     <div>
@@ -279,7 +279,7 @@ export default function ComponentsShowcase() {
                         Secondary Foreground
                       </p>
                       <p className="text-secondary-foreground text-lg">
-                        Secondary action text color
+                        Secondary Action Text Color
                       </p>
                     </div>
                   </div>
@@ -289,7 +289,7 @@ export default function ComponentsShowcase() {
                         Accent Foreground
                       </p>
                       <p className="text-accent-foreground text-lg">
-                        Accent text for emphasis
+                        Accent Text for Emphasis
                       </p>
                     </div>
                     <div>
@@ -297,7 +297,7 @@ export default function ComponentsShowcase() {
                         Destructive
                       </p>
                       <p className="text-destructive text-lg font-medium">
-                        Error or destructive action text
+                        Error or Destructive Action Text
                       </p>
                     </div>
                     <div>
@@ -305,7 +305,7 @@ export default function ComponentsShowcase() {
                         Card Foreground
                       </p>
                       <p className="text-card-foreground text-lg">
-                        Text color on card backgrounds
+                        Text Color on Card Backgrounds
                       </p>
                     </div>
                     <div>
@@ -313,7 +313,7 @@ export default function ComponentsShowcase() {
                         Popover Foreground
                       </p>
                       <p className="text-popover-foreground text-lg">
-                        Text color in popovers
+                        Text Color in Popovers
                       </p>
                     </div>
                   </div>
@@ -331,49 +331,49 @@ export default function ComponentsShowcase() {
                   <div className="bg-primary text-primary-foreground rounded-lg p-4">
                     <p className="font-medium mb-1">Primary</p>
                     <p className="text-sm opacity-90">
-                      Primary background with foreground text
+                      Primary Background with Foreground Text
                     </p>
                   </div>
                   <div className="bg-secondary text-secondary-foreground rounded-lg p-4">
                     <p className="font-medium mb-1">Secondary</p>
                     <p className="text-sm opacity-90">
-                      Secondary background with foreground text
+                      Secondary Background with Foreground Text
                     </p>
                   </div>
                   <div className="bg-muted text-muted-foreground rounded-lg p-4">
                     <p className="font-medium mb-1">Muted</p>
                     <p className="text-sm opacity-90">
-                      Muted background with foreground text
+                      Muted Background with Foreground Text
                     </p>
                   </div>
                   <div className="bg-accent text-accent-foreground rounded-lg p-4">
                     <p className="font-medium mb-1">Accent</p>
                     <p className="text-sm opacity-90">
-                      Accent background with foreground text
+                      Accent Background with Foreground Text
                     </p>
                   </div>
                   <div className="bg-destructive text-destructive-foreground rounded-lg p-4">
                     <p className="font-medium mb-1">Destructive</p>
                     <p className="text-sm opacity-90">
-                      Destructive background with foreground text
+                      Destructive Background with Foreground Text
                     </p>
                   </div>
                   <div className="bg-card text-card-foreground rounded-lg p-4 border">
                     <p className="font-medium mb-1">Card</p>
                     <p className="text-sm opacity-90">
-                      Card background with foreground text
+                      Card Background with Foreground Text
                     </p>
                   </div>
                   <div className="bg-popover text-popover-foreground rounded-lg p-4 border">
                     <p className="font-medium mb-1">Popover</p>
                     <p className="text-sm opacity-90">
-                      Popover background with foreground text
+                      Popover Background with Foreground Text
                     </p>
                   </div>
                   <div className="bg-background text-foreground rounded-lg p-4 border">
                     <p className="font-medium mb-1">Background</p>
                     <p className="text-sm opacity-90">
-                      Default background with foreground text
+                      Default Background with Foreground Text
                     </p>
                   </div>
                 </div>
@@ -416,14 +416,14 @@ export default function ComponentsShowcase() {
                   <Label htmlFor="message">Message</Label>
                   <Textarea
                     id="message"
-                    placeholder="Type your message here."
+                    placeholder="Type Your Message Here."
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Select</Label>
                   <Select>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a fruit" />
+                      <SelectValue placeholder="Select a Fruit" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="apple">Apple</SelectItem>
@@ -434,7 +434,7 @@ export default function ComponentsShowcase() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox id="terms" />
-                  <Label htmlFor="terms">Accept terms and conditions</Label>
+                  <Label htmlFor="terms">Accept Terms and Conditions</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch id="airplane-mode" />
@@ -484,7 +484,7 @@ export default function ComponentsShowcase() {
                         {datePickerDate ? (
                           format(datePickerDate, "PPP HH:mm", { locale: zhCN })
                         ) : (
-                          <span>Select date and time</span>
+                          <span>Select Date and Time</span>
                         )}
                       </Button>
                     </PopoverTrigger>
@@ -559,9 +559,9 @@ export default function ComponentsShowcase() {
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0">
                       <Command>
-                        <CommandInput placeholder="Search frameworks..." />
+                        <CommandInput placeholder="Search Frameworks..." />
                         <CommandList>
-                          <CommandEmpty>No framework found</CommandEmpty>
+                          <CommandEmpty>No Framework Found</CommandEmpty>
                           <CommandGroup>
                             {[
                               { value: "react", label: "React" },
@@ -772,14 +772,14 @@ export default function ComponentsShowcase() {
                     </PaginationContent>
                   </Pagination>
                   <p className="text-sm text-muted-foreground text-center">
-                    Current page: {currentPage}
+                    Current Page: {currentPage}
                   </p>
                 </div>
                 <Separator />
                 <div className="space-y-2">
                   <Label>Table</Label>
                   <Table>
-                    <TableCaption>A list of your recent invoices.</TableCaption>
+                    <TableCaption>A List of Your Recent Invoices.</TableCaption>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-[100px]">Invoice</TableHead>
@@ -874,14 +874,14 @@ export default function ComponentsShowcase() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Heads up!</AlertTitle>
                 <AlertDescription>
-                  You can add components to your app using the cli.
+                  You Can Add Components to Your App Using the CLI.
                 </AlertDescription>
               </Alert>
               <Alert variant="destructive">
                 <X className="h-4 w-4" />
                 <AlertTitle>Error</AlertTitle>
                 <AlertDescription>
-                  Your session has expired. Please log in again.
+                  Your Session Has Expired. Please Log In Again.
                 </AlertDescription>
               </Alert>
             </div>
@@ -901,7 +901,7 @@ export default function ComponentsShowcase() {
                   <CardHeader>
                     <CardTitle>Account</CardTitle>
                     <CardDescription>
-                      Make changes to your account here.
+                      Make Changes to Your Account Here.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
@@ -911,7 +911,7 @@ export default function ComponentsShowcase() {
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button>Save changes</Button>
+                    <Button>Save Changes</Button>
                   </CardFooter>
                 </Card>
               </TabsContent>
@@ -920,21 +920,21 @@ export default function ComponentsShowcase() {
                   <CardHeader>
                     <CardTitle>Password</CardTitle>
                     <CardDescription>
-                      Change your password here.
+                      Change Your Password Here.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-1">
-                      <Label htmlFor="current">Current password</Label>
+                      <Label htmlFor="current">Current Password</Label>
                       <Input id="current" type="password" />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="new">New password</Label>
+                      <Label htmlFor="new">New Password</Label>
                       <Input id="new" type="password" />
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button>Save password</Button>
+                    <Button>Save Password</Button>
                   </CardFooter>
                 </Card>
               </TabsContent>
@@ -948,7 +948,7 @@ export default function ComponentsShowcase() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground">
-                      Settings content goes here.
+                      Settings Content Goes Here.
                     </p>
                   </CardContent>
                 </Card>
@@ -961,20 +961,20 @@ export default function ComponentsShowcase() {
             <h3 className="text-2xl font-semibold">Accordion</h3>
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1">
-                <AccordionTrigger>Is it accessible?</AccordionTrigger>
+                <AccordionTrigger>Is It Accessible?</AccordionTrigger>
                 <AccordionContent>
-                  Yes. It adheres to the WAI-ARIA design pattern.
+                  Yes. It Adheres to the WAI-ARIA Design Pattern.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-2">
-                <AccordionTrigger>Is it styled?</AccordionTrigger>
+                <AccordionTrigger>Is It Styled?</AccordionTrigger>
                 <AccordionContent>
                   Yes. It comes with default styles that matches the other
                   components' aesthetic.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-3">
-                <AccordionTrigger>Is it animated?</AccordionTrigger>
+                <AccordionTrigger>Is It Animated?</AccordionTrigger>
                 <AccordionContent>
                   Yes. It's animated by default, but you can disable it if you
                   prefer.
@@ -1028,7 +1028,7 @@ export default function ComponentsShowcase() {
                       <DialogHeader>
                         <DialogTitle>Test Input</DialogTitle>
                         <DialogDescription>
-                          Enter some text below. Press Enter to submit (IME composition supported).
+                          Enter Some Text Below. Press Enter to Submit (IME Composition Supported).
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
@@ -1036,7 +1036,7 @@ export default function ComponentsShowcase() {
                           <Label htmlFor="dialog-input">Input</Label>
                           <Input
                             id="dialog-input"
-                            placeholder="Type something..."
+                            placeholder="Type Something..."
                             value={dialogInput}
                             onChange={(e) => setDialogInput(e.target.value)}
                             onKeyDown={handleDialogKeyDown}
@@ -1062,7 +1062,7 @@ export default function ComponentsShowcase() {
                     </SheetTrigger>
                     <SheetContent>
                       <SheetHeader>
-                        <SheetTitle>Edit profile</SheetTitle>
+                        <SheetTitle>Edit Profile</SheetTitle>
                         <SheetDescription>
                           Make changes to your profile here. Click save when
                           you're done.
@@ -1077,9 +1077,9 @@ export default function ComponentsShowcase() {
                     </DrawerTrigger>
                     <DrawerContent>
                       <DrawerHeader>
-                        <DrawerTitle>Are you absolutely sure?</DrawerTitle>
+                        <DrawerTitle>Are You Absolutely Sure?</DrawerTitle>
                         <DrawerDescription>
-                          This action cannot be undone.
+                          This Action Cannot Be Undone.
                         </DrawerDescription>
                       </DrawerHeader>
                       <DrawerFooter>
@@ -1099,7 +1099,7 @@ export default function ComponentsShowcase() {
                       <div className="space-y-2">
                         <h4 className="font-medium leading-none">Dimensions</h4>
                         <p className="text-sm text-muted-foreground">
-                          Set the dimensions for the layer.
+                          Set the Dimensions for the Layer.
                         </p>
                       </div>
                     </PopoverContent>
@@ -1107,10 +1107,10 @@ export default function ComponentsShowcase() {
 
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="outline">Hover me</Button>
+                      <Button variant="outline">Hover Me</Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Add to library</p>
+                      <p>Add to Library</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
@@ -1274,7 +1274,7 @@ export default function ComponentsShowcase() {
                       <div className="space-y-4">
                         {Array.from({ length: 20 }).map((_, i) => (
                           <div key={i} className="text-sm">
-                            Item {i + 1}: This is a scrollable content area
+                            Item {i + 1}: This Is a Scrollable Content Area
                           </div>
                         ))}
                       </div>
@@ -1321,8 +1321,8 @@ export default function ComponentsShowcase() {
                     <Button
                       variant="outline"
                       onClick={() => {
-                        sonnerToast.success("Operation successful", {
-                          description: "Your changes have been saved",
+                        sonnerToast.success("Operation Successful", {
+                          description: "Your Changes Have Been Saved",
                         });
                       }}
                     >
@@ -1331,9 +1331,9 @@ export default function ComponentsShowcase() {
                     <Button
                       variant="outline"
                       onClick={() => {
-                        sonnerToast.error("Operation failed", {
+                        sonnerToast.error("Operation Failed", {
                           description:
-                            "Cannot complete operation, please try again",
+                            "Cannot Complete Operation, Please Try Again",
                         });
                       }}
                     >
@@ -1343,7 +1343,7 @@ export default function ComponentsShowcase() {
                       variant="outline"
                       onClick={() => {
                         sonnerToast.info("Information", {
-                          description: "This is an information message",
+                          description: "This Is an Information Message",
                         });
                       }}
                     >
@@ -1354,7 +1354,7 @@ export default function ComponentsShowcase() {
                       onClick={() => {
                         sonnerToast.warning("Warning", {
                           description:
-                            "Please note the impact of this operation",
+                            "Please Note the Impact of This Operation",
                         });
                       }}
                     >
@@ -1364,7 +1364,7 @@ export default function ComponentsShowcase() {
                       variant="outline"
                       onClick={() => {
                         sonnerToast.loading("Loading", {
-                          description: "Please wait",
+                          description: "Please Wait",
                         });
                       }}
                     >
@@ -1378,8 +1378,8 @@ export default function ComponentsShowcase() {
                         );
                         sonnerToast.promise(promise, {
                           loading: "Processing...",
-                          success: "Processing complete!",
-                          error: "Processing failed",
+                          success: "Processing Complete!",
+                          error: "Processing Failed",
                         });
                       }}
                     >
@@ -1399,20 +1399,20 @@ export default function ComponentsShowcase() {
                 <div className="space-y-4">
                   <div className="text-sm text-muted-foreground">
                     <p>
-                      A ready-to-use chat interface component that integrates with the LLM system.
-                      Features markdown rendering, auto-scrolling, and loading states.
+                      A Ready-to-Use Chat Interface Component That Integrates With the LLM System.
+                      Features Markdown Rendering, Auto-Scrolling, and Loading States.
                     </p>
                     <p className="mt-2">
-                      This is a demo with simulated responses. In a real app, you'd connect it to a tRPC mutation.
+                      This Is a Demo With Simulated Responses. In a Real App, You'd Connect It to a tRPC Mutation.
                     </p>
                   </div>
                   <AIChatBox
                     messages={chatMessages}
                     onSendMessage={handleChatSend}
                     isLoading={isChatLoading}
-                    placeholder="Try sending a message..."
+                    placeholder="Try Sending a Message..."
                     height="500px"
-                    emptyStateMessage="How can I help you today?"
+                    emptyStateMessage="How Can I Help You Today?"
                     suggestedPrompts={[
                       "What is React?",
                       "Explain TypeScript",

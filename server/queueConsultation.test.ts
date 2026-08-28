@@ -36,7 +36,7 @@ describe("Consulta de Fila", () => {
     expect(router).toContain("return getQueue(ctx.localUser.machine.code");
     expect(router).toContain("getQueueProcesses(input.opCode, input.masterOrder)");
     expect(pointing).toContain("QueueConsultationDialog");
-    expect(pointing).toContain("Consultar fila");
+    expect(pointing).toContain("Consultar Fila");
     expect(dialog).toContain("Reserva");
     expect(dialog).toContain("Ajuste L:");
     expect(dialog).toContain("ProductPalletizationDialog");
@@ -45,8 +45,8 @@ describe("Consulta de Fila", () => {
     expect(dialog).toContain("Processos da OP");
     expect(dialog).toContain("Ferramentais");
     expect(dialog).toContain("Pacotes / Paletização");
-    expect(dialog).toContain("Visualizar layout");
-    expect(dialog).toContain("Não foi possível consultar a Fila da máquina");
+    expect(dialog).toContain("Visualizar Layout");
+    expect(dialog).toContain("Não Foi Possível Consultar a Fila da Máquina");
     expect(dialog).not.toContain('event.key === "F1"');
     expect(dialog).not.toContain('event.key === "F6"');
     expect(dialog).not.toContain("ShortcutKey");

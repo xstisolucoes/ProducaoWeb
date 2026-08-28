@@ -1,0 +1,32 @@
+flowchart LR
+  subgraph Estacao[Estação do operador ou PCP]
+    B[Navegador\nReact 19 + Tailwind]
+    LS[Cookie de sessão local\n8 horas]
+    B --- LS
+  end
+
+  subgraph Aplicacao[Aplicação Produção Web]
+    UI[Páginas e componentes\nProgramação, Apontamento, Manual, Liberação]
+    TRPC[tRPC + Express\nvalidação e regras de interface]
+    UI --> TRPC
+  end
+
+  subgraph IntegracaoLAN[Integração exclusiva LAN]
+    P[Proxy Firebird local\nNode.js + node-firebird]
+    PDF[jsreport + QR Code\nPDF e impressão Windows]
+    P --> PDF
+  end
+
+  FB[(Firebird legado\nordens, estoque, usuários, horários)]
+  B -->|HTTPS/HTTP da aplicação| UI
+  TRPC -->|token do proxy| P
+  P -->|conexão Firebird| FB
+
+  classDef client fill:#e5f6eb,stroke:#177458,color:#153d30,stroke-width:2px;
+  classDef app fill:#eef8f1,stroke:#2e9b70,color:#153d30,stroke-width:2px;
+  classDef proxy fill:#fff3d9,stroke:#b87914,color:#59430b,stroke-width:2px;
+  classDef database fill:#e6edff,stroke:#34549b,color:#1f3568,stroke-width:2px;
+  class B,LS client;
+  class UI,TRPC app;
+  class P,PDF proxy;
+  class FB database;

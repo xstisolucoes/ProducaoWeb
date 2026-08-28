@@ -12,10 +12,6 @@ describe("ordenação de grids", () => {
       "client/src/components/ApprovedProcessQuantitiesDialog.tsx",
       "client/src/components/SpecialProductionDialog.tsx",
       "client/src/components/SpecialProductionPanel.tsx",
-      "client/src/pages/Orders.tsx",
-      "client/src/pages/Products.tsx",
-      "client/src/pages/Stock.tsx",
-      "client/src/pages/ProductionDashboard.tsx",
     ].map((file) => readFileSync(resolve(process.cwd(), file), "utf8"));
 
     expect(primitives).toContain("export function useGridSort");

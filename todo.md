@@ -460,3 +460,96 @@
 - [x] Padronizar o cabeçalho verde do modal de encerramento com o contraste de Quantidades aprovadas.
 - [x] Cobrir os fluxos de limpeza e fim de período contra regressões.
 - [x] Substituir a legenda Estação por Máquina/Processo em todas as telas e mensagens operacionais.
+- [x] Ajustar tipografia, tamanhos e espaçamentos da Etiqueta de Produto Acabado conforme PDF de referência.
+- [x] Validar visualmente a prévia da Etiqueta PA revisada e cobrir a geração PDF contra regressões.
+- [x] Codificar o QR Code da Etiqueta PA com PV_CODIGO e alinhar corretamente o campo Responsável.
+- [x] Validar a prévia da Etiqueta PA com QR Code por produto contra regressões.
+
+- [x] Centralizar a tipografia da interface por tema, com Arial como configuração padrão.
+- [x] Permitir configurar e persistir fonte, tamanho, negrito e itálico no configurador de temas.
+- [x] Aplicar os tokens tipográficos a toda a interface web, preservando as especificações próprias das etiquetas PDF.
+- [x] Cobrir a configuração tipográfica com testes e validar os temas Verde e XSTI.
+
+- [x] Remover exceções tipográficas, incluindo font-mono, para garantir que o Tema alcance toda a interface web.
+- [x] Cobrir a ausência de fontes fixas e validar a herança integral de fonte, tamanho, negrito e itálico.
+
+- [x] Definir Tahoma 15px em negrito como padrão inicial dos temas Verde e XSTI.
+- [x] Exibir o menu lateral somente para usuários Administrador, PCP ou Programador.
+- [x] Cobrir os novos padrões de fonte e a regra de menu lateral com testes de regressão.
+
+- [x] Remover definitivamente o menu lateral e suas rotas de navegação não utilizadas do projeto.
+- [x] Manter a Programação como tela direta para todos os perfis sem regressão das telas operacionais.
+- [x] Cobrir a ausência do menu lateral e validar a inicialização da Programação.
+
+- [x] Ampliar o modal de Encerrar operação da Máquina/Processo e os cartões de ação para eliminar corte de texto.
+- [x] Cobrir e validar a leitura completa das quatro ações em largura operacional.
+
+- [x] Reorganizar as ações de encerramento em duas colunas nas telas estreitas para impedir cortes de texto.
+- [x] Validar visualmente a legibilidade das quatro ações na largura reportada pelo usuário.
+
+- [x] Exibir Quantidade a apontar e Processo anterior somente quando não houver reserva aplicável no Apontamento do Operador.
+- [x] Validar a troca de painéis após o setup, com e sem reserva, sem regressão do saldo a produzir.
+
+- [x] Padronizar os botões de finalização em todos os apontamentos: Atendido verde, A concluir laranja e Parcial azul, independentemente do tema.
+- [x] Cobrir e validar as cores operacionais dos resultados nos fluxos de Operador, Manual e Liberação.
+
+- [x] Remover as descrições inferiores dos botões Atendido, A concluir e Parcial em todos os apontamentos.
+- [x] Validar os botões de resultado simplificados sem regressão de ações ou cores.
+
+- [x] Adicionar Trocar Máquina/Processo para o grupo Manual, listando apenas máquinas de Processo Manual.
+- [x] Excluir Liberação de Produto e Apontamento da troca de Máquina/Processo do grupo Manual.
+- [x] Cobrir e validar a troca de processo manual sem regressão de Programação ou autorização.
+
+- [x] Encerrar a sessão após selecionar uma nova Máquina/Processo Manual e exigir novo login antes de operar.
+- [x] Cobrir e validar que a troca Manual não permite continuidade da operação com a sessão anterior.
+
+- [x] Ampliar e padronizar os títulos dos grids nos temas Verde e XSTI conforme a referência da Reserva.
+- [x] Cobrir e validar a legibilidade e o contraste dos cabeçalhos sem prejudicar ordenação ou largura das colunas.
+
+- [x] Documentar a arquitetura, módulos, fluxos operacionais e integração Firebird em formato de curso.
+- [x] Criar diagramas e imagens explicativas para o roteiro técnico e operacional do Produção Web/XPAPER.
+- [x] Revisar e entregar o curso ilustrado com orientações de manutenção e evolução.
+
+- [x] Permitir login local por número/código de usuário, além de usuário e e-mail.
+- [x] Validar autenticação por código, usuário e e-mail sem regressão de perfil ou Máquina/Processo.
+
+- [x] Adaptar a Programação de PCP/Programador para telas de celular, preservando filtros, grade, seleção e ações operacionais.
+- [x] Reorganizar painéis técnicos e barra de comandos para largura estreita sem perda de legibilidade.
+- [x] Validar a Programação nos layouts móvel e desktop sem regressão dos controles de máquina.
+
+- [x] Transformar os cartões móveis da Programação em carrossel horizontal com seleção de OP.
+- [x] Atualizar ajustes, cores, clichês e facas ao trocar o cartão ativo no carrossel.
+- [x] Adaptar a barra de comandos ao carrossel móvel e validar a interação em celular.
+
+- [x] Compactar a barra móvel da Programação, exibindo somente ícones nos comandos e mantendo rótulos acessíveis.
+- [x] Validar a distribuição dos botões, atalhos e botão Fechar em celular.
+
+- [x] Reduzir ainda mais os botões da barra móvel e impedir rolagem horizontal em telas estreitas.
+- [x] Validar a grade compacta de comandos em largura de celular sem corte ou expansão indevida.
+
+- [x] Documentar a criação do banco MySQL de homologação e usuário no cPanel da HostGator.
+- [x] Definir a sequência de transição inicial, mantendo o Firebird como fonte oficial até a validação da réplica.
+
+- [x] Criar uma habilidade reutilizável para evolução do Produção Web/XPAPER com Firebird em LAN.
+- [x] Incluir referências operacionais para regras de regressão, integração via proxy e entrega de pacote LAN completo.
+- [x] Validar e entregar a habilidade reutilizável para reutilização em projetos futuros.
+
+- [x] Documentar práticas de segurança para cPanel e MySQL hospedado na HostGator.
+- [x] Documentar a arquitetura segura de conexão PHP/Node.js do XPAPER ao MySQL hospedado.
+
+- [x] Criar a base visual do XPAPER Central com entrada do usuário e escolha de módulo.
+- [x] Implementar o menu principal de módulos conforme a referência do ERP legado.
+- [x] Criar o padrão inicial de tela de consulta para os cadastros, com barra de botões.
+
+- [x] Inventariar o projeto XPaper enviado e mapear seus módulos, dependências e artefatos de banco.
+- [x] Definir a estratégia de unificação do XPaper e Produção Web com integração Firebird compartilhada.
+
+- [x] Ajustar a entrada para comunicar o XPAPER Central e permitir que perfis administrativos escolham o módulo após autenticar.
+- [x] Preservar a abertura direta da Produção para perfis operacionais vinculados à Máquina/Processo.
+
+- [x] Remover os cartões centrais e o resumo de módulo da entrada do XPAPER Central.
+- [x] Manter somente o menu superior como navegação de módulos, preservando o acesso à Produção.
+
+- [x] Mapear e padronizar todos os textos visíveis do front-end em Title Case em português.
+- [x] Revisar títulos, cards, botões, campos, modais, grids, menus, mensagens, badges, filtros e placeholders sem alterar comportamento.
+- [x] Validar a consistência de capitalização entre telas e cobrir a padronização textual com testes de regressão.

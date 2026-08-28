@@ -1,0 +1,24 @@
+sequenceDiagram
+  participant U as Usuário
+  participant W as Interface web
+  participant A as tRPC/Express
+  participant P as Proxy Firebird
+  participant F as Firebird
+
+  U->>W: Informa usuário e senha
+  W->>A: localAuth.login
+  A->>P: POST /v1/auth/login com token
+  P->>F: Valida BCrypt, grupo e permissões
+  F-->>P: Perfil e Máquina/Processo
+  P-->>A: Usuário operacional autorizado
+  A-->>W: Cookie de sessão local
+  alt Máquina ainda não configurada
+    W->>U: PCP/Programador/Administrador seleciona a estação
+  else Máquina configurada
+    W->>W: Abre Programação filtrada pela máquina
+  end
+  alt Grupo Manual troca Máquina/Processo
+    W->>A: switchManualMachine
+    A-->>W: Encerra a sessão
+    W->>U: Exige novo login na máquina escolhida
+  end

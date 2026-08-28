@@ -1,15 +1,170 @@
 import { useEffect, useState } from "react";
 import { Box, CirclePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ConnectionNotice, LoadingRows, PageHeading, SearchBar, SortableHeader, TablePagination, displayValue, useGridSort } from "@/components/ProductionPrimitives";
+import {
+  ConnectionNotice,
+  LoadingRows,
+  PageHeading,
+  SearchBar,
+  SortableHeader,
+  TablePagination,
+  displayValue,
+  useGridSort,
+} from "@/components/ProductionPrimitives";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
 export default function Products() {
-  const [page, setPage] = useState(1); const [search, setSearch] = useState(""); const [query, setQuery] = useState("");
-  useEffect(() => { const id = window.setTimeout(() => { setQuery(search); setPage(1); }, 300); return () => window.clearTimeout(id); }, [search]);
-  const products = trpc.production.products.list.useQuery({ page, limit: 20, search: query }, { retry: false });
-  const { sortedItems, sortKey, sortDirection, toggleSort } = useGridSort(products.data?.items);
-  return <div className="space-y-7"><PageHeading eyebrow="Produto Venda" title="Produtos / Itens" description="Consulta de itens de venda e suas especificações registradas no cadastro legado." action={<Button onClick={() => toast.info("Cadastro de produto em preparação", { description: "A criação será habilitada após validar a estrutura obrigatória do cadastro legado na sua base local." })} className="h-10 rounded-lg bg-[#176c5a] px-4 text-sm font-bold hover:bg-[#0f5a49]"><CirclePlus className="mr-2 h-4 w-4" />Novo produto</Button>} />
-    {products.error && <ConnectionNotice error={products.error} />}<section className="overflow-hidden rounded-2xl border border-[#e1e5de] bg-white shadow-[0_12px_32px_rgba(31,42,34,0.035)]"><div className="border-b border-[#edf0eb] px-5 py-4"><SearchBar value={search} onChange={setSearch} placeholder="Buscar por código, referência ou código do cliente" /></div><div className="overflow-x-auto"><table className="w-full min-w-[850px] text-left text-sm"><thead className="bg-[#fafbf9] text-[10px] uppercase tracking-[0.1em] text-[#899189]"><tr><SortableHeader label="Código" column="codigo" sortKey={sortKey} sortDirection={sortDirection} onSort={(key) => toggleSort(key as never)} /><SortableHeader label="Referência" column="referencia" sortKey={sortKey} sortDirection={sortDirection} onSort={(key) => toggleSort(key as never)} /><SortableHeader label="Cliente" column="codigo_cliente" sortKey={sortKey} sortDirection={sortDirection} onSort={(key) => toggleSort(key as never)} /><SortableHeader label="Dimensões" column="largura" sortKey={sortKey} sortDirection={sortDirection} onSort={(key) => toggleSort(key as never)} /><SortableHeader label="Fechamento" column="fechamento" sortKey={sortKey} sortDirection={sortDirection} onSort={(key) => toggleSort(key as never)} /><SortableHeader label="Impressão" column="impressao" sortKey={sortKey} sortDirection={sortDirection} onSort={(key) => toggleSort(key as never)} /></tr></thead><tbody className="divide-y divide-[#edf0eb]">{products.isLoading ? <LoadingRows columns={6} /> : sortedItems.map((item) => <tr className="hover:bg-[#fbfcfa]" key={`${item.codigo}-${item.revisao}`}><td className="px-5 py-3.5"><span className="inline-flex items-center gap-2 font-mono text-xs font-medium text-[#304138]"><Box className="h-3.5 w-3.5 text-[#69a390]" />{item.codigo}</span><p className="mt-1 text-[10px] text-[#929a91]">REV. {displayValue(item.revisao, "0")}</p></td><td className="px-5 py-3.5 font-medium text-[#465249]">{displayValue(item.referencia)}</td><td className="px-5 py-3.5 text-[#647167]">{displayValue(item.codigo_cliente)}</td><td className="px-5 py-3.5 font-mono text-xs text-[#647167]">{[item.largura, item.comprimento, item.altura].every((v) => v === null) ? "—" : `${displayValue(item.largura, "0")} × ${displayValue(item.comprimento, "0")} × ${displayValue(item.altura, "0")}`}</td><td className="px-5 py-3.5 text-[#647167]">{displayValue(item.fechamento)}</td><td className="px-5 py-3.5 text-[#647167]">{displayValue(item.impressao)}</td></tr>)}</tbody></table></div>{!products.isLoading && !products.data?.items.length && <div className="px-5 py-12 text-center text-sm text-[#899189]">Nenhum produto localizado com os filtros atuais.</div>}<TablePagination page={page} total={products.data?.total ?? 0} limit={20} onChange={setPage} /></section></div>;
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [query, setQuery] = useState("");
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setQuery(search);
+      setPage(1);
+    }, 300);
+    return () => window.clearTimeout(id);
+  }, [search]);
+  const products = trpc.production.products.list.useQuery(
+    { page, limit: 20, search: query },
+    { retry: false }
+  );
+  const { sortedItems, sortKey, sortDirection, toggleSort } = useGridSort(
+    products.data?.items
+  );
+  return (
+    <div className="space-y-7">
+      <PageHeading
+        eyebrow="Produto Venda"
+        title="Produtos / Itens"
+        description="Consulta de itens de venda e suas especificações registradas no cadastro legado."
+        action={
+          <Button
+            onClick={() =>
+              toast.info("Cadastro de produto em preparação", {
+                description:
+                  "A criação será habilitada após validar a estrutura obrigatória do cadastro legado na sua base local.",
+              })
+            }
+            className="h-10 rounded-lg bg-[#176c5a] px-4 text-sm font-bold hover:bg-[#0f5a49]"
+          >
+            <CirclePlus className="mr-2 h-4 w-4" />
+            Novo produto
+          </Button>
+        }
+      />
+      {products.error && <ConnectionNotice error={products.error} />}
+      <section className="overflow-hidden rounded-2xl border border-[#e1e5de] bg-white shadow-[0_12px_32px_rgba(31,42,34,0.035)]">
+        <div className="border-b border-[#edf0eb] px-5 py-4">
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Buscar por código, referência ou código do cliente"
+          />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[850px] text-left text-sm">
+            <thead className="bg-[#fafbf9] text-[10px] ''tracking-[0.1em] text-[#899189]">
+              <tr>
+                <SortableHeader
+                  label="Código"
+                  column="codigo"
+                  sortKey={sortKey}
+                  sortDirection={sortDirection}
+                  onSort={key => toggleSort(key as never)}
+                />
+                <SortableHeader
+                  label="Referência"
+                  column="referencia"
+                  sortKey={sortKey}
+                  sortDirection={sortDirection}
+                  onSort={key => toggleSort(key as never)}
+                />
+                <SortableHeader
+                  label="Cliente"
+                  column="codigo_cliente"
+                  sortKey={sortKey}
+                  sortDirection={sortDirection}
+                  onSort={key => toggleSort(key as never)}
+                />
+                <SortableHeader
+                  label="Dimensões"
+                  column="largura"
+                  sortKey={sortKey}
+                  sortDirection={sortDirection}
+                  onSort={key => toggleSort(key as never)}
+                />
+                <SortableHeader
+                  label="Fechamento"
+                  column="fechamento"
+                  sortKey={sortKey}
+                  sortDirection={sortDirection}
+                  onSort={key => toggleSort(key as never)}
+                />
+                <SortableHeader
+                  label="Impressão"
+                  column="impressao"
+                  sortKey={sortKey}
+                  sortDirection={sortDirection}
+                  onSort={key => toggleSort(key as never)}
+                />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#edf0eb]">
+              {products.isLoading ? (
+                <LoadingRows columns={6} />
+              ) : (
+                sortedItems.map(item => (
+                  <tr
+                    className="hover:bg-[#fbfcfa]"
+                    key={`${item.codigo}-${item.revisao}`}
+                  >
+                    <td className="px-5 py-3.5">
+                      <span className="inline-flex items-center gap-2 font-mono text-xs font-medium text-[#304138]">
+                        <Box className="h-3.5 w-3.5 text-[#69a390]" />
+                        {item.codigo}
+                      </span>
+                      <p className="mt-1 text-[10px] text-[#929a91]">
+                        REV. {displayValue(item.revisao, "0")}
+                      </p>
+                    </td>
+                    <td className="px-5 py-3.5 font-medium text-[#465249]">
+                      {displayValue(item.referencia)}
+                    </td>
+                    <td className="px-5 py-3.5 text-[#647167]">
+                      {displayValue(item.codigo_cliente)}
+                    </td>
+                    <td className="px-5 py-3.5 font-mono text-xs text-[#647167]">
+                      {[item.largura, item.comprimento, item.altura].every(
+                        v => v === null
+                      )
+                        ? "—"
+                        : `${displayValue(item.largura, "0")} × ${displayValue(item.comprimento, "0")} × ${displayValue(item.altura, "0")}`}
+                    </td>
+                    <td className="px-5 py-3.5 text-[#647167]">
+                      {displayValue(item.fechamento)}
+                    </td>
+                    <td className="px-5 py-3.5 text-[#647167]">
+                      {displayValue(item.impressao)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        {!products.isLoading && !products.data?.items.length && (
+          <div className="px-5 py-12 text-center text-sm text-[#899189]">
+            Nenhum produto localizado com os filtros atuais.
+          </div>
+        )}
+        <TablePagination
+          page={page}
+          total={products.data?.total ?? 0}
+          limit={20}
+          onChange={setPage}
+        />
+      </section>
+    </div>
+  );
 }

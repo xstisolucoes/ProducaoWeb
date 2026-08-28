@@ -21,9 +21,12 @@ describe("indicadores operacionais de reserva", () => {
     expect(pointing).toContain('reservation.data?.applicable && reservation.data.indicatorQuantity != null');
     expect(pointing).toContain('Pacotes / Paletização');
     expect(pointing).toContain("function QuantityToPointNotice");
-    expect(pointing).toContain("const mustAttendWhenCovered = !hasReservation");
+    expect(pointing).toContain('enabled: Boolean(pointing.data) && Number.isInteger(opCodigo) && Number.isInteger(mpCodigo)');
+    expect(pointing).toContain("const noApplicableReservation = reservation.data !== undefined && !hasReservation");
+    expect(pointing).toContain("{noApplicableReservation ? <QuantityToPointNotice processName={previousProcessName} quantity={quantityToPoint} compact /> : null}");
+    expect(pointing).toContain("const mustAttendWhenCovered = noApplicableReservation");
     expect(pointing).toContain('reservation.data?.indicatorQuantity != null ? <QuantityToPointNotice processName={reservation.data.previousProcessDescription ?? "processo anterior"} quantity={reservation.data.indicatorQuantity} />');
-    expect(pointing).toContain("const insufficientToAttendWithoutReservation = !hasReservation");
+    expect(pointing).toContain("const insufficientToAttendWithoutReservation = noApplicableReservation");
     expect(pointing).toContain("disabled={invalidQuantity || mustAttendWhenCovered || finishProduction.isPending}");
     expect(pointing).toContain('onPointerDownOutside={(event) => event.preventDefault()}');
     expect(pointing).toContain('onEscapeKeyDown={(event) => event.preventDefault()}');

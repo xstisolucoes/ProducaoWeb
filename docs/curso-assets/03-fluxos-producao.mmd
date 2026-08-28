@@ -1,0 +1,32 @@
+flowchart TD
+  L[Login e identificação\nda Máquina/Processo] --> PG[Programação]
+  PG --> O{Perfil e grupo\nda máquina}
+  O -->|Operador| S[Iniciar setup]
+  S --> C[Checklist de liberação]
+  C --> PR[Produção]
+  PR --> F[Finalizar produção]
+  F --> R{Reserva aplicável?}
+  R -->|Sim| ER[Usa quantidade reservada\ne baixa estoque quando habilitado]
+  R -->|Não| PA[Calcula saldo pelo\nprocesso anterior]
+  ER --> RF[Resultado\nAtendido / A concluir / Parcial]
+  PA --> RF
+
+  O -->|Apontador ou Manual| AM[Apontamento Manual]
+  AM --> RF
+  O -->|Qualidade / Liberação| LP[Liberação de Produto]
+  LP --> NC{Conforme?}
+  NC -->|Sim| RF
+  NC -->|Não conforme| RPNC[RPNC]
+  RPNC --> AG[Amostragem Geral]
+  AG --> LP
+
+  RF --> PG
+
+  classDef entry fill:#e5f6eb,stroke:#177458,color:#153d30,stroke-width:2px;
+  classDef operator fill:#e6edff,stroke:#34549b,color:#1f3568,stroke-width:2px;
+  classDef warning fill:#fff3d9,stroke:#b87914,color:#59430b,stroke-width:2px;
+  classDef quality fill:#ffe6e9,stroke:#bd2632,color:#70131c,stroke-width:2px;
+  class L,PG entry;
+  class S,C,PR,F,R,ER,PA,RF operator;
+  class AM warning;
+  class LP,NC,RPNC,AG quality;

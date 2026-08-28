@@ -41,8 +41,8 @@ describe("Produção Especial", () => {
     expect(programming).toContain(">Conjunto</button>");
     expect(programming).toContain("<SpecialProductionDialog");
     expect((programming.match(/theme-toolbar sticky bottom-0/g) ?? []).length).toBe(1);
-    expect(dialog).toContain("OPs que compõem a OP:");
-    expect(dialog).toContain("Código do produto");
+    expect(dialog).toContain("OPs que Compõem a OP:");
+    expect(dialog).toContain("Código do Produto");
     expect(dialog).toContain("Referencial");
     expect(pointing).toContain("<SpecialProductionPanel");
     expect(manual).toContain("<SpecialProductionPanel");
