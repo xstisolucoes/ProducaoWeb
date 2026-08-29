@@ -961,7 +961,7 @@ export default function Programming() {
           <div className="flex items-center gap-2 rounded-xl border border-white/15 bg-white/8 px-3 py-2">
             <ThemeConfigurator compact />
             <div className="min-w-0 border-l border-white/15 pl-3 text-right">
-              <p className="text-[10px] font-bold ''tracking-[.14em] text-[#b8d8c5]">
+              <p className="theme-tooling-label text-[14px] font-['Tahoma'] ''tracking-[.14em] text-[#b8d8c5]">
                 {operator ? "Operador" : "Programador"}
               </p>
               <p className="mt-1 truncate font-semibold">
@@ -1151,7 +1151,7 @@ export default function Programming() {
               <Input
                 value={searchInput}
                 onChange={event => setSearchInput(event.target.value)}
-                placeholder="Cliente, Código Prod., OP ou Referência"
+                placeholder="Cliente, Cód Prod. Cliente, OP ou Referência"
                 className="theme-search-field h-10 border-[#b9d9c8] bg-white/90 pl-9 text-sm"
               />
             </div>
@@ -1263,7 +1263,7 @@ export default function Programming() {
           <table
             className={`programming-grid w-full text-left text-sm ${manualPointing ? "min-w-[1250px]" : "min-w-[1600px]"}`}
           >
-            <thead className="theme-grid-header bg-[#f5f8f5] text-[10px] font-black ''tracking-[.08em] text-[#66776d]">
+            <thead className="theme-grid-header sticky top-0 z-10 border-b-2 border-[#e0c976] bg-[#fff2c9] font-['Tahoma'] text-xs font-black ''tracking-[.12em] text-[#705719]">
               <tr>
                 {!manualPointing ? (
                   <SortableHeader
@@ -1310,7 +1310,7 @@ export default function Programming() {
                   onSort={key => toggleProgrammingSort(key as never)}
                 />
                 <SortableHeader
-                  label="Código prod. cliente"
+                  label="Cod. Prod. Cliente"
                   column="customerProductCode"
                   sortKey={programmingSortKey}
                   sortDirection={programmingSortDirection}
@@ -1333,7 +1333,7 @@ export default function Programming() {
                   className="text-center"
                 />
                 <SortableHeader
-                  label="Qtde de Saldo"
+                  label="Saldo"
                   column="saldo"
                   sortKey={programmingSortKey}
                   sortDirection={programmingSortDirection}
@@ -1341,14 +1341,14 @@ export default function Programming() {
                   className="text-center"
                 />
                 <SortableHeader
-                  label="Data Exp."
+                  label="Data de Expedição"
                   column="shipmentDate"
                   sortKey={programmingSortKey}
                   sortDirection={programmingSortDirection}
                   onSort={key => toggleProgrammingSort(key as never)}
                 />
                 <SortableHeader
-                  label="Data Ent."
+                  label="Data de Entrega"
                   column="data_entrega"
                   sortKey={programmingSortKey}
                   sortDirection={programmingSortDirection}
@@ -1373,7 +1373,7 @@ export default function Programming() {
                 {!manualPointing ? (
                   <>
                     <SortableHeader
-                      label="Situação M.P."
+                      label="Situação da M.P."
                       column="processPosition"
                       sortKey={programmingSortKey}
                       sortDirection={programmingSortDirection}
@@ -1388,7 +1388,7 @@ export default function Programming() {
                     />
                   </>
                 ) : null}
-                <th className="px-3 py-3">Ação</th>
+                <th className="px-3 py-3  text-center">Ação</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#e7ede8]">

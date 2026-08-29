@@ -92,14 +92,14 @@
   --theme-border: #c6ded0;
   --theme-text: #183e30;
   --theme-text-muted: #62756a;
-  --theme-grid-header: #d8f7e7;
+  --theme-grid-header: #69ee69;
   --grid-header-font-size: 0.92rem;
   --grid-header-font-weight: 800;
   --grid-header-letter-spacing: 0.045em;
   --grid-header-min-height: rem;
   --theme-grid-row: #ffffff;
   --theme-grid-row-alt: #f8fcf9;
-  --theme-grid-selected: #aef1c6;
+  --theme-grid-selected: #bdf7d1;
   --theme-grid-selected-ring: #177458;
   --theme-btn-primary: #177458;
   --theme-btn-primary-hover: #105f45;
@@ -132,7 +132,7 @@
   --xsti-surface: #ffffff;
   --xsti-surface-muted: #f5f4f4;
   --xsti-surface-raised: #faf9f9;
-  --xsti-grid-header: #70242d;
+  --xsti-grid-header: #b36b73;
   --xsti-grid-row-alt: #faf9f9;
   --xsti-grid-selected: #f5d1d4;
   --xsti-grid-selected-ring: #d6313b;
@@ -313,13 +313,46 @@
   }
   .theme-grid-header {
     border-color: var(--theme-grid-selected-ring);
-    background: linear-gradient(
-      105deg,
+
+    background:
+      radial-gradient(
+        circle at 85% 15%,
+        rgba(255, 255, 255, 0.22),
+        transparent 28%
+      ),
+      radial-gradient(
+        circle at 10% 90%,
+        color-mix(in srgb, var(--theme-btn-primary) 28%, transparent),
+        transparent 38%
+      ),
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--theme-grid-header) 82%, black) 0%,
+        var(--theme-grid-header) 50%,
+        color-mix(
+            in srgb,
+            var(--theme-grid-header) 62%,
+            var(--theme-btn-primary)
+          )
+          100%
+      );
+
+    color: white;
+
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+      0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+
+  /* .theme-grid-header {
+    border-color: var(--theme-grid-selected-ring);
+    background: radial-gradient(
       var(--theme-grid-header),
-      color-mix(in srgb, var(--theme-grid-header) 82%, var(--theme-btn-primary))
+      color-mix(in srgb, var(--theme-grid-header) 62%, var(--theme-btn-primary))
     );
     color: white;
-  }
+  } */
   table thead :is(th, td) {
     font-size: var(--grid-header-font-size) !important;
     font-weight: var(--grid-header-font-weight) !important;

@@ -68,11 +68,11 @@ export function ProductReservationDialog({
                 Reserva de Matéria-Prima · OP {opCode ?? "—"}
               </DialogTitle>
               <DialogDescription className="mt-1 text-sm font-bold text-[#697a67]">
-                Materiais com Saldo Reservado para a Ordem Selecionada.
+                Materiais com saldo reservado para a OP selecionada.
               </DialogDescription>
             </div>
-            <div className="reservation-total rounded-xl border px-4 py-2 text-right">
-              <p className="text-[10px] font-black ''tracking-[.14em]">
+            <div className="reservation-total rounded-xl border px-4 py-2  text-right">
+              <p className="text-[12px] font-black ''tracking-[.14em]">
                 Saldo Reservado
               </p>
               <p className="mt-1 font-mono text-2xl font-black">
@@ -92,21 +92,21 @@ export function ProductReservationDialog({
             </p>
           ) : !data?.length ? (
             <p className="rounded-xl border-2 border-dashed border-[#d8c783] bg-white p-6 text-center text-base font-bold text-[#7a6937]">
-              Não há Reserva com Saldo para esta OP.
+              Não há reserva com saldo para esta OP.
             </p>
           ) : (
             <div className="w-full overflow-auto rounded-xl border-2 border-[#dfe7df] bg-white">
               <table className="w-full min-w-[1080px] text-left text-base">
-                <thead className="theme-grid-header sticky top-0 z-10 border-b-2 border-[#e0c976] bg-[#fff2c9] font-mono text-xs font-black ''tracking-[.12em] text-[#705719]">
-                  <tr>
+                <thead className="theme-grid-header sticky top-0 z-10 border-b-2 border-[#e0c976] bg-[#fff2c9] font-['Tahoma'] text-xs font-black ''tracking-[.12em] text-[#705719]">
+                  <tr className="justify-self-center">
                     {header("Produto", "product")}
                     {header("Lote", "lot")}
                     {header("Medidas", "measures")}
                     {header("Arranjo", "arrangement")}
                     {header("Tipo", "boardType")}
-                    {header("Composição", "composition")}
-                    {header("Quantidade", "quantity", "text-right")}
-                    {header("Saldo", "balance", "text-right")}
+                    {header("Papelão Ondulado", "composition")}
+                    {header("Quantidade", "quantity", "text-center")}
+                    {header("Saldo", "balance", "text-center")}
                   </tr>
                 </thead>
                 <tbody>
@@ -133,10 +133,10 @@ export function ProductReservationDialog({
                       <td className="px-4 py-3 font-bold text-[#355044]">
                         {value(row.composition)}
                       </td>
-                      <td className="reservation-quantity px-4 py-3 text-right font-mono text-lg font-black">
+                      <td className="reservation-quantity px-4 py-3 justify-self-center font-mono text-lg font-black">
                         {value(row.quantity)}
                       </td>
-                      <td className="reservation-balance px-4 py-3 text-right font-mono text-lg font-black">
+                      <td className="reservation-balance px-4 py-3 justify-self-center font-mono text-lg font-black">
                         {value(row.balance)}
                       </td>
                     </tr>
@@ -148,8 +148,8 @@ export function ProductReservationDialog({
         </div>
         <div className="flex w-full items-center justify-between border-t border-[#e7ebdf] bg-[#fffdf6] px-5 py-4">
           <p className="reservation-help flex items-center gap-2 text-sm font-bold">
-            <CheckCircle2 className="h-5 w-5" />A Reserva Exibida Considera
-            Somente Itens com Saldo Disponível.
+            <CheckCircle2 className="h-5 w-5" />A Reserva exibida considera
+            somente itens com saldo disponível.
           </p>
           <Button
             onClick={() => onOpenChange(false)}

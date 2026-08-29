@@ -68,7 +68,9 @@ function PalletImagePanel({
       <div className="mb-3 text-center">
         <h3 className="text-xl font-black text-[#315d2e]">{title}</h3>
         {description ? (
-          <p className="mt-1 text-sm font-bold text-[#62765d]">{description}</p>
+          <p className="mt-1 text-[15px]  font-bold text-[#62765d]">
+            {description}
+          </p>
         ) : null}
       </div>
       <div className="flex min-h-[280px] items-center justify-center overflow-auto rounded-xl bg-[#eef3ec] p-3">
@@ -110,12 +112,12 @@ export function ProductPalletizationDialog({
         <DialogHeader className="-mx-4 -mt-4 border-b border-[#e2eae4] bg-gradient-to-r from-[#f0f8f2] via-white to-[#fff8df] px-4 py-4 sm:-mx-6 sm:-mt-6 sm:px-6">
           <DialogTitle className="flex items-center gap-2 text-2xl font-black text-[#315d2e]">
             <Package className="h-6 w-6" />
-            Pacotes / Paletização
+            Pacotes/Paletização
           </DialogTitle>
           <DialogDescription className="text-base font-bold text-[#62765d]">
             {productLabel
-              ? `Configuração de Embalagem da OP ${productLabel}.`
-              : "Configuração de Embalagem da Ficha do Produto para o Cliente Atual."}
+              ? `Configuração de embalagem da referêrencia - ${productLabel}.`
+              : "Configuração de embalagem da Ficha do Produto para o Cliente Atual."}
           </DialogDescription>
         </DialogHeader>
         {loading ? (
@@ -130,8 +132,8 @@ export function ProductPalletizationDialog({
           <div className="mt-4 rounded-xl border-2 border-[#a9bda4] bg-white p-6 text-center">
             <p className="text-xl font-black text-[#3d5c39]">Não cadastrado.</p>
             <p className="mt-2 text-base font-bold text-[#687a67]">
-              Não Há Configuração de Pacotes / Paletização para Este Produto,
-              Revisão e Cliente.
+              Não Há configuração de Pacotes/Paletização para este Produto,
+              revisão e cliente.
             </p>
           </div>
         ) : (
@@ -142,11 +144,11 @@ export function ProductPalletizationDialog({
               <section className="rounded-2xl border-2 border-[#b8d1b2] bg-white p-4">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-xl font-black text-[#315d2e]">Pacotes</h3>
-                  <span className="rounded-full bg-[#e4f2df] px-3 py-1 text-xs font-black ''tracking-wide text-[#3f6e39]">
+                  {/* <span className="rounded-full bg-[#e4f2df] px-3 py-1 text-xs font-black ''tracking-wide text-[#3f6e39]">
                     {data.customerSpecific
                       ? "Cadastro do Cliente"
                       : "Cadastro Padrão"}
-                  </span>
+                  </span> */}
                 </div>
                 <div className="mt-4 flex flex-wrap items-baseline gap-x-6 gap-y-3 text-base font-bold text-[#3d4f3b]">
                   <Field label="Tipo:" value={data.packageType} grow />
@@ -304,22 +306,22 @@ export function ProductPrintLayoutDialog({
           <header className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[#92c7a3] bg-[#d9f2df] px-3 py-2 shadow-sm">
             <div className="mr-auto flex min-w-0 flex-1 flex-wrap items-center gap-2">
               <ImageIcon className="h-5 w-5 shrink-0 text-[#176148]" />
-              <span className="text-xs font-black ''tracking-wide text-[#356d4a]">
+              <span className="text-[15px]  font-black ''tracking-wide text-[#356d4a]">
                 Produto
               </span>
-              <span className="layout-meta-card rounded border border-[#a6cdb1] bg-white px-2 py-1 text-sm font-black text-[#19412a] shadow-sm">
+              <span className="layout-meta-card rounded border border-[#a6cdb1] bg-white px-2 py-1 text-[15px]  font-black text-[#19412a] shadow-sm">
                 {productLabel || data?.productCode || "—"}
               </span>
-              <span className="text-xs font-black ''tracking-wide text-[#356d4a]">
+              <span className="text-[15px] font-black ''tracking-wide text-[#356d4a]">
                 Rev.
               </span>
-              <span className="layout-meta-card rounded border border-[#a6cdb1] bg-white px-2 py-1 text-sm font-black text-[#19412a] shadow-sm">
+              <span className="layout-meta-card rounded border border-[#a6cdb1] bg-white px-2 py-1 text-[15px]  font-black text-[#19412a] shadow-sm">
                 {value(revision)}
               </span>
               {data?.cliches?.map((cliche: any) => (
                 <span
                   key={`${cliche.code}-${cliche.series}`}
-                  className="layout-meta-card rounded border border-[#a6cdb1] bg-white px-2 py-1 text-sm font-black text-[#19412a] shadow-sm"
+                  className="layout-meta-card rounded border border-[#a6cdb1] bg-white px-2 py-1 text-[15px]  font-black text-[#19412a] shadow-sm"
                 >
                   Clichê {cliche.code}
                   {cliche.series ? `/${cliche.series}` : ""}
@@ -329,7 +331,7 @@ export function ProductPrintLayoutDialog({
                 <span
                   key={`${color.order}-${color.description}`}
                   data-contrast={colorChipContrastTone(color.hexWhite)}
-                  className="layout-color-chip rounded border px-3 py-1 text-sm font-black shadow-sm"
+                  className="layout-color-chip rounded border px-3 py-1 text-[15px]  font-black shadow-sm"
                   style={colorChipStyle(color.hexWhite)}
                 >
                   {color.description}
@@ -344,7 +346,7 @@ export function ProductPrintLayoutDialog({
               >
                 <Minus className="h-5 w-5" />
               </Button>
-              <span className="min-w-14 text-center text-sm font-black">
+              <span className="min-w-14 text-center text-[15px] font-black">
                 {Math.round(zoom * 100)}%
               </span>
               <Button
@@ -358,14 +360,14 @@ export function ProductPrintLayoutDialog({
             <Button
               variant="outline"
               onClick={reset}
-              className="h-10 border-[#70aa83] bg-white px-3 text-sm font-black text-[#185d3b] shadow-sm hover:bg-[#f1fbf3]"
+              className="h-10 border-[#70aa83] bg-white px-3 text-[15px]  font-black text-[#185d3b] shadow-sm hover:bg-[#f1fbf3]"
             >
               <RotateCcw className="mr-1.5 h-4 w-4" />
               Ajustar
             </Button>
             <Button
               onClick={() => onOpenChange(false)}
-              className="h-10 rounded-lg bg-[#cf3f3f] px-3 text-sm font-black text-white hover:bg-[#ad2e2e]"
+              className="h-10 rounded-lg bg-[#cf3f3f] px-3 text-[15px] font-black text-white hover:bg-[#ad2e2e]"
             >
               Fechar
             </Button>

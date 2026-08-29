@@ -63,13 +63,15 @@ export function ApprovedProcessQuantitiesDialog({
           ) : (
             <div className="w-full overflow-x-auto rounded-xl border-2 border-[#dfe7df] bg-white">
               <div className="min-w-[650px]">
-                <div className="theme-grid-header grid grid-cols-[1.1fr_1.2fr_1fr_1fr] border-b-2 border-[#e0c976] bg-[#fff2c9] px-4 py-3 font-mono text-xs font-black tracking-[.12em] text-[#705719]">
+                <div className="theme-grid-header grid grid-cols-[1.1fr_1.2fr_1fr_1fr] border-b-2 border-[#e0c976] bg-[#fff2c9] px-4 py-3 font-['Tahoma'] text-12px font-black tracking-[.12em] text-[#705719]">
                   <SortableGridButton
                     label="Processo"
                     column="processGroup"
                     sortKey={sortKey}
                     sortDirection={sortDirection}
                     onSort={key => toggleSort(key as never)}
+
+                    // "theme-grid-header sticky top-0 z-10 border-b-2 border-[#e0c976] bg-[#fff2c9] font-['Tahoma'] text-xs font-black ''tracking-[.12em] text-[#705719]
                   />
                   <SortableGridButton
                     label="Arranjo"
@@ -77,6 +79,7 @@ export function ApprovedProcessQuantitiesDialog({
                     sortKey={sortKey}
                     sortDirection={sortDirection}
                     onSort={key => toggleSort(key as never)}
+                    className="justify-self-center"
                   />
                   <SortableGridButton
                     label="Q. Aprovada"
@@ -84,7 +87,7 @@ export function ApprovedProcessQuantitiesDialog({
                     sortKey={sortKey}
                     sortDirection={sortDirection}
                     onSort={key => toggleSort(key as never)}
-                    className="justify-self-end"
+                    className="justify-self-center"
                   />
                   <SortableGridButton
                     label="Status"
@@ -101,12 +104,12 @@ export function ApprovedProcessQuantitiesDialog({
                     className={`theme-grid-row grid grid-cols-[1.1fr_1.2fr_1fr_1fr] items-center border-b border-[#edf0ea] px-4 py-3 ${index % 2 ? "bg-[#fbfdfb]" : "bg-white"}`}
                   >
                     <span className="font-bold text-[#355044]">
-                      Grupo {row.processGroup ?? "—"}
+                      {row.processGroup ?? "—"}
                     </span>
-                    <span className="font-mono font-bold text-[#56685f]">
+                    <span className="text-center font-mono font-bold text-[#56685f]">
                       {row.arrangement || "—"}
                     </span>
-                    <span className="text-right font-mono text-lg font-black text-[#177458]">
+                    <span className="text-center font-mono text-lg font-black text-[#177458]">
                       {row.approvedQuantity ?? 0}
                     </span>
                     <span className="justify-self-center">
