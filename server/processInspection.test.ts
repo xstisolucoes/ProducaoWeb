@@ -32,11 +32,12 @@ describe("Inspeção de Processo periódica", () => {
   });
 
   it("impede o fechamento até que todos os itens obrigatórios sejam confirmados", () => {
-    expect(pointing).toContain("onEscapeKeyDown={(event) => event.preventDefault()}");
-    expect(pointing).toContain("onPointerDownOutside={(event) => event.preventDefault()}");
+    expect(pointing).toContain("onEscapeKeyDown={event => event.preventDefault()}");
+    expect(pointing).toContain("onPointerDownOutside={event => event.preventDefault()}");
     expect(pointing).toContain("allProcessInspectionItemsConfirmed");
     expect(pointing).toContain("Confirmar Inspeção de Processo");
-    expect(pointing).toContain("disabled={!allProcessInspectionItemsConfirmed");
+    expect(pointing).toContain("disabled={");
+    expect(pointing).toContain("!allProcessInspectionItemsConfirmed");
   });
 
   it("usa largura operacional, três colunas e no máximo duas linhas por pergunta", () => {

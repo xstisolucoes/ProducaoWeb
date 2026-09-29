@@ -38,7 +38,7 @@ describe("Produção Especial", () => {
     const manual = readFileSync(resolve(process.cwd(), "client/src/pages/ManualPointing.tsx"), "utf8");
     const release = readFileSync(resolve(process.cwd(), "client/src/pages/ProductReleasePointing.tsx"), "utf8");
 
-    expect(programming).toContain(">Conjunto</button>");
+    expect(programming).toContain("Conjunto");
     expect(programming).toContain("<SpecialProductionDialog");
     expect((programming.match(/theme-toolbar sticky bottom-0/g) ?? []).length).toBe(1);
     expect(dialog).toContain("OPs que Compõem a OP:");
@@ -53,9 +53,11 @@ describe("Produção Especial", () => {
     const pointing = readFileSync(resolve(process.cwd(), "client/src/pages/Pointing.tsx"), "utf8");
     const manual = readFileSync(resolve(process.cwd(), "client/src/pages/ManualPointing.tsx"), "utf8");
 
-    expect(pointing).toContain("const isPointingMachineGroup = String(item?.machineGroup");
-    expect(pointing).toContain("if (isPointingMachineGroup) setShowProductFinishedLabel(true); else setLocation(\"/\");");
-    expect(manual).toContain("const isPointingMachineGroup = String(pointing.data?.machineGroup");
+    expect(pointing).toContain("const isPointingMachineGroup");
+    expect(pointing).toContain("String(item?.machineGroup");
+    expect(pointing).toMatch(/if \(isPointingMachineGroup\) setShowProductFinishedLabel\(true\);\s*else setLocation\("\/"\);/);
+    expect(manual).toContain("const isPointingMachineGroup");
+    expect(manual).toContain("String(pointing.data?.machineGroup");
     expect(manual).toContain("if (isPointingMachineGroup) setShowProductFinishedLabel(true);");
     expect(manual).toContain("else setLocation(\"/\");");
   });

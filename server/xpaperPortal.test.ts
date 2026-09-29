@@ -5,41 +5,60 @@ import { resolve } from "node:path";
 const root = resolve(import.meta.dirname, "..");
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
-describe("portal inicial do XPAPER", () => {
-  it("mantém os módulos legados no seletor central", () => {
-    const portal = read("client/src/pages/XPaperPortal.tsx");
-    ["Cadastros", "Almoxarifado", "Compras", "Desenvolvimento", "Emissor NF", "Financeiro", "Fiscal", "PCP", "Qualidade", "Vendas", "Relatórios", "Configurações", "Atualizações", "Produção"].forEach((module) => expect(portal).toContain(`label: \"${module}\"`));
+describe("Portal Inicial do XPAPER", () => {
+  it("mantém todos os módulos legados concentrados na Sidebar", () => {
+    const workspace = read("client/src/components/XPaperWorkspace.tsx");
+    [
+      "Cadastros",
+      "Almoxarifado",
+      "Compras",
+      "Desenvolvimento",
+      "Emissor NF",
+      "Financeiro",
+      "Fiscal",
+      "PCP",
+      "Qualidade",
+      "Vendas",
+      "Relatórios",
+      "Configurações",
+      "Atualizações",
+      "Produção",
+    ].forEach(module => expect(workspace).toContain(`label: "${module}"`));
+    expect(workspace).toContain('aria-label="Sidebar do XPAPER"');
   });
 
-  it("mantém Produção e Cadastros como módulos disponíveis e rotas integradas", () => {
+  it("mantém Produção e Cadastros integrados à área de trabalho", () => {
     const portal = read("client/src/pages/XPaperPortal.tsx");
     const app = read("client/src/App.tsx");
     expect(portal).toContain('setLocation("/producao")');
-    expect(portal).toContain('setLocation("/xpaper/cadastros")');
+    expect(portal).toContain("XPaperWorkspace");
     expect(app).toContain('path={"/producao"}');
     expect(app).toContain('path={"/xpaper/cadastros"}');
   });
 
-  it("apresenta XPAPER Central no login e preserva o direcionamento por perfil", () => {
+  it("apresenta XPAPER no login e preserva o direcionamento por perfil", () => {
     const login = read("client/src/components/LocalLogin.tsx");
     const home = read("client/src/pages/Home.tsx");
-    expect(login).toContain("XPAPER Central");
+    expect(login).toContain("XPAPER");
     expect(login).toContain("Perfis Administrativos Escolhem o Módulo");
     expect(home).toContain("user?.canConfigureStation");
     expect(home).toContain("return <Programming />");
   });
 
-  it("preserva o padrão consulta primeiro para os cadastros", () => {
-    const consultation = read("client/src/pages/XPaperConsultation.tsx");
-    expect(consultation).toContain("Consulta Padrão");
-    ["Novo", "Alterar", "Excluir", "Imprimir", "Fechar"].forEach((action) => expect(consultation).toContain(`>${action}<`));
+  it("preserva Consulta de Participantes como primeira tela de cadastro", () => {
+    const workspace = read("client/src/components/XPaperWorkspace.tsx");
+    expect(workspace).toContain("Consulta de Participantes");
+    expect(workspace).toContain("Novo Cliente");
+    expect(workspace).toContain("Dados Gerais");
   });
 
-  it("opera exclusivamente pelo menu superior e não renderiza cartões centrais", () => {
+  it("mantém módulos fora das abas e abre somente consultas, formulários e registros internamente", () => {
     const portal = read("client/src/pages/XPaperPortal.tsx");
-    expect(portal).toContain('className="xpaper-module-nav"');
-    expect(portal).toContain('className="xpaper-menu-only-stage"');
+    const workspace = read("client/src/components/XPaperWorkspace.tsx");
+    expect(portal).not.toContain('className="xpaper-module-nav"');
+    expect(workspace).toContain('aria-label="Abas Internas"');
+    expect(workspace).toContain("const openForm");
+    expect(workspace).toContain("const openModule");
     expect(portal).not.toContain("xpaper-module-grid");
-    expect(portal).not.toContain("xpaper-active-module");
   });
 });

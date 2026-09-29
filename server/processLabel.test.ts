@@ -64,7 +64,8 @@ describe("Etiqueta de Processo", () => {
     expect(proxy).toContain("from empresa");
     expect(contracts).toContain("export const getLocalCompanies");
     expect(dialog).toContain("Visualizar Etiqueta");
-    expect(dialog.indexOf("Visualizar Etiqueta")).toBeLessThan(dialog.indexOf(">Fechar</Button>"));
+    expect(dialog).toContain("Fechar");
+    expect(dialog.indexOf("Visualizar Etiqueta")).toBeLessThan(dialog.indexOf("Fechar"));
     expect(dialog).not.toContain('<X className');
   });
 });

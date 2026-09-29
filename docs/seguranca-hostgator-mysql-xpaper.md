@@ -21,12 +21,12 @@ MySQL da HostGator
 
 Use **uma API principal**, não PHP e Node.js para a mesma regra sem necessidade. Como o Produção Web atual já usa React, TypeScript e Node.js, o caminho preferencial é **Node.js como API do XPAPER**. PHP continua apropriado se o módulo for hospedado em plano compartilhado que suporte PHP, mas não suporte processo Node.js persistente.
 
-| Cenário | Opção recomendada |
-|---|---|
-| XPAPER Central e módulos novos | API Node.js/TypeScript, com pool MySQL. |
-| Site ou API limitada a hospedagem compartilhada cPanel | PHP com PDO, sem acesso do navegador ao banco. |
-| Aplicação PHP e MySQL no mesmo plano HostGator | Conectar em `localhost`; não habilitar MySQL remoto. |
-| API Node.js hospedada fora da HostGator | Liberar somente o IP público fixo da API em **Remote Database Access**. |
+| Cenário                                                | Opção recomendada                                                       |
+| ------------------------------------------------------ | ----------------------------------------------------------------------- |
+| XPAPER e módulos novos                                 | API Node.js/TypeScript, com pool MySQL.                                 |
+| Site ou API limitada a hospedagem compartilhada cPanel | PHP com PDO, sem acesso do navegador ao banco.                          |
+| Aplicação PHP e MySQL no mesmo plano HostGator         | Conectar em `localhost`; não habilitar MySQL remoto.                    |
+| API Node.js hospedada fora da HostGator                | Liberar somente o IP público fixo da API em **Remote Database Access**. |
 
 O acesso MySQL remoto é bloqueado por padrão na HostGator e depende da inclusão explícita do IP de origem em **Remote Database Access**. A HostGator alerta que o curinga `%` libera conexão de qualquer IP e não é recomendado. [1]
 
@@ -34,15 +34,15 @@ O acesso MySQL remoto é bloqueado por padrão na HostGator e depende da inclus�
 
 Proteja primeiro o cPanel, porque quem controla o painel pode alterar banco, arquivos, DNS, e-mails e usuários da hospedagem.
 
-| Controle | Como aplicar |
-|---|---|
-| Senha exclusiva e longa | Use senha aleatória, exclusiva e guardada em gerenciador de senhas. Não reutilize a senha do ERP ou do e-mail. |
-| Segundo fator | Ative autenticação em duas etapas no Portal/cPanel se estiver disponível no plano. Mantenha códigos de recuperação em cofre seguro. |
-| E-mail de recuperação | Use caixa corporativa protegida por segundo fator; não use e-mail pessoal compartilhado. |
-| Menor acesso | Crie acessos individuais para quem administra. Não compartilhe uma senha de cPanel entre equipe, fornecedor e desenvolvimento. |
-| Revisão periódica | Revogue acessos de ex-colaboradores, revise usuários MySQL, cron jobs, chaves SSH e redirecionamentos. |
-| Atualizações | Mantenha CMS, dependências PHP/Node, plugins e bibliotecas atualizados. |
-| Backup | Teste restauração, não apenas a existência do backup. Mantenha cópia fora da conta de hospedagem. |
+| Controle                | Como aplicar                                                                                                                        |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Senha exclusiva e longa | Use senha aleatória, exclusiva e guardada em gerenciador de senhas. Não reutilize a senha do ERP ou do e-mail.                      |
+| Segundo fator           | Ative autenticação em duas etapas no Portal/cPanel se estiver disponível no plano. Mantenha códigos de recuperação em cofre seguro. |
+| E-mail de recuperação   | Use caixa corporativa protegida por segundo fator; não use e-mail pessoal compartilhado.                                            |
+| Menor acesso            | Crie acessos individuais para quem administra. Não compartilhe uma senha de cPanel entre equipe, fornecedor e desenvolvimento.      |
+| Revisão periódica       | Revogue acessos de ex-colaboradores, revise usuários MySQL, cron jobs, chaves SSH e redirecionamentos.                              |
+| Atualizações            | Mantenha CMS, dependências PHP/Node, plugins e bibliotecas atualizados.                                                             |
+| Backup                  | Teste restauração, não apenas a existência do backup. Mantenha cópia fora da conta de hospedagem.                                   |
 
 Não coloque arquivo `.env`, backup SQL, log detalhado, chave privada ou exportação Firebird dentro de `public_html`. Em PHP, mantenha a configuração fora da pasta pública sempre que o plano permitir; em Node.js, guarde os segredos em variáveis de ambiente do processo ou no gerenciador de segredos do provedor.
 
@@ -50,12 +50,12 @@ Não coloque arquivo `.env`, backup SQL, log detalhado, chave privada ou exporta
 
 Crie bancos e credenciais separados por ambiente e finalidade. O usuário da aplicação não deve possuir permissões administrativas.
 
-| Finalidade | Exemplo de banco | Exemplo de usuário | Privilégios |
-|---|---|---|---|
-| Homologação XPAPER | `prefixo_xpaper_hml` | `prefixo_xpapphml` | `SELECT`, `INSERT`, `UPDATE`, `DELETE` nas tabelas do ambiente. |
-| Produção XPAPER | `prefixo_xpaper_prd` | `prefixo_xpapprd` | Somente os privilégios necessários em produção. |
-| Migração versionada | mesmo banco do ambiente | `prefixo_xpmigrate` | DDL temporário e controlado: `CREATE`, `ALTER`, `INDEX` e `REFERENCES`, somente durante migrações. |
-| Relatórios somente leitura | mesmo banco do ambiente | `prefixo_xpreport` | Apenas `SELECT` em views/tabelas liberadas. |
+| Finalidade                 | Exemplo de banco        | Exemplo de usuário  | Privilégios                                                                                        |
+| -------------------------- | ----------------------- | ------------------- | -------------------------------------------------------------------------------------------------- |
+| Homologação XPAPER         | `prefixo_xpaper_hml`    | `prefixo_xpapphml`  | `SELECT`, `INSERT`, `UPDATE`, `DELETE` nas tabelas do ambiente.                                    |
+| Produção XPAPER            | `prefixo_xpaper_prd`    | `prefixo_xpapprd`   | Somente os privilégios necessários em produção.                                                    |
+| Migração versionada        | mesmo banco do ambiente | `prefixo_xpmigrate` | DDL temporário e controlado: `CREATE`, `ALTER`, `INDEX` e `REFERENCES`, somente durante migrações. |
+| Relatórios somente leitura | mesmo banco do ambiente | `prefixo_xpreport`  | Apenas `SELECT` em views/tabelas liberadas.                                                        |
 
 No cPanel, crie o banco, crie o usuário, associe-o ao banco e selecione privilégios em **MySQL Databases → Add User to Database**. A HostGator documenta essa associação e a escolha de privilégios nessa tela. [2]
 
@@ -65,13 +65,13 @@ Não use `root`, não use a mesma conta para homologação e produção, e não 
 
 Prefira que API e MySQL estejam no mesmo ambiente de hospedagem, pois a conexão tende a usar `localhost` e dispensa exposição remota. Se a API Node.js ficar fora da HostGator, ela precisa de IP de saída **fixo**. Cadastre somente esse IP em **Remote Database Access**.
 
-| Nunca fazer | Alternativa segura |
-|---|---|
-| Liberar `%` no Remote MySQL | Liberar um IP fixo específico da API. |
-| Usar IP residencial dinâmico em produção | Executar a API em servidor com IP estático ou usar túnel/VPN apropriado. |
-| Abrir phpMyAdmin ao público sem proteção adicional | Usar cPanel protegido e acesso administrativo pontual. |
-| Abrir MySQL ao navegador | Publicar somente API HTTPS com autenticação e autorização. |
-| Gravar senha do banco no Git | Usar segredo/variável de ambiente fora do repositório. |
+| Nunca fazer                                        | Alternativa segura                                                       |
+| -------------------------------------------------- | ------------------------------------------------------------------------ |
+| Liberar `%` no Remote MySQL                        | Liberar um IP fixo específico da API.                                    |
+| Usar IP residencial dinâmico em produção           | Executar a API em servidor com IP estático ou usar túnel/VPN apropriado. |
+| Abrir phpMyAdmin ao público sem proteção adicional | Usar cPanel protegido e acesso administrativo pontual.                   |
+| Abrir MySQL ao navegador                           | Publicar somente API HTTPS com autenticação e autorização.               |
+| Gravar senha do banco no Git                       | Usar segredo/variável de ambiente fora do repositório.                   |
 
 Caso o plano permita TLS para MySQL remoto, exija certificado da CA fornecida pelo provedor. Se o plano não fornecer TLS remoto, não trate a conexão MySQL pela internet como canal apropriado para produção; mantenha a API no mesmo ambiente do banco ou escolha uma hospedagem de banco gerenciada que ofereça TLS e rede privada.
 
@@ -108,7 +108,7 @@ export const mysqlPool = mysql.createPool({
 export async function findOrderByCode(orderCode: number) {
   const [rows] = await mysqlPool.execute(
     "SELECT op_codigo, op_status FROM ordens_producao WHERE op_codigo = ?",
-    [orderCode],
+    [orderCode]
   );
   return rows;
 }
@@ -176,16 +176,16 @@ function findOrderByCode(int $orderCode): array {
 
 A conexão protegida não substitui controles de aplicação. A API deve aplicar autenticação, autorização por módulo/perfil, auditoria e limites de abuso antes de chegar ao banco.
 
-| Controle | Aplicação no XPAPER |
-|---|---|
-| HTTPS | Obrigatório em produção; redirecionar HTTP para HTTPS. |
-| Sessão | Cookie `HttpOnly`, `Secure` e `SameSite`; expiração e renovação controladas. |
-| Autorização | Verificar perfil e permissões no servidor em cada mutação. |
-| CSRF | Proteger rotas de sessão/cookie quando a arquitetura usar autenticação por cookie. |
-| Rate limit | Limitar login, recuperação de senha e consultas pesadas. |
-| Auditoria | Registrar usuário, perfil, IP, módulo, ação, entidade e resultado. |
-| Erros | Não devolver host, SQL, stack trace ou credencial ao navegador. |
-| Transações | Usar transação para estoque, reserva, apontamento, qualidade e estados dependentes. |
+| Controle    | Aplicação no XPAPER                                                                 |
+| ----------- | ----------------------------------------------------------------------------------- |
+| HTTPS       | Obrigatório em produção; redirecionar HTTP para HTTPS.                              |
+| Sessão      | Cookie `HttpOnly`, `Secure` e `SameSite`; expiração e renovação controladas.        |
+| Autorização | Verificar perfil e permissões no servidor em cada mutação.                          |
+| CSRF        | Proteger rotas de sessão/cookie quando a arquitetura usar autenticação por cookie.  |
+| Rate limit  | Limitar login, recuperação de senha e consultas pesadas.                            |
+| Auditoria   | Registrar usuário, perfil, IP, módulo, ação, entidade e resultado.                  |
+| Erros       | Não devolver host, SQL, stack trace ou credencial ao navegador.                     |
+| Transações  | Usar transação para estoque, reserva, apontamento, qualidade e estados dependentes. |
 
 Para o módulo de Produção, mantenha as regras Firebird e proxy LAN enquanto ele não for migrado. Não faça a tela web gravar diretamente no MySQL e no Firebird na mesma operação sem uma estratégia de fonte oficial e reconciliação.
 

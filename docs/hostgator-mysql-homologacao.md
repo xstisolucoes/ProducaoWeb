@@ -1,6 +1,6 @@
 # XPAPER — Criação do MySQL de Homologação na HostGator
 
-**Objetivo:** criar um banco MySQL/MariaDB de homologação para iniciar a evolução do XPAPER Central, sem alterar a operação atual baseada no Firebird.
+**Objetivo:** criar um banco MySQL/MariaDB de homologação para iniciar a evolução do XPAPER, sem alterar a operação atual baseada no Firebird.
 
 > **Decisão recomendada:** crie agora o banco e o usuário de homologação, mas mantenha o **Firebird local como fonte oficial** de todos os dados e gravações. Nesta etapa, não importe o ERP inteiro nem aponte a Produção Web para o MySQL.
 
@@ -8,13 +8,13 @@
 
 O banco hospedado deve nascer vazio e protegido. Enquanto o modelo de dados não estiver conferido e a replicação não for validada, o Firebird continua sendo a base oficial de Produção, estoque, OPs, qualidade e fiscal.
 
-| Etapa | O que fazer agora | Fonte oficial |
-|---|---|---|
-| **1. Homologação** | Criar banco e usuário na HostGator. | Firebird local |
-| **2. Modelagem** | Montar dicionário de dados e esquema compatível no MySQL. | Firebird local |
-| **3. Leitura** | Replicar cadastros e consultas para conferência. | Firebird local |
-| **4. Migração por módulo** | Transferir a escrita de um domínio validado por vez. | Definida por módulo |
-| **5. Produção central** | Tornar o MySQL fonte oficial somente depois de reconciliação. | MySQL |
+| Etapa                      | O que fazer agora                                             | Fonte oficial       |
+| -------------------------- | ------------------------------------------------------------- | ------------------- |
+| **1. Homologação**         | Criar banco e usuário na HostGator.                           | Firebird local      |
+| **2. Modelagem**           | Montar dicionário de dados e esquema compatível no MySQL.     | Firebird local      |
+| **3. Leitura**             | Replicar cadastros e consultas para conferência.              | Firebird local      |
+| **4. Migração por módulo** | Transferir a escrita de um domínio validado por vez.          | Definida por módulo |
+| **5. Produção central**    | Tornar o MySQL fonte oficial somente depois de reconciliação. | MySQL               |
 
 Nesta primeira etapa, **não apague, não altere e não exporte em massa** a base Firebird de produção. O resultado esperado é somente o banco `XPAPER` preparado para receber o esquema de homologação.
 
@@ -22,11 +22,11 @@ Nesta primeira etapa, **não apague, não altere e não exporte em massa** a bas
 
 O cPanel geralmente adiciona automaticamente o nome da conta antes do banco e do usuário. Use sufixos curtos, sem espaços, acentos ou caracteres especiais. A HostGator recomenda usar o nome conforme apresentado pelo próprio cPanel ao configurar a aplicação.[1]
 
-| Item | Sufixo a digitar no cPanel | Nome final provável |
-|---|---|---|
-| Banco de homologação | `xpaper_hml` | `seuusuario_xpaper_hml` |
-| Usuário de migração | `xpaper_mig` | `seuusuario_xpaper_mig` |
-| Usuário da aplicação futura | `xpaper_app` | `seuusuario_xpaper_app` |
+| Item                        | Sufixo a digitar no cPanel | Nome final provável     |
+| --------------------------- | -------------------------- | ----------------------- |
+| Banco de homologação        | `xpaper_hml`               | `seuusuario_xpaper_hml` |
+| Usuário de migração         | `xpaper_mig`               | `seuusuario_xpaper_mig` |
+| Usuário da aplicação futura | `xpaper_app`               | `seuusuario_xpaper_app` |
 
 Use o usuário `xpaper_mig` apenas para criar e alterar o esquema durante a modelagem. O usuário `xpaper_app` será criado agora ou depois, mas deverá ter privilégios menores quando a aplicação entrar em uso.
 
@@ -70,11 +70,11 @@ A associação entre usuário e banco é uma etapa separada da criação. A Host
 
 Quando a API XPAPER for conectada ao MySQL, crie um segundo usuário, `xpaper_app`. Para o funcionamento cotidiano, ele deve receber somente os privilégios necessários sobre `seuusuario_xpaper_hml`.
 
-| Usuário | Uso | Privilégios sugeridos |
-|---|---|---|
-| `xpaper_mig` | Criar/alterar esquema durante homologação | Todos os privilégios **somente** no banco de homologação |
-| `xpaper_app` | API XPAPER em execução | `SELECT`, `INSERT`, `UPDATE`, `DELETE` e `EXECUTE` quando necessário |
-| Usuário de relatório futuro | Consulta e BI | `SELECT` apenas |
+| Usuário                     | Uso                                       | Privilégios sugeridos                                                |
+| --------------------------- | ----------------------------------------- | -------------------------------------------------------------------- |
+| `xpaper_mig`                | Criar/alterar esquema durante homologação | Todos os privilégios **somente** no banco de homologação             |
+| `xpaper_app`                | API XPAPER em execução                    | `SELECT`, `INSERT`, `UPDATE`, `DELETE` e `EXECUTE` quando necessário |
+| Usuário de relatório futuro | Consulta e BI                             | `SELECT` apenas                                                      |
 
 Não use a credencial de migração na aplicação diária quando o sistema estiver publicado.
 
@@ -100,13 +100,13 @@ Por padrão, a HostGator bloqueia acessos MySQL externos e exige que o IP de ori
 
 Quando chegar o momento de conectar um serviço externo, siga estas regras:
 
-| Regra | Aplicação |
-|---|---|
-| Autorizar somente IP fixo | Cadastre apenas o IP público fixo do servidor autorizado. |
-| Não usar `%` ou “qualquer host” | Nunca liberar acesso global ao banco. |
-| Remover IPs de teste | Revogue o acesso quando o teste terminar. |
-| API, não navegador | O navegador não deve se conectar ao MySQL diretamente. |
-| Usar conexão criptografada quando disponível | Configure TLS entre API e banco. |
+| Regra                                        | Aplicação                                                 |
+| -------------------------------------------- | --------------------------------------------------------- |
+| Autorizar somente IP fixo                    | Cadastre apenas o IP público fixo do servidor autorizado. |
+| Não usar `%` ou “qualquer host”              | Nunca liberar acesso global ao banco.                     |
+| Remover IPs de teste                         | Revogue o acesso quando o teste terminar.                 |
+| API, não navegador                           | O navegador não deve se conectar ao MySQL diretamente.    |
+| Usar conexão criptografada quando disponível | Configure TLS entre API e banco.                          |
 
 > Se a aplicação XPAPER estiver hospedada na mesma conta ou infraestrutura do banco, ela normalmente se conecta internamente. O acesso remoto só deve ser configurado após identificar o servidor da API e seu IP permitido.
 
@@ -129,13 +129,13 @@ Fonte oficial atual: Firebird local
 
 Após o banco estar criado, a próxima atividade não é carregar o Firebird inteiro. Primeiro será elaborado o **Dicionário de Dados XPAPER**, contendo tabela de origem, campo de origem, tipo Firebird, tipo MySQL, chave, relacionamento, regra de negócio e responsável pelo dado.
 
-| Prioridade | Domínio a modelar | Motivo |
-|---|---|---|
-| 1 | Empresas, usuários, grupos e permissões | Base do login único e da autorização. |
-| 2 | Clientes, produtos, revisões e máquinas | Cadastros necessários para todos os módulos. |
-| 3 | OPs e processos | Núcleo de PCP e Produção. |
-| 4 | Estoque, reservas, lotes e movimentações | Exige validação rigorosa de saldo e transação. |
-| 5 | Qualidade, RPNC, fiscal e relatórios | Migração gradual após os domínios-base. |
+| Prioridade | Domínio a modelar                        | Motivo                                         |
+| ---------- | ---------------------------------------- | ---------------------------------------------- |
+| 1          | Empresas, usuários, grupos e permissões  | Base do login único e da autorização.          |
+| 2          | Clientes, produtos, revisões e máquinas  | Cadastros necessários para todos os módulos.   |
+| 3          | OPs e processos                          | Núcleo de PCP e Produção.                      |
+| 4          | Estoque, reservas, lotes e movimentações | Exige validação rigorosa de saldo e transação. |
+| 5          | Qualidade, RPNC, fiscal e relatórios     | Migração gradual após os domínios-base.        |
 
 As tabelas poderão manter os nomes legados do Firebird na primeira fase, como `MOV_PROCESSOS`, `MOV_PROCESSOS_HORARIOS` e `PRODUTOS_VENDAS`. As triggers, views e procedures terão a mesma finalidade, mas serão reescritas para a sintaxe MySQL/MariaDB e comparadas contra o resultado atual antes de entrar em produção.
 

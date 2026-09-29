@@ -981,7 +981,7 @@ export default function Programming() {
                     masterOrder: selectedProcess?.masterOrder ?? null,
                   })
                 }
-                className={`process-status-card min-w-44 rounded-lg border px-3 py-2 text-left font-['Tahoma] transition ${processStatusClass(process.status)} 
+                className={`process-status-card min-w-44 rounded-lg border px-3 py-2 text-left font-['Tahoma] transition ${processStatusClass(process.status)}
                 ${process.mpCode === selectedItem?.mp_codigo ? "ring-4 ring-blue/85" : "opacity-90 hover:opacity-100"}`}
               >
                 <span className="block truncate text-xs font-extrabold">

@@ -36,12 +36,12 @@ describe("RPNC no proxy Firebird", () => {
     expect(pointing).toContain("Causa Aparente");
     expect(pointing).toContain("Ação de Contenção");
     expect(pointing).toContain("Checklist para Inspeção");
-    expect(pointing).toContain("onPointerDownOutside={(event) => event.preventDefault()}");
-    expect(pointing).toContain("onEscapeKeyDown={(event) => event.preventDefault()}");
+    expect(pointing).toContain("onPointerDownOutside={event => event.preventDefault()}");
+    expect(pointing).toContain("onEscapeKeyDown={event => event.preventDefault()}");
     expect(pointing).toContain("grid-rows-[minmax(0,1fr)_156px]");
     expect(pointing).toContain("h-[min(54dvh,520px)]");
     expect(pointing).toContain("flex w-20 shrink-0 flex-col");
-    expect(pointing).toContain("O Processo Foi Concluído sem Não Conformidade?");
+    expect(pointing).toContain("O Processo foi Concluído sem Não Conformidade?");
     expect(pointing).toContain("Sim, Seguir para Rastreio");
     expect(pointing).toContain("Não, Abrir RPNC");
     expect(pointing).toContain("function decideTraceConformance");

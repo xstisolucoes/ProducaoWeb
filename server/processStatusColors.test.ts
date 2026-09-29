@@ -8,7 +8,8 @@ describe("cores de MOV_PROCESSOS", () => {
     expect(primitives).toContain('normalized === "em produção"');
     expect(primitives).toContain('normalized === "liberado"');
     expect(primitives).toContain('normalized === "atendido"');
-    expect(primitives).toContain('normalized === "cancelado" || normalized === "setup cancelado"');
+    expect(primitives).toContain('normalized === "cancelado"');
+    expect(primitives).toContain('normalized === "setup cancelado"');
     expect(primitives).toContain('normalized === "a concluir" || normalized === "setup a concluir"');
   });
 });

@@ -47,6 +47,103 @@ export type Product = {
   impressao: string | null;
 };
 
+export type Participant = {
+  codigo: number;
+  tipo: "Cliente" | "Fornecedor" | "Outro Participante" | "Representante";
+  fantasia: string | null;
+  razao_social: string | null;
+  cnpj: string | null;
+  contato: string | null;
+  telefone: string | null;
+  cidade: string | null;
+  uf: string | null;
+  status: string | null;
+};
+
+export type ClientRecord = {
+  codigo: number;
+  fantasia: string | null;
+  razaoSocial: string | null;
+  cnpj: string | null;
+  cpf: string | null;
+  rg: string | null;
+  inscricaoEstadual: string | null;
+  inscricaoMunicipal: string | null;
+  cep: string | null;
+  endereco: string | null;
+  numero: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cidadeCodigo: number | null;
+  cidade: string | null;
+  uf: string | null;
+  contato: string | null;
+  telefone: string | null;
+  celular: string | null;
+  email: string | null;
+  status: string | null;
+  grupoEconomicoCodigo: number | null;
+  grupoEconomicoDescricao: string | null;
+  regiaoCodigo: number | null;
+  regiaoDescricao: string | null;
+  ramoAtividadeCodigo: number | null;
+  ramoAtividadeDescricao: string | null;
+  representanteCodigo: number | null;
+  representanteFantasia: string | null;
+  comissao: number | null;
+  tipoFrete: number | null;
+  suframa: string | null;
+  consumidorFinal: string | null;
+  exigirLaudoTecnico: string | null;
+  unidadeMedida: string | null;
+  unidadeMedidaDescricao: string | null;
+  inspecionarProduto: string | null;
+  amostragem: string | null;
+  controlarLote: string | null;
+  tributacaoCodigo: number | null;
+  tributacaoDescricao: string | null;
+  naturezaFiscalDescricao: string | null;
+};
+
+export type CreateClientInput = {
+  fantasia: string;
+  razaoSocial: string;
+  cnpj?: string | null;
+  cpf?: string | null;
+  rg?: string | null;
+  inscricaoEstadual?: string | null;
+  inscricaoMunicipal?: string | null;
+  cep?: string | null;
+  endereco?: string | null;
+  numero?: string | null;
+  complemento?: string | null;
+  bairro?: string | null;
+  cidadeCodigo?: number | null;
+  contato?: string | null;
+  telefone?: string | null;
+  celular?: string | null;
+  email?: string | null;
+  grupoEconomicoCodigo?: number | null;
+  regiaoCodigo?: number | null;
+  ramoAtividadeCodigo?: number | null;
+  representanteCodigo?: number | null;
+  comissao?: number | null;
+  tributacaoCodigo?: number | null;
+  variacaoProducaoMais?: number | null;
+  variacaoProducaoMenos?: number | null;
+  tipoFrete?: number | null;
+  suframa?: string | null;
+  consumidorFinal?: "S" | "N" | null;
+  exigeLaudoTecnico?: "S" | "N" | null;
+  unidadeMedida?: string | null;
+  inspecionarProduto?: "S" | "N" | null;
+  amostragem?: "S" | "N" | null;
+  controlarLote?: "S" | "N" | null;
+  tipoDocumentoCodigo?: number | null;
+  tipoOperacaoCodigo?: number | null;
+  status: "Ativo" | "Inativo";
+};
+
 export type StockBalance = {
   produto_codigo: number;
   codigo_estoque: number;
@@ -365,6 +462,22 @@ export const updateOrderStatus = (input: { opCodigo: number; mpCodigo: number; s
   });
 export const getProducts = (page: number, limit: number, search: string) =>
   request<PagedResult<Product>>(`/v1/products?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`);
+export const getParticipants = (
+  page: number,
+  limit: number,
+  search: string,
+  type: "Todos" | Participant["tipo"],
+  status: "Todos" | "Ativo" | "Inativo",
+) =>
+  request<PagedResult<Participant>>(
+    `/v1/participants?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}&type=${encodeURIComponent(type)}&status=${encodeURIComponent(status)}`,
+  );
+export const getClient = (codigo: number) => request<ClientRecord>(`/v1/clients/${codigo}`);
+export const createClient = (input: CreateClientInput) => request<{ success: true; codigo: number }>("/v1/clients", {
+  method: "POST",
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify(input),
+});
 export const getStock = (page: number, limit: number, search: string) =>
   request<PagedResult<StockBalance>>(`/v1/stock?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`);
 export const getStockHistory = (page: number, limit: number) =>

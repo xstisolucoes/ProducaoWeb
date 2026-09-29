@@ -89,17 +89,17 @@ export default function LocalLogin() {
               <Factory className="h-5 w-5" />
             )}
           </div>
-          <p className="mt-7 font-mono text-[10px] tracking-[0.18em] text-[#a9c8b6]">
+          {/* <p className="mt-7 font-mono text-[10px] tracking-[0.18em] text-[#a9c8b6]">
             Acesso Integrado
-          </p>
+          </p> */}
           <h1 className="mt-2 text-2xl font-extrabold tracking-[-0.04em]">
-            XPAPER Central
+            XPAPER
           </h1>
-          <p className="mt-2 text-sm leading-6 text-[#c1d9ca]">
+          {/* <p className="mt-2 text-sm leading-6 text-[#c1d9ca]">
             Entre com Sua Identificação Corporativa. Após Validar o Acesso,
             Perfis Administrativos Escolhem o Módulo; Perfis Operacionais Seguem
             Direto para Produção.
-          </p>
+          </p> */}
         </div>
         <form
           onSubmit={submit}

@@ -537,19 +537,53 @@
 - [x] Documentar práticas de segurança para cPanel e MySQL hospedado na HostGator.
 - [x] Documentar a arquitetura segura de conexão PHP/Node.js do XPAPER ao MySQL hospedado.
 
-- [x] Criar a base visual do XPAPER Central com entrada do usuário e escolha de módulo.
+- [x] Criar a base visual do XPAPER com entrada do usuário e escolha de módulo.
 - [x] Implementar o menu principal de módulos conforme a referência do ERP legado.
 - [x] Criar o padrão inicial de tela de consulta para os cadastros, com barra de botões.
 
 - [x] Inventariar o projeto XPaper enviado e mapear seus módulos, dependências e artefatos de banco.
 - [x] Definir a estratégia de unificação do XPaper e Produção Web com integração Firebird compartilhada.
 
-- [x] Ajustar a entrada para comunicar o XPAPER Central e permitir que perfis administrativos escolham o módulo após autenticar.
+- [x] Ajustar a entrada para comunicar o XPAPER e permitir que perfis administrativos escolham o módulo após autenticar.
 - [x] Preservar a abertura direta da Produção para perfis operacionais vinculados à Máquina/Processo.
 
-- [x] Remover os cartões centrais e o resumo de módulo da entrada do XPAPER Central.
+- [x] Remover os cartões centrais e o resumo de módulo da entrada do XPAPER.
 - [x] Manter somente o menu superior como navegação de módulos, preservando o acesso à Produção.
 
 - [x] Mapear e padronizar todos os textos visíveis do front-end em Title Case em português.
 - [x] Revisar títulos, cards, botões, campos, modais, grids, menus, mensagens, badges, filtros e placeholders sem alterar comportamento.
 - [x] Validar a consistência de capitalização entre telas e cobrir a padronização textual com testes de regressão.
+- [x] Inventariar o pacote atualizado enviado pelo usuário e comparar suas correções de front-end com a versão LAN atual.
+- [x] Integrar apenas as correções compatíveis do pacote atualizado, preservar as regras operacionais e validar antes da próxima entrega LAN completa.
+- [x] Incorporar os ajustes visuais recebidos nas grades de Quantidades Aprovadas, Reserva e identificação do operador, mantendo Title Case, tema e tipografia global.
+- [x] Substituir integralmente os arquivos de front-end pela versão enviada pelo usuário, assumindo seus tamanhos, cores e organização visual.
+- [x] Validar a compatibilidade entre o front-end substituído e a infraestrutura LAN/Firebird, preservando regras e geração de pacote completo.
+- [x] Inventariar os formulários Delphi de Participantes e documentar campos comuns, particularidades e regras de Cliente, Fornecedor, Outros Participantes e Representante.
+- [x] Atualizar a Sidebar do XPAPER com a entrada de Consulta de Participantes em Title Case.
+- [x] Implementar abas internas persistentes, inspiradas no PageControl, com abertura múltipla, prevenção de duplicidade e fechamento individual.
+- [x] Implementar a Consulta de Participantes com filtros, grid ordenável, estados de carregamento/erro/vazio e integração protegida ao Firebird pelo proxy local.
+- [x] Preparar os contratos e a estrutura de abas para futuros cadastros de Cliente, Fornecedor, Outros Participantes, Representante, Pagamentos e Observações.
+- [x] Criar testes de regressão e validar o módulo de Participantes em desktop e celular antes da entrega LAN completa.
+- [x] Validar na instalação LAN a consulta de Participantes contra os campos reais de PESSOA, CIDADES e ESTADOS antes de ativar cadastros de gravação.
+- [x] Remover a barra superior de módulos do XPAPER e concentrar todos os módulos na Sidebar.
+- [x] Organizar a Sidebar com os módulos Cadastros, Almoxarifado, Compras, Desenvolvimento, Emissor NF, Financeiro, Fiscal, PCP, Qualidade, Vendas, Relatórios, Configurações, Atualizações e Produção.
+- [x] Reservar as abas internas para consultas, formulários e registros abertos, evitando que módulos de navegação apareçam como abas.
+- [x] Validar a navegação reorganizada em desktop e celular antes da próxima entrega LAN completa.
+- [x] Inventariar campos e regras do formulário Delphi U_CadCliente antes de expor gravação no XPAPER.
+- [x] Criar o contrato protegido de leitura detalhada de Clientes pelo proxy Firebird LAN; inclusão e alteração permanecem bloqueadas até a validação de gravação.
+- [x] Implementar a consulta detalhada de Cliente em aba interna, com Dados Gerais, Endereços, Comercial, Fiscal, Regras de Produção e Contatos.
+- [x] Validar o fluxo de Cliente com testes de regressão e aceite na LAN antes de iniciar o cadastro seguinte.
+- [x] Confirmar e documentar a geração compartilhada de PES_CODIGO para todos os tipos da tabela PESSOA.
+- [x] Implementar a inclusão protegida de Cliente com PES_CODIGO gerado no proxy Firebird LAN.
+- [x] Implementar a aba de novo Cliente com validação dos campos principais e confirmação antes da gravação.
+- [ ] Criar testes de regressão e validar a inclusão de Cliente na instalação LAN.
+- [x] Analisar o vídeo de referência enviado pelo usuário e documentar seu fluxo, comandos, abas e campos do Cadastro de Cliente.
+- [x] Ajustar o Cadastro de Cliente para seguir o fluxo visual e funcional demonstrado no vídeo, preservando a gravação protegida por Firebird LAN.
+- [x] Substituir a geração presumida GEN_PESSOA pela instrução SQL real usada por SMGlobalClient.GetID('PESSOA', 'PES_CODIGO').
+- [x] Gerar PES_CODIGO com COALESCE(MAX(PES_CODIGO), 0) + 1 na mesma transação de inclusão, conforme SMGlobalClient.GetID do legado.
+- [x] Reorganizar o Cadastro de Cliente em Informações Gerais, Informações Complementares, Contatos e Informações Financeiras, com comandos Gravar e Fechar na barra inferior.
+- [ ] Preparar consultas auxiliares por lupa para Grupo Econômico, Região, Ramo de Atividade e Representante, sem acesso direto do navegador ao Firebird.
+- [x] Preparar a grade de Endereços de Cobrança/Entrega e seus comandos de Inserir, Alterar e Excluir para validação posterior das tabelas-filhas.
+- [x] Substituir a aba resumida de Cliente por um modal completo para inserir, alterar e consultar, conforme o vídeo e U_CadCliente.
+- [x] Implementar todas as abas e campos confirmados do modal de Cliente: Informações Gerais, Informações Complementares, Contatos e Informações Financeiras.
+- [ ] Validar a abertura do modal pelo grid de Participantes e o retorno à consulta sem perder filtros.

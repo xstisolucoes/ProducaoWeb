@@ -10,7 +10,7 @@ import Pointing from "./pages/Pointing";
 import ManualPointing from "./pages/ManualPointing";
 import ProductReleasePointing from "./pages/ProductReleasePointing";
 import Programming from "./pages/Programming";
-import XPaperConsultation from "./pages/XPaperConsultation";
+import XPaperPortal from "./pages/XPaperPortal";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -18,7 +18,7 @@ function Router() {
     <Switch>
       <Route path={"/"}><DashboardLayout><Home /></DashboardLayout></Route>
       <Route path={"/producao"}><DashboardLayout><Programming /></DashboardLayout></Route>
-      <Route path={"/xpaper/cadastros"}><DashboardLayout><XPaperConsultation /></DashboardLayout></Route>
+      <Route path={"/xpaper/cadastros"}><DashboardLayout><XPaperPortal /></DashboardLayout></Route>
       <Route path={"/apontamento/:opCodigo/:mpCodigo"}><Pointing /></Route>
       <Route path={"/apontamento-manual/:opCodigo/:mpCodigo"}><ManualPointing /></Route>
       <Route path={"/liberacao-produto/:opCodigo/:mpCodigo"}><ProductReleasePointing /></Route>

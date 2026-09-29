@@ -1273,7 +1273,7 @@ body *::after {
   font-style: var(--app-font-style) !important;
 }
 
-/* XPAPER Central: portal corporativo sem navegação lateral, usando o tema ativo. */
+/* XPAPER: portal corporativo sem navegação lateral, usando o tema ativo. */
 .xpaper-shell {
   min-height: 100dvh;
   background:

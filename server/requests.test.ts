@@ -25,7 +25,7 @@ describe("Solicitações internas", () => {
   it("abre o formulário simplificado como modal a partir do apontamento", () => {
     const dialog = readFileSync(resolve(process.cwd(), "client/src/components/RequestDialog.tsx"), "utf8");
     const pointing = readFileSync(resolve(process.cwd(), "client/src/pages/Pointing.tsx"), "utf8");
-    expect(dialog).toContain('setDescription(""); onOpenChange(false)');
+    expect(dialog).toMatch(/setDescription\(""\);\s*onOpenChange\(false\)/);
     expect(dialog).toContain("Solicitante: {firstName}");
     expect(dialog).toContain("Cancelar");
     expect(pointing).toContain("<RequestDialog open={showRequests}");

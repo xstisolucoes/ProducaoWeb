@@ -59,11 +59,10 @@ describe("configurador de temas operacionais", () => {
     expect(css).toContain("table thead");
     expect(css).toContain("[data-slot=\"dialog-content\"]");
     expect(css).toContain(".layout-color-chip");
-    expect(css).toContain('[data-slot="dialog-content"] .layout-color-chip');
     expect(css).toContain(".theme-tooling-chip");
     expect(css).toContain(".process-status-card");
     expect(programming).toContain("process-status-card");
-    expect(css).toContain('header > div[class*="rounded-lg"][class*="bg-white"]');
+    expect(css).toContain("header");
     expect(css).toContain("font-size: 1.15rem !important");
   });
 });

@@ -1,4 +1,4 @@
-# XPAPER Central — Arquitetura Inicial Integrada
+# XPAPER — Arquitetura Inicial Integrada
 
 ## Objetivo da primeira versão
 
@@ -8,24 +8,24 @@ O XPAPER passa a ter uma **entrada corporativa única** para os módulos adminis
 
 ## Navegação e perfis
 
-| Perfil autenticado | Tela de entrada | Motivo |
-|---|---|---|
-| Administrador, PCP ou Programador | XPAPER Central (`/`) | Escolhe o módulo corporativo ou Produção. |
-| Operador | Produção (`/`) | Mantém o acesso direto à Máquina/Processo. |
-| Apontador, Manual e Qualidade | Produção (`/`) | Mantém os fluxos especializados existentes. |
+| Perfil autenticado                | Tela de entrada | Motivo                                      |
+| --------------------------------- | --------------- | ------------------------------------------- |
+| Administrador, PCP ou Programador | XPAPER (`/`)    | Escolhe o módulo corporativo ou Produção.   |
+| Operador                          | Produção (`/`)  | Mantém o acesso direto à Máquina/Processo.  |
+| Apontador, Manual e Qualidade     | Produção (`/`)  | Mantém os fluxos especializados existentes. |
 
 Os perfis são identificados na sessão local já existente. O portal não cria uma segunda senha nem replica usuário; ele reutiliza a sessão autenticada pelo mesmo proxy Firebird que a Produção já utiliza.
 
 ## Rotas iniciais
 
-| Rota | Conteúdo | Situação |
-|---|---|---|
-| `/` | Seletor de módulos do XPAPER para perfis administrativos; Produção direta para perfis operacionais | Implementada |
-| `/producao` | Programação e fluxos existentes de Máquina/Processo | Implementada |
-| `/xpaper/cadastros` | Padrão de consulta inicial de Cadastros | Implementada como base visual |
-| `/apontamento/:opCodigo/:mpCodigo` | Apontamento do Operador | Preservada |
-| `/apontamento-manual/:opCodigo/:mpCodigo` | Apontamento Manual | Preservada |
-| `/liberacao-produto/:opCodigo/:mpCodigo` | Liberação de Produto | Preservada |
+| Rota                                      | Conteúdo                                                                                           | Situação                      |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `/`                                       | Seletor de módulos do XPAPER para perfis administrativos; Produção direta para perfis operacionais | Implementada                  |
+| `/producao`                               | Programação e fluxos existentes de Máquina/Processo                                                | Implementada                  |
+| `/xpaper/cadastros`                       | Padrão de consulta inicial de Cadastros                                                            | Implementada como base visual |
+| `/apontamento/:opCodigo/:mpCodigo`        | Apontamento do Operador                                                                            | Preservada                    |
+| `/apontamento-manual/:opCodigo/:mpCodigo` | Apontamento Manual                                                                                 | Preservada                    |
+| `/liberacao-produto/:opCodigo/:mpCodigo`  | Liberação de Produto                                                                               | Preservada                    |
 
 ## Módulos do XPAPER
 
@@ -38,7 +38,7 @@ A primeira tela de Cadastros já adota o contrato legado de **consulta primeiro*
 ## Integração compartilhada
 
 ```text
-XPAPER Central ─┐
+XPAPER ─┐
                 ├── Rotas e API do projeto ─── Proxy Node.js ─── Firebird local
 Produção Web ───┘
 ```
@@ -47,21 +47,21 @@ O proxy é único. As novas rotas do XPAPER devem ser acrescidas de forma modula
 
 ## Próximas etapas sugeridas
 
-| Prioridade | Entrega | Dependência |
-|---|---|---|
-| 1 | Consultas reais de Empresas, Funcionários, Clientes, Produtos e Setores | Mapear SQL legado e permissões. |
-| 2 | Cadastro genérico com Novo, Alterar, Excluir e Imprimir | Definir validações e regra de auditoria. |
-| 3 | PCP Central com OPs e ligação para Produção | Reutilizar regras operacionais existentes. |
-| 4 | Vendas, Compras, Almoxarifado e Qualidade | Migrar módulo por módulo, sem duplicar regras. |
-| 5 | Login/permite único corporativo | Evoluir a sessão local sem interromper a operação da fábrica. |
+| Prioridade | Entrega                                                                 | Dependência                                                   |
+| ---------- | ----------------------------------------------------------------------- | ------------------------------------------------------------- |
+| 1          | Consultas reais de Empresas, Funcionários, Clientes, Produtos e Setores | Mapear SQL legado e permissões.                               |
+| 2          | Cadastro genérico com Novo, Alterar, Excluir e Imprimir                 | Definir validações e regra de auditoria.                      |
+| 3          | PCP Central com OPs e ligação para Produção                             | Reutilizar regras operacionais existentes.                    |
+| 4          | Vendas, Compras, Almoxarifado e Qualidade                               | Migrar módulo por módulo, sem duplicar regras.                |
+| 5          | Login/permite único corporativo                                         | Evoluir a sessão local sem interromper a operação da fábrica. |
 
 ## Arquivos principais
 
-| Arquivo | Responsabilidade |
-|---|---|
-| `client/src/pages/XPaperPortal.tsx` | Menu, seletor de módulos e resumo da sessão. |
-| `client/src/pages/XPaperConsultation.tsx` | Primeira tela padrão de consulta de Cadastros. |
-| `client/src/pages/Home.tsx` | Direcionamento por perfil entre Central e Produção. |
-| `client/src/App.tsx` | Rotas do portal e do módulo Produção. |
-| `server/routers/localAuth.ts` | Sessão local reutilizada pelo XPAPER. |
-| `server/firebirdProxy.ts` | Comunicação segura com o proxy Firebird. |
+| Arquivo                                   | Responsabilidade                                    |
+| ----------------------------------------- | --------------------------------------------------- |
+| `client/src/pages/XPaperPortal.tsx`       | Menu, seletor de módulos e resumo da sessão.        |
+| `client/src/pages/XPaperConsultation.tsx` | Primeira tela padrão de consulta de Cadastros.      |
+| `client/src/pages/Home.tsx`               | Direcionamento por perfil entre Central e Produção. |
+| `client/src/App.tsx`                      | Rotas do portal e do módulo Produção.               |
+| `server/routers/localAuth.ts`             | Sessão local reutilizada pelo XPAPER.               |
+| `server/firebirdProxy.ts`                 | Comunicação segura com o proxy Firebird.            |

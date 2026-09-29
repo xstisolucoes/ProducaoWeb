@@ -644,6 +644,195 @@ app.get("/v1/orders", ensureAuthorized, async (req, res, next) => {
   }
 });
 
+app.get("/v1/participants", ensureAuthorized, async (req, res, next) => {
+  try {
+    const search = String(req.query.search ?? "").trim();
+    const type = String(req.query.type ?? "Todos").trim();
+    const status = String(req.query.status ?? "Ativo").trim();
+    const typeFilters = {
+      Cliente: "coalesce(pes.tipo_cliente, 'N') = 'S'",
+      Fornecedor: "coalesce(pes.tipo_forn, 'N') = 'S'",
+      "Outro Participante": "coalesce(pes.tipo_outros, 'N') = 'S'",
+      Representante: "coalesce(pes.tipo_rep, 'N') = 'S'",
+    };
+    const filterParts = ["1 = 1"];
+    const params = [];
+
+    if (typeFilters[type]) filterParts.push(typeFilters[type]);
+    if (status !== "Todos") {
+      filterParts.push("upper(trim(coalesce(pes.pes_status, ''))) = ?");
+      params.push(status.toLocaleUpperCase("pt-BR"));
+    }
+    if (search) {
+      filterParts.push(`(
+        cast(pes.pes_codigo as varchar(20)) containing ?
+        or coalesce(pes.pes_fantasia, '') containing ?
+        or coalesce(pes.pes_razao_social, '') containing ?
+        or coalesce(pes.pes_cnpj, '') containing ?
+        or coalesce(pes.pes_contato, '') containing ?
+      )`);
+      params.push(search, search, search, search, search);
+    }
+
+    const filter = filterParts.join(" and ");
+    const result = await paged(
+      (limit, offset) => `
+        select first ${limit} skip ${offset}
+          pes.pes_codigo as codigo,
+          case
+            when coalesce(pes.tipo_cliente, 'N') = 'S' then 'Cliente'
+            when coalesce(pes.tipo_forn, 'N') = 'S' then 'Fornecedor'
+            when coalesce(pes.tipo_outros, 'N') = 'S' then 'Outro Participante'
+            when coalesce(pes.tipo_rep, 'N') = 'S' then 'Representante'
+            else 'Outro Participante'
+          end as tipo,
+          pes.pes_fantasia as fantasia,
+          pes.pes_razao_social as razao_social,
+          pes.pes_cnpj as cnpj,
+          pes.pes_contato as contato,
+          pes.pes_fone1 as telefone,
+          cid.cid_nome as cidade,
+          est.est_sigla as uf,
+          pes.pes_status as status
+        from pessoa pes
+        left join cidades cid on cid.cid_codigo = pes.cid_codigo
+        left join estados est on est.est_codigo = cid.est_codigo
+        where ${filter}
+        order by pes.pes_fantasia, pes.pes_razao_social, pes.pes_codigo
+      `,
+      `select count(*) as total
+         from pessoa pes
+         left join cidades cid on cid.cid_codigo = pes.cid_codigo
+         left join estados est on est.est_codigo = cid.est_codigo
+        where ${filter}`,
+      params,
+      req,
+    );
+    res.json({
+      ...result,
+      items: result.items.map((row) => ({
+        codigo: Number(row.codigo ?? row.CODIGO ?? 0),
+        tipo: row.tipo ?? row.TIPO ?? "Outro Participante",
+        fantasia: row.fantasia ?? row.FANTASIA ?? null,
+        razao_social: row.razao_social ?? row.RAZAO_SOCIAL ?? null,
+        cnpj: row.cnpj ?? row.CNPJ ?? null,
+        contato: row.contato ?? row.CONTATO ?? null,
+        telefone: row.telefone ?? row.TELEFONE ?? null,
+        cidade: row.cidade ?? row.CIDADE ?? null,
+        uf: row.uf ?? row.UF ?? null,
+        status: row.status ?? row.STATUS ?? null,
+      })),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/v1/clients/:codigo", ensureAuthorized, async (req, res, next) => {
+  try {
+    const codigo = Number(req.params.codigo);
+    if (!Number.isInteger(codigo) || codigo <= 0) return res.status(400).json({ error: "Código de Cliente Inválido." });
+    const rows = await query(
+      `select
+        pes.pes_codigo as codigo,
+        pes.pes_fantasia as fantasia,
+        pes.pes_razao_social as razao_social,
+        pes.pes_cnpj as cnpj,
+        pes.pes_cpf as cpf,
+        pes.pes_rg as rg,
+        pes.pes_insc_estadual as inscricao_estadual,
+        pes.pes_insc_municipal as inscricao_municipal,
+        pes.pes_cep as cep,
+        pes.pes_endereco as endereco,
+        pes.pes_numero as numero,
+        pes.pes_complemento as complemento,
+        pes.pes_bairro as bairro,
+        pes.cid_codigo as cidade_codigo,
+        cid.cid_nome as cidade,
+        est.est_sigla as uf,
+        pes.pes_contato as contato,
+        pes.pes_fone1 as telefone,
+        pes.pes_celular as celular,
+        pes.pes_email as email,
+        pes.pes_status as status,
+        pes.ge_codigo as grupo_economico_codigo,
+        pes.ge_descricao as grupo_economico_descricao,
+        pes.reg_codigo as regiao_codigo,
+        pes.reg_descricao as regiao_descricao,
+        pes.rativ_codigo as ramo_atividade_codigo,
+        pes.rativ_descricao as ramo_atividade_descricao,
+        pes.pes_rep_codigo as representante_codigo,
+        pes.pes_rep_fantasia as representante_fantasia,
+        pes.pes_rep_comissao as comissao,
+        pes.pes_tipo_frete as tipo_frete,
+        pes.pes_cod_suframa as suframa,
+        pes.pes_cons_final as consumidor_final,
+        pes.pes_ex_ld_tecnico as exigir_laudo_tecnico,
+        pes.um_medida as unidade_medida,
+        pes.um_descricao as unidade_medida_descricao,
+        pes.pes_inspecionar_produto as inspecionar_produto,
+        pes.pes_amostragem as amostragem,
+        pes.pes_controlar_lote as controlar_lote,
+        pes.et_codigo as tributacao_codigo,
+        pes.et_descricao as tributacao_descricao,
+        pes.nat_descricao_fiscal as natureza_fiscal_descricao
+       from pessoa pes
+       left join cidades cid on cid.cid_codigo = pes.cid_codigo
+       left join estados est on est.est_codigo = cid.est_codigo
+      where pes.pes_codigo = ? and coalesce(pes.tipo_cliente, 'N') = 'S'`,
+      [codigo],
+    );
+    const row = rows[0];
+    if (!row) return res.status(404).json({ error: "Cliente Não Encontrado." });
+    const pick = (key) => row[key] ?? row[key.toUpperCase()] ?? null;
+    res.json({
+      codigo: Number(pick("codigo") ?? 0), fantasia: pick("fantasia"), razaoSocial: pick("razao_social"), cnpj: pick("cnpj"), cpf: pick("cpf"), rg: pick("rg"),
+      inscricaoEstadual: pick("inscricao_estadual"), inscricaoMunicipal: pick("inscricao_municipal"), cep: pick("cep"), endereco: pick("endereco"), numero: pick("numero"), complemento: pick("complemento"), bairro: pick("bairro"), cidadeCodigo: pick("cidade_codigo"), cidade: pick("cidade"), uf: pick("uf"), contato: pick("contato"), telefone: pick("telefone"), celular: pick("celular"), email: pick("email"), status: pick("status"), grupoEconomicoCodigo: pick("grupo_economico_codigo"), grupoEconomicoDescricao: pick("grupo_economico_descricao"), regiaoCodigo: pick("regiao_codigo"), regiaoDescricao: pick("regiao_descricao"), ramoAtividadeCodigo: pick("ramo_atividade_codigo"), ramoAtividadeDescricao: pick("ramo_atividade_descricao"), representanteCodigo: pick("representante_codigo"), representanteFantasia: pick("representante_fantasia"), comissao: pick("comissao"), tipoFrete: pick("tipo_frete"), suframa: pick("suframa"), consumidorFinal: pick("consumidor_final"), exigirLaudoTecnico: pick("exigir_laudo_tecnico"), unidadeMedida: pick("unidade_medida"), unidadeMedidaDescricao: pick("unidade_medida_descricao"), inspecionarProduto: pick("inspecionar_produto"), amostragem: pick("amostragem"), controlarLote: pick("controlar_lote"), tributacaoCodigo: pick("tributacao_codigo"), tributacaoDescricao: pick("tributacao_descricao"), naturezaFiscalDescricao: pick("natureza_fiscal_descricao"),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/v1/clients", ensureAuthorized, async (req, res, next) => {
+  try {
+    if (process.env.XPAPER_CADASTRO_WRITE_ENABLED?.trim().toUpperCase() !== "S") return res.status(403).json({ error: "A Gravação de Clientes Está Bloqueada. Defina XPAPER_CADASTRO_WRITE_ENABLED=S Após Validar um Cliente de Teste." });
+    const source = req.body ?? {};
+    const text = (key, max) => String(source[key] ?? "").trim().slice(0, max);
+    const positiveInteger = (key) => { const value = Number(source[key]); return Number.isInteger(value) && value > 0 ? value : null; };
+    const fantasia = text("fantasia", 30);
+    const razaoSocial = text("razaoSocial", 180);
+    const status = text("status", 10) === "Inativo" ? "Inativo" : "Ativo";
+    if (fantasia.length < 2 || razaoSocial.length < 2) return res.status(400).json({ error: "Informe o Participante e a Razão Social do Cliente." });
+    const email = text("email", 180);
+    if (email && (!email.includes("@") || !email.includes("."))) return res.status(400).json({ error: "Informe um E-mail Válido." });
+
+    const result = await withTransaction(async (transaction) => {
+      const sequenceRows = await transaction.queryAsync("select coalesce(max(pes_codigo), 0) + 1 as codigo from pessoa");
+      const codigo = Number(sequenceRows[0]?.codigo ?? sequenceRows[0]?.CODIGO ?? 0);
+      if (!Number.isInteger(codigo) || codigo <= 0) throw new Error("Não Foi Possível Gerar o PES_CODIGO do Cliente.");
+      await transaction.queryAsync(
+        `insert into pessoa (
+          pes_codigo, pes_fantasia, pes_razao_social, pes_cnpj, pes_cpf, pes_rg,
+          pes_insc_estadual, pes_insc_municipal, pes_cep, pes_endereco, pes_numero,
+          pes_complemento, pes_bairro, cid_codigo, pes_contato, pes_fone1, pes_celular,
+          pes_email, ge_codigo, reg_codigo, rativ_codigo, pes_rep_codigo, pes_rep_comissao,
+          et_codigo, pes_fg_prod_mais, pes_fg_prod_menos, pes_tipo_frete, pes_cod_suframa,
+          pes_cons_final, pes_ex_ld_tecnico, um_medida, pes_inspecionar_produto,
+          pes_amostragem, pes_controlar_lote, td_codigo, to_codigo,
+          pes_status, pes_data_cadastro, pais_codigo,
+          tipo_cliente, tipo_forn, tipo_outros, tipo_rep
+        ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, current_date, 1, 'S', 'N', 'N', 'N')`,
+        [codigo, fantasia, razaoSocial, text("cnpj", 30) || null, text("cpf", 20) || null, text("rg", 30) || null, text("inscricaoEstadual", 30) || null, text("inscricaoMunicipal", 30) || null, text("cep", 12) || null, text("endereco", 180) || null, text("numero", 20) || null, text("complemento", 100) || null, text("bairro", 100) || null, positiveInteger("cidadeCodigo"), text("contato", 120) || null, text("telefone", 30) || null, text("celular", 30) || null, email || null, positiveInteger("grupoEconomicoCodigo"), positiveInteger("regiaoCodigo"), positiveInteger("ramoAtividadeCodigo"), positiveInteger("representanteCodigo"), Number.isFinite(Number(source.comissao)) ? Number(source.comissao) : null, positiveInteger("tributacaoCodigo"), Number.isFinite(Number(source.variacaoProducaoMais)) ? Number(source.variacaoProducaoMais) : null, Number.isFinite(Number(source.variacaoProducaoMenos)) ? Number(source.variacaoProducaoMenos) : null, Number.isInteger(Number(source.tipoFrete)) ? Number(source.tipoFrete) : null, text("suframa", 20) || null, source.consumidorFinal === "S" ? "S" : "N", source.exigeLaudoTecnico === "S" ? "S" : "N", text("unidadeMedida", 20) || null, source.inspecionarProduto === "S" ? "S" : "N", source.amostragem === "S" ? "S" : "N", source.controlarLote === "S" ? "S" : "N", positiveInteger("tipoDocumentoCodigo"), positiveInteger("tipoOperacaoCodigo"), status],
+      );
+      return { success: true, codigo };
+    });
+    res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.patch("/v1/orders/:opCodigo/:mpCodigo/status", ensureAuthorized, async (req, res, next) => {
   try {
     const opCodigo = Number(req.params.opCodigo);

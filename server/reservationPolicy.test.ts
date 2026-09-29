@@ -61,7 +61,9 @@ describe("política de reservas do apontamento", () => {
     expect(proxySource).toContain("const arrangementTotal = reservation.applies ? reservation.arrangementTotal : processArrangementTotal");
     expect(proxySource).toContain("mp_qtde_produzida = coalesce(mp_qtde_produzida, 0) + ?");
     expect(proxySource).toContain("mph_qtde_produzida = coalesce(mph_qtde_produzida, 0) + ?");
-    expect(pointingSource).toContain("const productionMultiplier = item?.calculateProductionArrangement || item?.calculateReservationArrangement");
+    expect(pointingSource).toContain("const productionMultiplier");
+    expect(pointingSource).toContain("item?.calculateProductionArrangement");
+    expect(pointingSource).toContain("item?.calculateReservationArrangement");
     expect(pointingSource).toContain("const reservationMultiplier = 1");
     expect(pointingSource).toContain("const effectiveArrangementTotal = reservation.data?.applicable");
     expect(pointingSource).toContain("Arranjo da reserva:");

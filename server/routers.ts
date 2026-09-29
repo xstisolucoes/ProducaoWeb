@@ -3,6 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { localAuthRouter } from "./routers/localAuth";
+import { participantsRouter } from "./routers/participants";
 import { productionRouter } from "./routers/production";
 
 export const appRouter = router({
@@ -19,6 +20,7 @@ export const appRouter = router({
     }),
   }),
   localAuth: localAuthRouter,
+  participants: participantsRouter,
   production: productionRouter,
 });
 
