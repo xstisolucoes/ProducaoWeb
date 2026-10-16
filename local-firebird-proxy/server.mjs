@@ -1,6 +1,6 @@
 import "dotenv/config";
 import express from "express";
-import Firebird from "node-firebird";
+import Firebird, { GDSCode } from "node-firebird";
 import bcrypt from "bcryptjs";
 import os from "node:os";
 import { readFile, unlink, writeFile } from "node:fs/promises";
@@ -44,7 +44,7 @@ async function printPdfDirectly(pdfBuffer, printer, copies) {
   finally { await unlink(temporaryPath).catch(() => undefined); }
 }
 
-const pool = Firebird.pool(5, {
+const pool = Firebird.pool(40, {
   host: required("FIREBIRD_HOST"),
   port: numberFromEnv("FIREBIRD_PORT", 3050),
   database: required("FIREBIRD_DATABASE"),
@@ -56,6 +56,20 @@ const pool = Firebird.pool(5, {
   wireCrypt: Firebird.WIRE_CRYPT_ENABLE,
   idleTimeoutMillis: 30000,
 });
+
+// Firebird lock waits block forever by default (node-firebird starts every
+// transaction with wait: true + waitTimeout: 0), so a write that collides with
+// another session hangs the request with no error and never returns. isc_tpb_lock_timeout
+// is expressed in SECONDS; when it elapses Firebird raises isc_lock_timeout
+// and the transaction rolls back, freeing its connection instead of stalling.
+const lockTimeoutSeconds = numberFromEnv("FIREBIRD_LOCK_TIMEOUT_SECONDS", 5);
+
+// The Express client aborts at 8s, but an aborted HTTP request does not cancel
+// the Firebird statement: the proxy keeps the connection busy (and any locks)
+// long after the browser gave up. This deadline fires an out-of-band op_cancel
+// so the work actually stops. Set FIREBIRD_QUERY_TIMEOUT_MS=0 to disable, or
+// pass { timeoutMs } per query to override.
+const defaultQueryTimeoutMs = Number(process.env.FIREBIRD_QUERY_TIMEOUT_MS ?? 60_000);
 
 const app = express();
 app.disable("x-powered-by");
@@ -80,8 +94,43 @@ function listPage(req) {
   return { limit, offset: (page - 1) * limit };
 }
 
-async function query(sql, params = []) {
-  return pool.withConnection((db) => db.queryAsync(sql, params));
+/** Adds an abort deadline to every statement run through `executor`, so a
+ *  cancelled HTTP request stops the Firebird work instead of leaving the
+ *  connection (and its locks) busy. Passes non-query members through untouched. */
+function withQueryDeadline(executor, timeoutMs) {
+  if (!timeoutMs || !executor) return executor;
+  return new Proxy(executor, {
+    get(target, property) {
+      const value = Reflect.get(target, property, target);
+      if (typeof value !== "function") return value;
+      if (property !== "queryAsync") return value.bind(target);
+      return (sql, params, options) => value.call(target, sql, params, { ...(options ?? {}), signal: AbortSignal.timeout(timeoutMs) });
+    },
+  });
+}
+
+async function query(sql, params = [], options = {}) {
+  const { timeoutMs = defaultQueryTimeoutMs, ...rest } = options;
+  return pool.withConnection((db) => db.queryAsync(sql, params, { ...rest, ...(timeoutMs ? { signal: AbortSignal.timeout(timeoutMs) } : {}) }));
+}
+
+async function withTransaction(work, options = {}) {
+  const { timeoutMs = defaultQueryTimeoutMs, ...transactionOptions } = options;
+  return pool.withConnection((db) =>
+    db.withTransaction((transaction) => work(withQueryDeadline(transaction, timeoutMs)), {
+      waitTimeout: lockTimeoutSeconds,
+      ...transactionOptions,
+    })
+  );
+}
+
+function isAborted(error) {
+  if (!error || typeof error !== "object") return false;
+  // Only the driver's own abort shapes count: an AbortError from the deadline,
+  // or Firebird's isc_cancelled acknowledgement of the op_cancel we sent. A
+  // free-text match on the message would swallow business errors whose wording
+  // merely mentions "cancel".
+  return error.name === "AbortError" || Number(error.gdscode) === Number(GDSCode.CANCELLED);
 }
 
 async function getWindowsPrinters() {
@@ -127,10 +176,6 @@ async function readBlobImageDataUri(blob, label) {
       stream.on("end", () => resolve(toDataUri(Buffer.concat(chunks))));
     });
   });
-}
-
-async function withTransaction(work) {
-  return pool.withConnection((db) => db.withTransaction(work));
 }
 
 async function ensureDailyClock(executor, machineCode) {
@@ -465,8 +510,15 @@ async function findMachineForOperator(userId, selectedMachineCode = null) {
 
 app.get("/health", ensureAuthorized, async (_req, res, next) => {
   try {
-    await query("select 1 as alive from rdb$database");
-    res.json({ status: "ok", database: "reachable" });
+    await query("select 1 as alive from rdb$database", [], { timeoutMs: 5000 });
+    res.json({
+      status: "ok",
+      database: "reachable",
+      // Exposed so pool starvation under load is visible without a debugger.
+      pool: { total: pool.totalCount, idle: pool.idleCount, active: pool.activeCount, waiting: pool.waitingCount, max: 40 },
+      limits: { lockTimeoutSeconds, queryTimeoutMs: defaultQueryTimeoutMs },
+      uptimeSeconds: Math.round(process.uptime()),
+    });
   } catch (error) {
     next(error);
   }
@@ -2086,9 +2138,16 @@ app.post("/v1/pointing/:opCodigo/:mpCodigo/finish-production", ensureAuthorized,
       const reservationQuantity = quantityProduced * reservationMultiplier;
       const currentBalance = Number(movement.mp_saldo ?? movement.MP_SALDO ?? 0);
       const quantityToPoint = reservation.applies ? currentBalance : Math.max(0, Number(reservation.indicatorQuantity ?? currentBalance));
-      if (!reservation.applies && netQuantity > quantityToPoint) throw Object.assign(new Error(`A quantidade apontada excede o saldo disponível de ${quantityToPoint}.`), { statusCode: 409 });
-      if (!reservation.applies && quantityToPoint > 0 && netQuantity >= quantityToPoint && outcome !== "attended") throw Object.assign(new Error(`A produção de ${netQuantity} cobre o saldo a apontar de ${quantityToPoint}. Finalize o processo como Atendido.`), { statusCode: 409 });
-      if (!reservation.applies && outcome === "attended" && netQuantity < quantityToPoint) throw Object.assign(new Error(`O saldo a apontar é ${quantityToPoint}. Para atender o processo, informe essa quantidade; use Parcial ou A Concluir para quantidade menor.`), { statusCode: 409 });
+      const blockZeroPreviousQuantity = (process.env.PRODUCTION_POINTING_BLOCK_ZERO_PREVIOUS_QUANTITY?.trim().toUpperCase() ?? "S") !== "N";
+      if (!reservation.applies) {
+        if (quantityToPoint <= 0) {
+          if (blockZeroPreviousQuantity) throw Object.assign(new Error("A quantidade do processo anterior está zerada. Libere o apontamento definindo PRODUCTION_POINTING_BLOCK_ZERO_PREVIOUS_QUANTITY=N."), { statusCode: 409 });
+        } else {
+          if (netQuantity > quantityToPoint) throw Object.assign(new Error(`A quantidade apontada excede o saldo disponível de ${quantityToPoint}.`), { statusCode: 409 });
+          if (quantityToPoint > 0 && netQuantity >= quantityToPoint && outcome !== "attended") throw Object.assign(new Error(`A produção de ${netQuantity} cobre o saldo a apontar de ${quantityToPoint}. Finalize o processo como Atendido.`), { statusCode: 409 });
+          if (outcome === "attended" && netQuantity < quantityToPoint) throw Object.assign(new Error(`O saldo a apontar é ${quantityToPoint}. Para atender o processo, informe essa quantidade; use Parcial ou A Concluir para quantidade menor.`), { statusCode: 409 });
+        }
+      }
       if (reservation.applies && outcome === "attended" && reservationQuantity < reservation.balance) throw Object.assign(new Error(`A reserva disponível é ${reservation.balance}. Para atender a produção, informe pelo menos ${reservation.balance / reservationMultiplier} na unidade apontada; use Parcial ou A Concluir para quantidade menor.`), { statusCode: 409 });
       if (reservation.applies && process.env.PRODUCTION_STOCK_WRITE_ENABLED?.trim().toUpperCase() !== "S") throw Object.assign(new Error("A baixa de reserva está protegida. Defina PRODUCTION_STOCK_WRITE_ENABLED=S apenas para validar a ordem de teste."), { statusCode: 403 });
       const status = outcome === "attended" ? "Atendido" : outcome === "to_conclude" ? "A Concluir" : "Parcial";
@@ -2207,6 +2266,16 @@ app.get("/v1/stock/history", ensureAuthorized, async (req, res, next) => {
 });
 
 app.use((error, _req, res, _next) => {
+  // 1) aborted by our own deadline (Firebird acknowledged the op_cancel)
+  if (isAborted(error)) {
+    console.warn("[Firebird Proxy] Operação cancelada por tempo limite:", error?.message);
+    return res.status(504).json({ error: "A consulta ao Firebird excedeu o tempo limite e foi cancelada. Tente novamente." });
+  }
+  // 2) Firebird refused to wait for a lock any longer (isc_tpb_lock_timeout or a no-wait lock conflict)
+  if ([Number(GDSCode.LOCK_CONFLICT), Number(GDSCode.LOCK_TIMEOUT), Number(GDSCode.DEADLOCK)].includes(Number(error?.gdscode)) || /lock (conflict|timeout)|deadlock/i.test(String(error?.message ?? ""))) {
+    console.warn("[Firebird Proxy] Conflito de bloqueio no Firebird:", error?.message);
+    return res.status(409).json({ error: "O registro está sendo usado por outra estação. Aguarde alguns segundos e tente novamente." });
+  }
   console.error("[Firebird Proxy]", error);
   res.status(503).json({ error: "O Firebird não está disponível para o proxy local." });
 });

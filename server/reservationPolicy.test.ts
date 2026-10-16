@@ -39,7 +39,8 @@ describe("política de reservas do apontamento", () => {
     const pointingSource = readFileSync(resolve(process.cwd(), "client/src/pages/Pointing.tsx"), "utf8");
 
     expect(proxySource).toContain("const quantityToPoint = reservation.applies ? currentBalance : Math.max(0, Number(reservation.indicatorQuantity ?? currentBalance))");
-    expect(proxySource).toContain("if (!reservation.applies && netQuantity > quantityToPoint)");
+    expect(proxySource).toContain("if (netQuantity > quantityToPoint)");
+    expect(proxySource).toContain("const blockZeroPreviousQuantity = (process.env.PRODUCTION_POINTING_BLOCK_ZERO_PREVIOUS_QUANTITY?.trim().toUpperCase() ?? \"S\") !== \"N\"");
     expect(proxySource).toContain("const nextBalance = reservation.applies ? Math.max(0, currentBalance - netQuantity) : Math.max(0, quantityToPoint - netQuantity)");
     expect(pointingSource).toContain("Com reserva vinculada, a baixa considera");
     expect(pointingSource).toContain("Quantidade a Apontar");

@@ -36,12 +36,11 @@ describe("Portal Inicial do XPAPER", () => {
     expect(app).toContain('path={"/xpaper/cadastros"}');
   });
 
-  it("apresenta XPAPER no login e preserva o direcionamento por perfil", () => {
+  it("apresenta XPAPER no login e mantém o acesso direto ao ProduçãoWeb durante o teste", () => {
     const login = read("client/src/components/LocalLogin.tsx");
     const home = read("client/src/pages/Home.tsx");
     expect(login).toContain("XPAPER");
     expect(login).toContain("Perfis Administrativos Escolhem o Módulo");
-    expect(home).toContain("user?.canConfigureStation");
     expect(home).toContain("return <Programming />");
   });
 

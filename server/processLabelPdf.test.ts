@@ -3,8 +3,8 @@ import { renderProcessLabelPdf } from "./processLabelPdf";
 
 describe("PDF da Etiqueta de Processo", () => {
   it("gera um PDF em papel físico 145 × 210 mm", async () => {
-    const pdf = await renderProcessLabelPdf({
-      label: {
+    const pdf = await renderProcessLabelPdf(
+      {
         operationCode: 10124,
         processCode: 8,
         productCode: 6000709,
@@ -22,10 +22,8 @@ describe("PDF da Etiqueta de Processo", () => {
         companyLogoError: null,
         printerOptions: [],
       },
-      printer: "Impressora de teste",
-      quantityPerPallet: 10,
-      copies: 1,
-    });
+      { quantityPerPallet: 10 }
+    );
     expect(pdf.subarray(0, 4).toString()).toBe("%PDF");
     expect(pdf.byteLength).toBeGreaterThan(1000);
   }, 60000);

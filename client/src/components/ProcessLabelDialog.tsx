@@ -8,9 +8,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
+import {
+  buildPrinterChoices,
+  printWithStationDialog,
+  STATION_PRINTER_OPTION,
+} from "@/lib/stationPrint";
 import type { ProcessLabel } from "../../../server/firebirdProxy";
 import { Printer, Tag } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 type PrintParameters = {
@@ -50,10 +55,9 @@ export function ProcessLabelDialog({
   });
   const previewPdf = trpc.production.pointing.previewProcessLabel.useMutation();
   const directPrint = trpc.production.pointing.printProcessLabel.useMutation();
-  const availablePrinters = [...printers].sort(
-    (left, right) =>
-      Number(right.isDefault) - Number(left.isDefault) ||
-      left.name.localeCompare(right.name, "pt-BR")
+  const printerChoices = useMemo(
+    () => buildPrinterChoices(printers, data?.printerOptions ?? []),
+    [printers, data?.printerOptions]
   );
 
   useEffect(() => {
@@ -65,14 +69,9 @@ export function ProcessLabelDialog({
   }, [open]);
   useEffect(() => {
     if (parameters.printer) return;
-    const selected =
-      availablePrinters.find(printer => printer.isDefault && !printer.offline)
-        ?.name ??
-      availablePrinters.find(printer => !printer.offline)?.name ??
-      data?.printerOptions[0] ??
-      "";
-    if (selected) setParameters(current => ({ ...current, printer: selected }));
-  }, [availablePrinters, data?.printerOptions, parameters.printer]);
+    const station = printerChoices.find(choice => choice.isStation);
+    if (station) setParameters(current => ({ ...current, printer: station.value }));
+  }, [printerChoices, parameters.printer]);
 
   const valid =
     Boolean(parameters.printer.trim()) &&
@@ -102,16 +101,27 @@ export function ProcessLabelDialog({
   };
   const print = async () => {
     try {
-      await directPrint.mutateAsync({
-        opCodigo,
-        mpCodigo,
-        printer: parameters.printer,
-        copies: Number(parameters.copies),
-        quantityPerPallet: Number(parameters.quantityPerPallet),
-      });
-      toast.success("Etiqueta Enviada à Impressora", {
-        description: `${parameters.copies} Cópia(s) Enviada(s) para ${parameters.printer}.`,
-      });
+      if (parameters.printer === STATION_PRINTER_OPTION) {
+        if (!previewPdfUrl)
+          return toast.error(
+            "Gere a prévia antes de enviar à impressora da estação."
+          );
+        await printWithStationDialog(previewPdfUrl);
+        toast.success("Etiqueta Enviada à Impressora da Estação", {
+          description: `${parameters.copies} Cópia(s) Enviada(s).`,
+        });
+      } else {
+        await directPrint.mutateAsync({
+          opCodigo,
+          mpCodigo,
+          printer: parameters.printer,
+          copies: Number(parameters.copies),
+          quantityPerPallet: Number(parameters.quantityPerPallet),
+        });
+        toast.success("Etiqueta Enviada à Impressora", {
+          description: `${parameters.copies} Cópia(s) Enviada(s) para ${parameters.printer}.`,
+        });
+      }
     } catch (reason) {
       toast.error(
         reason instanceof Error
@@ -164,53 +174,31 @@ export function ProcessLabelDialog({
                     <span>
                       Impressora <b className="text-[#bb3434]">*</b>
                     </span>
-                    {availablePrinters.length ? (
-                      <select
-                        value={parameters.printer}
-                        onChange={event =>
-                          setParameters(current => ({
-                            ...current,
-                            printer: event.target.value,
-                          }))
-                        }
-                        className="h-12 w-full rounded-md border-2 border-[#dbe5de] bg-white px-3 text-base font-bold text-[#294438] outline-none focus:border-[#177458]"
-                      >
-                        <option value="">Selecione a Impressora</option>
-                        {availablePrinters.map(printer => (
-                          <option
-                            key={printer.name}
-                            value={printer.name}
-                            disabled={printer.offline}
-                          >
-                            {printer.name}
-                            {printer.isDefault ? " (padrão)" : ""}
-                            {printer.offline ? " (offline)" : ""}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <Input
-                        list="process-label-printers"
-                        value={parameters.printer}
-                        onChange={event =>
-                          setParameters(current => ({
-                            ...current,
-                            printer: event.target.value,
-                          }))
-                        }
-                        placeholder="Digite a Impressora"
-                        className="h-12 border-2 border-[#dbe5de] bg-white text-base font-bold"
-                      />
-                    )}
-                    <datalist id="process-label-printers">
-                      {data.printerOptions.map(printer => (
-                        <option key={printer} value={printer} />
+                    <select
+                      value={parameters.printer}
+                      onChange={event =>
+                        setParameters(current => ({
+                          ...current,
+                          printer: event.target.value,
+                        }))
+                      }
+                      className="h-12 w-full rounded-md border-2 border-[#dbe5de] bg-white px-3 text-base font-bold text-[#294438] outline-none focus:border-[#177458]"
+                    >
+                      <option value="">Selecione a Impressora</option>
+                      {printerChoices.map(choice => (
+                        <option
+                          key={choice.value}
+                          value={choice.value}
+                          disabled={choice.offline}
+                        >
+                          {choice.label}
+                        </option>
                       ))}
-                    </datalist>
+                    </select>
                     <span className="text-xs font-medium leading-4 text-[#748178]">
                       {printerSource === "windows"
-                        ? "A Etiqueta Será Enviada Diretamente à Impressora Windows Selecionada."
-                        : "Não Foi Encontrada uma Impressora Windows Disponível nesta Máquina/Processo."}
+                        ? "Etiqueta Será Enviada Diretamente à Impressora Windows Selecionada ou ao Diálogo de Impressão da Estação."
+                        : "Não Foi Encontrada uma Impressora Windows no Servidor; use a Impressora desta Estação."}
                     </span>
                   </label>
                   <label className="grid min-w-0 gap-2 text-xs font-black text-[#40564a]">
