@@ -430,7 +430,7 @@ async function request<T>(path: string, init: RequestInit = {}, fetcher: typeof 
       authorization: `Bearer ${token}`,
       ...init.headers,
     },
-    signal: AbortSignal.timeout(8_000),
+    signal: AbortSignal.timeout(7_000),
   });
   const body = (await response.json().catch(() => null)) as T | { error?: string } | null;
   if (!response.ok) {

@@ -12,7 +12,7 @@ const jsreport = require("jsreport") as (configuration: Record<string, unknown>)
 const QRCode = require("qrcode") as { toDataURL: (text: string, options: Record<string, unknown>) => Promise<string> };
 
 let jsreportInstance: JsreportInstance | null = null;
-let pdfRenderingPromise: Promise<void> = Promise.resolve();
+let pdfRenderingPromise: Promise<void | unknown> = Promise.resolve();
 
 async function enqueuePdfRendering<T>(task: () => Promise<T>): Promise<T> {
   const taskPromise = pdfRenderingPromise.then(async () => {
@@ -22,7 +22,7 @@ async function enqueuePdfRendering<T>(task: () => Promise<T>): Promise<T> {
       throw e;
     }
   });
-  pdfRenderingPromise = taskPromise.catch(() => {});
+  pdfRenderingPromise = taskPromise.catch(() => {}) as Promise<void | unknown>;
   return taskPromise;
 }
 
@@ -89,11 +89,6 @@ export async function renderProductFinishedLabelPdf(label: ProductFinishedLabel,
     const report = await (await getJsreport()).render({ template: { recipe: "chrome-pdf", engine: "none", content: html, chrome: { printBackground: true, preferCSSPageSize: true } }, options: { preview: false } });
     if (Buffer.isBuffer(report.content)) return report.content;
     if (report.content instanceof Uint8Array) return Buffer.from(report.content);
-    const chunks: Buffer[] = [];
-    for await (const chunk of report.content) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-    return Buffer.concat(chunks);
-  });
-}
     const chunks: Buffer[] = [];
     for await (const chunk of report.content) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
     return Buffer.concat(chunks);
