@@ -255,7 +255,8 @@ export function ProcessLabelDialog({
                   Boolean(error) ||
                   !data ||
                   !valid ||
-                  previewPdf.isPending
+                  previewPdf.isPending ||
+                  directPrint.isPending
                 }
                 onClick={openPreview}
                 className="h-12 bg-[#177458] px-5 text-base font-black hover:bg-[#105f45]"

@@ -8,6 +8,19 @@ const jsreport = require("jsreport") as (configuration: Record<string, unknown>)
 const QRCode = require("qrcode") as { toDataURL: (text: string, options: Record<string, unknown>) => Promise<string> };
 
 let jsreportInstance: JsreportInstance | null = null;
+let pdfRenderingPromise: Promise<void> = Promise.resolve();
+
+async function enqueuePdfRendering<T>(task: () => Promise<T>): Promise<T> {
+  const taskPromise = pdfRenderingPromise.then(async () => {
+    try {
+      return await task();
+    } catch (e) {
+      throw e;
+    }
+  });
+  pdfRenderingPromise = taskPromise.catch(() => {});
+  return taskPromise;
+}
 
 function resolveChromiumExecutable() {
   const programFiles = process.env.PROGRAMFILES ?? "C:\\Program Files";
@@ -48,10 +61,11 @@ function formatDateTime() {
 }
 
 export async function renderProcessLabelPdf(label: ProcessLabel, input: { quantityPerPallet: number }) {
-  const qrPayload = `OP${label.operationCode}`;
-  const qrCode = await QRCode.toDataURL(qrPayload, { margin: 0, width: 330, errorCorrectionLevel: "M" });
-  const logo = label.companyLogoDataUri ? `<img class="logo" src="${label.companyLogoDataUri}" alt="Logo" />` : `<strong class="company-brand">${safe(label.companyName)}</strong>`;
-  const html = `<!doctype html><html><head><meta charset="utf-8"/><style>
+  return enqueuePdfRendering(async () => {
+    const qrPayload = `OP${label.operationCode}`;
+    const qrCode = await QRCode.toDataURL(qrPayload, { margin: 0, width: 330, errorCorrectionLevel: "M" });
+    const logo = label.companyLogoDataUri ? `<img class="logo" src="${label.companyLogoDataUri}" alt="Logo" />` : `<strong class="company-brand">${safe(label.companyName)}</strong>`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"/><style>
     @page { size: 145mm 210mm; margin: 0; }
     * { box-sizing: border-box; } html,body { margin:0; width:145mm; height:210mm; background:#fff; color:#000; font-family:Arial,Helvetica,sans-serif; }
     .page { position:relative; width:145mm; height:210mm; padding:40mm 5mm 5mm; overflow:hidden; }
@@ -76,15 +90,16 @@ export async function renderProcessLabelPdf(label: ProcessLabel, input: { quanti
   <section class="pallet">Quantidade por Palete: <span style="font-family:Arial,Helvetica,sans-serif;font-weight:400">${input.quantityPerPallet}</span></section>
   <section class="bottom"><div class="op"><span class="op-label">OP. (Lote):</span><span class="op-number">${safe(label.operationCode)}</span></div><div class="qr"><img src="${qrCode}" alt="${qrPayload}" /></div></section>
   </section><div class="page-number">Página 01</div></main></body></html>`;
-  const report = await (await getJsreport()).render({ template: { recipe: "chrome-pdf", engine: "none", content: html }, options: { preview: false } });
-  if (Buffer.isBuffer(report.content)) return report.content;
-  if (report.content instanceof Uint8Array) return Buffer.from(report.content);
+    const report = await (await getJsreport()).render({ template: { recipe: "chrome-pdf", engine: "none", content: html }, options: { preview: false } });
+    if (Buffer.isBuffer(report.content)) return report.content;
+    if (report.content instanceof Uint8Array) return Buffer.from(report.content);
 
-  const chunks: Buffer[] = [];
-  for await (const chunk of report.content) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  }
-  return Buffer.concat(chunks);
+    const chunks: Buffer[] = [];
+    for await (const chunk of report.content) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
+  });
 }
 
 function formatLabelDate(value: string | null) {
@@ -101,38 +116,40 @@ function formatQuantity(value: number | null | undefined) {
 }
 
 export async function renderProductFinishedLabelPdf(label: ProductFinishedLabel, input: { palletQuantity: number }) {
-  const totalPallets = Math.max(1, Math.min(999, Math.floor(input.palletQuantity)));
-  const qrPayload = String(label.productCode);
-  const qrCode = await QRCode.toDataURL(qrPayload, { margin: 0, width: 320, errorCorrectionLevel: "M" });
-  const logo = label.companyLogoDataUri ? `<img class="logo" src="${label.companyLogoDataUri}" alt="Logo" />` : `<strong class="company-brand">${safe(label.companyName)}</strong>`;
-  const pages = Array.from({ length: totalPallets }, (_, index) => {
-    const pallet = index + 1;
-    return `<main class="product-page"><section class="label"><header class="top"><div class="logo-wrap">${logo}</div><h1>Identificação de Produto</h1></header>
-      <section class="field legal"><p class="caption">Razão Social:</p><p class="value medium">${safe(label.customerLegalName)}</p></section>
-      <section class="field client"><p class="caption">Cliente:</p><p class="value large">${safe(label.customerName)}</p></section>
-      <section class="field reference"><p class="caption">Cód. Prod. Cliente / Referência:</p><p class="value reference-value">${safe(label.reference)}</p></section>
-      <section class="stats"><div class="field"><p class="caption">Produto:</p><p class="value stat-value">${safe(label.productCode)}-${safe(label.revision)}</p></div><div class="field"><p class="caption">Quantidade do Estoque:</p><p class="value stock-value">${safe(formatQuantity(label.stockQuantity))}</p></div><div class="field"><p class="caption">Quantidade por Palete:</p><p class="value stock-value">${safe(label.quantityPerPallet == null || label.quantityPerPallet <= 0 ? "—" : formatQuantity(label.quantityPerPallet))}</p></div><div class="field pallet"><p class="caption">Palete:</p><p class="value pallet-value">${pallet}/${totalPallets}</p></div></section>
-      <section class="details"><p><strong>Validade:</strong> 03 Anos</p><p><strong>Condições de Armazenamento:</strong> Em ambiente seco, ao abrigo de contato com água, em local ventilado, com proteção contra danos e insetos, com controle de pragas.</p></section>
-      <section class="inspection"><p class="caption inspection-title">Inspeção do Controle<br/>da Qualidade:</p><span class="check"></span><span class="check-label">Aprovado</span><span class="check"></span><span class="check-label">Quarentena</span><span class="check"></span><span class="check-label">Reprovado</span><span class="signature"></span><span class="signature-label">Responsável</span><img class="qr" src="${qrCode}" alt="${safe(qrPayload)}" /></section>
-      <section class="stock-out"><strong>Baixa do Estoque:</strong></section>
-      <section class="stock-fields"><div><strong>Data:</strong></div><div><strong>Quantidade:</strong></div><div><strong>Saldo:</strong></div></section>
-      <section class="bottom"><div><p class="caption">OP / (Lote):</p><p class="op-value">${safe(label.lot || label.operationCode)}</p></div><div><p class="caption">Fabricação:</p><p class="date-value">${safe(formatLabelDate(label.manufacturingDate))}</p></div></section>
-      <footer><span>${safe(label.internalMeasures)}</span><span>FOR-394 Rev: 01</span><span>Página ${String(pallet).padStart(2, "0")}</span></footer>
-    </section></main>`;
-  }).join("");
-  const html = `<!doctype html><html><head><meta charset="utf-8"/><style>
-    @page { size: A4 portrait; margin: 0; } * { box-sizing: border-box; } html, body { margin: 0; background: #fff; color:#000; font-family: Arial, Helvetica, sans-serif; }
-    .product-page { width:210mm; height:297mm; padding:55mm 5mm 5mm; page-break-after:always; overflow:hidden; } .product-page:last-child { page-break-after:auto; }
-    .label { width:200mm; height:226mm; border:.35mm solid #000; display:grid; grid-template-rows:18mm 16mm 23mm 31mm 27mm 20mm 18mm 6mm 21mm 40mm 6mm; overflow:hidden; }
-    .top { display:grid; grid-template-columns:48mm 1fr; align-items:center; border-bottom:.35mm solid #000; padding:2mm 3mm; } .logo-wrap { display:flex; align-items:center; } .logo { max-height:12mm; max-width:42mm; object-fit:contain; object-position:left center; } .company-brand { font:700 14pt Arial,Helvetica,sans-serif; } h1 { margin:0; text-align:center; font:900 26pt "Arial Black",Arial,sans-serif; line-height:1; }
-    .field { min-width:0; overflow:hidden; padding:1.1mm 1.4mm; border-bottom:.35mm solid #000; } .caption { margin:0; font-size:10pt; font-weight:700; line-height:1.05; } .value { margin:1mm 0 0; font-weight:700; line-height:1.03; overflow-wrap:anywhere; } .medium { font-size:24pt; } .large { font-size:42pt; } .reference-value { font-size:48pt; white-space:nowrap; } .stats { display:grid; grid-template-columns:1.2fr 1.15fr 1.05fr .72fr; } .stats .field { border-right:.35mm solid #000; border-bottom:.35mm solid #000; } .stats .field:last-child { border-right:0; } .stat-value { font:900 28pt/1 "Arial Black",Arial,sans-serif; text-align:center; white-space:nowrap; } .stock-value { font:900 48pt/.92 "Arial Black",Arial,sans-serif; text-align:center; white-space:nowrap; } .pallet-value { font:900 36pt/.95 "Arial Black",Arial,sans-serif; text-align:center; }
-    .details { border-bottom:.35mm solid #000; padding:1.3mm; font-size:10pt; line-height:1.08; } .details p { margin:.25mm 0; } .inspection { position:relative; display:grid; grid-template-columns:32mm 5mm 27mm 5mm 27mm 5mm 27mm 1fr; align-items:center; gap:1mm; padding:1mm 1.4mm; border-bottom:.35mm solid #000; } .inspection-title { font-size:10pt; } .check { height:4mm; width:4mm; border:.35mm solid #000; } .check-label { font-size:10pt; font-weight:700; } .signature { position:absolute; left:135mm; right:23mm; bottom:4mm; border-bottom:.35mm solid #000; } .signature-label { position:absolute; right:22mm; bottom:1mm; width:40mm; text-align:center; font-size:8pt; font-weight:700; } .qr { position:absolute; right:1mm; top:1mm; width:18mm; height:18mm; }
-    .stock-out { padding:1mm 1.4mm; border-bottom:.35mm solid #000; font-size:10pt; } .stock-fields { display:grid; grid-template-columns:1fr 1fr 1fr; border-bottom:.35mm solid #000; } .stock-fields div { padding:1.5mm; border-right:.35mm solid #000; font-size:10pt; } .stock-fields div:last-child { border-right:0; } .bottom { display:grid; grid-template-columns:1fr 1.15fr; } .bottom div { padding:1.5mm; border-right:.35mm solid #000; overflow:hidden; } .bottom div:last-child { border-right:0; } .op-value { margin:2mm 0 0; font:900 68pt/.9 "Arial Black",Arial,sans-serif; letter-spacing:-1mm; } .date-value { margin:5mm 0 0; font:900 50pt/.92 "Arial Black",Arial,sans-serif; white-space:nowrap; } footer { display:flex; justify-content:space-between; align-items:center; padding:0 2mm; border-top:.25mm solid #000; font-size:5.5pt; color:#333; }
-  </style></head><body>${pages}</body></html>`;
-  const report = await (await getJsreport()).render({ template: { recipe: "chrome-pdf", engine: "none", content: html, chrome: { printBackground: true, preferCSSPageSize: true } }, options: { preview: false } });
-  if (Buffer.isBuffer(report.content)) return report.content;
-  if (report.content instanceof Uint8Array) return Buffer.from(report.content);
-  const chunks: Buffer[] = [];
-  for await (const chunk of report.content) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  return Buffer.concat(chunks);
+  return enqueuePdfRendering(async () => {
+    const totalPallets = Math.max(1, Math.min(999, Math.floor(input.palletQuantity)));
+    const qrPayload = String(label.productCode);
+    const qrCode = await QRCode.toDataURL(qrPayload, { margin: 0, width: 320, errorCorrectionLevel: "M" });
+    const logo = label.companyLogoDataUri ? `<img class="logo" src="${label.companyLogoDataUri}" alt="Logo" />` : `<strong class="company-brand">${safe(label.companyName)}</strong>`;
+    const pages = Array.from({ length: totalPallets }, (_, index) => {
+      const pallet = index + 1;
+      return `<main class="product-page"><section class="label"><header class="top"><div class="logo-wrap">${logo}</div><h1>Identificação de Produto</h1></header>
+        <section class="field legal"><p class="caption">Razão Social:</p><p class="value medium">${safe(label.customerLegalName)}</p></section>
+        <section class="field client"><p class="caption">Cliente:</p><p class="value large">${safe(label.customerName)}</p></section>
+        <section class="field reference"><p class="caption">Cód. Prod. Cliente / Referência:</p><p class="value reference-value">${safe(label.reference)}</p></section>
+        <section class="stats"><div class="field"><p class="caption">Produto:</p><p class="value stat-value">${safe(label.productCode)}-${safe(label.revision)}</p></div><div class="field"><p class="caption">Quantidade do Estoque:</p><p class="value stock-value">${safe(formatQuantity(label.stockQuantity))}</p></div><div class="field"><p class="caption">Quantidade por Palete:</p><p class="value stock-value">${safe(label.quantityPerPallet == null || label.quantityPerPallet <= 0 ? "—" : formatQuantity(label.quantityPerPallet))}</p></div><div class="field pallet"><p class="caption">Palete:</p><p class="value pallet-value">${pallet}/${totalPallets}</p></div></section>
+        <section class="details"><p><strong>Validade:</strong> 03 Anos</p><p><strong>Condições de Armazenamento:</strong> Em ambiente seco, ao abrigo de contato com água, em local ventilado, com proteção contra danos e insetos, com controle de pragas.</p></section>
+        <section class="inspection"><p class="caption inspection-title">Inspeção do Controle<br/>da Qualidade:</p><span class="check"></span><span class="check-label">Aprovado</span><span class="check"></span><span class="check-label">Quarentena</span><span class="check"></span><span class="check-label">Reprovado</span><span class="signature"></span><span class="signature-label">Responsável</span><img class="qr" src="${qrCode}" alt="${safe(qrPayload)}" /></section>
+        <section class="stock-out"><strong>Baixa do Estoque:</strong></section>
+        <section class="stock-fields"><div><strong>Data:</strong></div><div><strong>Quantidade:</strong></div><div><strong>Saldo:</strong></div></section>
+        <section class="bottom"><div><p class="caption">OP / (Lote):</p><p class="op-value">${safe(label.lot || label.operationCode)}</p></div><div><p class="caption">Fabricação:</p><p class="date-value">${safe(formatLabelDate(label.manufacturingDate))}</p></div></section>
+        <footer><span>${safe(label.internalMeasures)}</span><span>FOR-394 Rev: 01</span><span>Página ${String(pallet).padStart(2, "0")}</span></footer>
+      </section></main>`;
+    }).join("");
+    const html = `<!doctype html><html><head><meta charset="utf-8"/><style>
+      @page { size: A4 portrait; margin: 0; } * { box-sizing: border-box; } html, body { margin: 0; background: #fff; color:#000; font-family: Arial, Helvetica, sans-serif; }
+      .product-page { width:210mm; height:297mm; padding:55mm 5mm 5mm; page-break-after:always; overflow:hidden; } .product-page:last-child { page-break-after:auto; }
+      .label { width:200mm; height:226mm; border:.35mm solid #000; display:grid; grid-template-rows:18mm 16mm 23mm 31mm 27mm 20mm 18mm 6mm 21mm 40mm 6mm; overflow:hidden; }
+      .top { display:grid; grid-template-columns:48mm 1fr; align-items:center; border-bottom:.35mm solid #000; padding:2mm 3mm; } .logo-wrap { display:flex; align-items:center; } .logo { max-height:12mm; max-width:42mm; object-fit:contain; object-position:left center; } .company-brand { font:700 14pt Arial,Helvetica,sans-serif; } h1 { margin:0; text-align:center; font:900 26pt "Arial Black",Arial,sans-serif; line-height:1; }
+      .field { min-width:0; overflow:hidden; padding:1.1mm 1.4mm; border-bottom:.35mm solid #000; } .caption { margin:0; font-size:10pt; font-weight:700; line-height:1.05; } .value { margin:1mm 0 0; font-weight:700; line-height:1.03; overflow-wrap:anywhere; } .medium { font-size:24pt; } .large { font-size:42pt; } .reference-value { font-size:48pt; white-space:nowrap; } .stats { display:grid; grid-template-columns:1.2fr 1.15fr 1.05fr .72fr; } .stats .field { border-right:.35mm solid #000; border-bottom:.35mm solid #000; } .stats .field:last-child { border-right:0; } .stat-value { font:900 28pt/1 "Arial Black",Arial,sans-serif; text-align:center; white-space:nowrap; } .stock-value { font:900 48pt/.92 "Arial Black",Arial,sans-serif; text-align:center; white-space:nowrap; } .pallet-value { font:900 36pt/.95 "Arial Black",Arial,sans-serif; text-align:center; }
+      .details { border-bottom:.35mm solid #000; padding:1.3mm; font-size:10pt; line-height:1.08; } .details p { margin:.25mm 0; } .inspection { position:relative; display:grid; grid-template-columns:32mm 5mm 27mm 5mm 27mm 5mm 27mm 1fr; align-items:center; gap:1mm; padding:1mm 1.4mm; border-bottom:.35mm solid #000; } .inspection-title { font-size:10pt; } .check { height:4mm; width:4mm; border:.35mm solid #000; } .check-label { font-size:10pt; font-weight:700; } .signature { position:absolute; left:135mm; right:23mm; bottom:4mm; border-bottom:.35mm solid #000; } .signature-label { position:absolute; right:22mm; bottom:1mm; width:40mm; text-align:center; font-size:8pt; font-weight:700; } .qr { position:absolute; right:1mm; top:1mm; width:18mm; height:18mm; }
+      .stock-out { padding:1mm 1.4mm; border-bottom:.35mm solid #000; font-size:10pt; } .stock-fields { display:grid; grid-template-columns:1fr 1fr 1fr; border-bottom:.35mm solid #000; } .stock-fields div { padding:1.5mm; border-right:.35mm solid #000; font-size:10pt; } .stock-fields div:last-child { border-right:0; } .bottom { display:grid; grid-template-columns:1fr 1.15fr; } .bottom div { padding:1.5mm; border-right:.35mm solid #000; overflow:hidden; } .bottom div:last-child { border-right:0; } .op-value { margin:2mm 0 0; font:900 68pt/.9 "Arial Black",Arial,sans-serif; letter-spacing:-1mm; } .date-value { margin:5mm 0 0; font:900 50pt/.92 "Arial Black",Arial,sans-serif; white-space:nowrap; } footer { display:flex; justify-content:space-between; align-items:center; padding:0 2mm; border-top:.25mm solid #000; font-size:5.5pt; color:#333; }
+    </style></head><body>${pages}</body></html>`;
+    const report = await (await getJsreport()).render({ template: { recipe: "chrome-pdf", engine: "none", content: html, chrome: { printBackground: true, preferCSSPageSize: true } }, options: { preview: false } });
+    if (Buffer.isBuffer(report.content)) return report.content;
+    if (report.content instanceof Uint8Array) return Buffer.from(report.content);
+    const chunks: Buffer[] = [];
+    for await (const chunk of report.content) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    return Buffer.concat(chunks);
+  });
 }
