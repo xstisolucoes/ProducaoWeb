@@ -47,6 +47,7 @@ export function ProcessLabelDialog({
   mpCodigo: number;
 }) {
   const [preview, setPreview] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false); // Novo estado
   const [previewPdfUrl, setPreviewPdfUrl] = useState("");
   const [parameters, setParameters] = useState<PrintParameters>({
     printer: "",
@@ -100,6 +101,8 @@ export function ProcessLabelDialog({
     }
   };
   const print = async () => {
+    if (isPrinting || directPrint.isPending) return;
+    setIsPrinting(true);
     try {
       if (parameters.printer === STATION_PRINTER_OPTION) {
         if (!previewPdfUrl)
@@ -128,6 +131,8 @@ export function ProcessLabelDialog({
           ? reason.message
           : "Não Foi Possível Enviar a Etiqueta à Impressora."
       );
+    } finally {
+      setIsPrinting(false);
     }
   };
 
@@ -300,12 +305,12 @@ export function ProcessLabelDialog({
                   Voltar
                 </Button>
                 <Button
-                  disabled={directPrint.isPending}
+                  disabled={directPrint.isPending || isPrinting}
                   onClick={print}
                   className="h-10 bg-[#177458] font-black hover:bg-[#105f45]"
                 >
                   <Printer className="mr-1.5 h-4 w-4" />
-                  {directPrint.isPending ? "Enviando…" : "Imprimir"}
+                  {directPrint.isPending || isPrinting ? "Enviando…" : "Imprimir"}
                 </Button>
               </div>
             </div>
