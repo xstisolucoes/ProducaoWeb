@@ -1,6 +1,6 @@
-import { COOKIE_NAME } from "@shared/const";
-import { getSessionCookieOptions } from "./_core/cookies";
-import { systemRouter } from "./_core/systemRouter";
+import { COOKIE_NAME } from "../shared/const";
+import { getSessionCookieOptions } from "../shared/_core/cookies";
+import { systemRouter } from "../shared/_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { localAuthRouter } from "./routers/localAuth";
 import { participantsRouter } from "./routers/participants";
