@@ -13,7 +13,7 @@ import { serveStatic } from "./vite";
  * Verifica se a porta está disponível, permitindo reuse do socket
  */
 function isPortAvailable(port: number): Promise<boolean> {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const server = net.createServer();
     server.once("listening", () => {
       server.close(() => resolve(true));
@@ -22,10 +22,7 @@ function isPortAvailable(port: number): Promise<boolean> {
       if (err.code === "EADDRINUSE") {
         resolve(false);
       } else {
-        console.error(
-          `[PORT CHECK] Erro ao verificar porta ${port}:`,
-          err.message
-        );
+        console.error(`[PORT CHECK] Erro ao verificar porta ${port}:`, err.message);
         resolve(false);
       }
     });
@@ -34,19 +31,13 @@ function isPortAvailable(port: number): Promise<boolean> {
   });
 }
 
-/**
- * Encontra uma porta disponível a partir do porta inicial especificada
- * Tenta até 20 portas consecutivas
- */
 async function findAvailablePort(startPort: number = 3000): Promise<number> {
   for (let port = startPort; port < startPort + 20; port++) {
     if (await isPortAvailable(port)) {
       console.log(`[PORT CHECK] Porta ${port} está disponível`);
       return port;
     } else {
-      console.log(
-        `[PORT CHECK] Porta ${port} está em uso, tentando a próxima...`
-      );
+      console.log(`[PORT CHECK] Porta ${port} está em uso, tentando a próxima...`);
     }
   }
   throw new Error(`No available port found starting from ${startPort}`);
@@ -54,10 +45,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 
 async function startServer() {
   console.log(`[${new Date().toISOString()}] [DEBUG] Iniciando startServer...`);
-  console.log(
-    `[${new Date().toISOString()}] [DEBUG] NODE_ENV:`,
-    process.env.NODE_ENV || "development"
-  );
+  console.log(`[${new Date().toISOString()}] [DEBUG] NODE_ENV:`, process.env.NODE_ENV || "development");
   console.log(`[${new Date().toISOString()}] [DEBUG] PID:`, process.pid);
 
   const app = express();
@@ -93,9 +81,7 @@ async function startServer() {
     console.log(`[${new Date().toISOString()}] [DEBUG] Vite setup concluído`);
   } else {
     serveStatic(app, express);
-    console.log(
-      `[${new Date().toISOString()}] [DEBUG] Static serving configurado`
-    );
+    console.log(`[${new Date().toISOString()}] [DEBUG] Static serving configurado`);
   }
 
   const preferredPort = parseInt(process.env.PORT || "3000");
@@ -107,9 +93,7 @@ async function startServer() {
   const shutdown = (signal: string) => {
     if (shutdownStarted) return;
     shutdownStarted = true;
-    console.log(
-      `[${new Date().toISOString()}] Recebido sinal ${signal} - iniciando shutdown graceful...`
-    );
+    console.log(`[${new Date().toISOString()}] Recebido sinal ${signal} - iniciando shutdown graceful...`);
 
     server.close(() => {
       console.log(`[${new Date().toISOString()}] Servidor HTTP fechado`);
@@ -118,9 +102,7 @@ async function startServer() {
 
     // Force shutdown após 10 segundos
     setTimeout(() => {
-      console.error(
-        `[${new Date().toISOString()}] Timeout de shutdown - forçando saída`
-      );
+      console.error(`[${new Date().toISOString()}] Timeout de shutdown - forçando saída`);
       process.exit(1);
     }, 10000);
   };
@@ -129,14 +111,12 @@ async function startServer() {
   process.on("SIGINT", () => shutdown("SIGINT"));
   process.on("SIGQUIT", () => shutdown("SIGQUIT"));
 
-  server.listen(port, host, () => {
-    console.log(
-      `[${new Date().toISOString()}] Server running on http://${host}:${port}/`
-    );
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`[${new Date().toISOString()}] Server running on http://0.0.0.0:${port}/`);
   });
 }
 
-startServer().catch(err => {
+startServer().catch((err) => {
   console.error(`[${new Date().toISOString()}] FATAL ERROR:`, err);
   process.exit(1);
 });

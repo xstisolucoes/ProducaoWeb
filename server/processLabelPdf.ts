@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import {
   buildProcessLabelHtml,
   buildProductFinishedLabelHtml,
-} from "@shared/labelHtml";
+} from "../shared/labelHtml";
 import type { ProcessLabel, ProductFinishedLabel } from "./firebirdProxy";
 
 const require = createRequire(import.meta.url);
