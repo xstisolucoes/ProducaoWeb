@@ -1,9 +1,8 @@
-import { router, publicProcedure } from "./_core/trpc";
+import { initTRPC } from "@trpc/server";
+import type { TrpcContext } from "./context";
 
-export const appRouter = router({
-  health: publicProcedure.query(() => ({
-    status: "ok",
-    timestamp: new Date().toISOString()
-  })),
-  hello: publicProcedure.query(() => "Hello World"),
-});
+const t = initTRPC.context<TrpcContext>().create();
+
+export const router = t.router;
+export const publicProcedure = t.procedure;
+export const createTRPCRouter = t.router;

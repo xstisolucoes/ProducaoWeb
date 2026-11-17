@@ -7,22 +7,41 @@ import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
-import { serveStatic, setupVite } from "./vite";
+import { serveStatic } from "./vite";
 
+/**
+ * Verifica se a porta está disponível, permitindo reuse do socket
+ */
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
     const server = net.createServer();
-    server.listen(port, () => {
+    server.once("listening", () => {
       server.close(() => resolve(true));
     });
-    server.on("error", () => resolve(false));
+    server.once("error", (err: NodeJS.ErrnoException) => {
+      if (err.code === "EADDRINUSE") {
+        resolve(false);
+      } else {
+        console.error(`[PORT CHECK] Erro ao verificar porta ${port}:`, err.message);
+        resolve(false);
+      }
+    });
+    // Habilita SO_REUSEADDR para evitar TIME_WAIT
+    server.listen({ port, host: "0.0.0.0", reuseAddress: true });
   });
 }
 
+/**
+ * Encontra uma porta disponível a partir do porta inicial especificada
+ * Tenta até 20 portas consecutivas
+ */
 async function findAvailablePort(startPort: number = 3000): Promise<number> {
   for (let port = startPort; port < startPort + 20; port++) {
     if (await isPortAvailable(port)) {
+      console.log(`[PORT CHECK] Porta ${port} está disponível`);
       return port;
+    } else {
+      console.log(`[PORT CHECK] Porta ${port} está em uso, tentando a próxima...`);
     }
   }
   throw new Error(`No available port found starting from ${startPort}`);
@@ -60,10 +79,12 @@ async function startServer() {
 
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
+    // Importação dinâmica para Vite apenas em desenvolvimento
+    const { setupVite } = await import("./vite");
     await setupVite(app, server);
     console.log(`[${new Date().toISOString()}] [DEBUG] Vite setup concluído`);
   } else {
-    serveStatic(app);
+    serveStatic(app, express);
     console.log(`[${new Date().toISOString()}] [DEBUG] Static serving configurado`);
   }
 
