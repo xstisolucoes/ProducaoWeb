@@ -54,7 +54,7 @@ const pool = Firebird.pool(40, {
   encoding: firebirdEncoding,
   connectTimeout: 5000,
   wireCrypt: Firebird.WIRE_CRYPT_ENABLE,
-  idleTimeoutMillis: 30000,
+  idleTimeoutMillis: Number(process.env.FIREBIRD_IDLE_TIMEOUT_MS ?? 60_000),
 });
 
 // Firebird lock waits block forever by default (node-firebird starts every
@@ -168,7 +168,11 @@ async function readBlobImageDataUri(blob, label) {
   if (Buffer.isBuffer(blob)) return toDataUri(blob);
   if (typeof blob !== "function") return { dataUri: null, error: `Não foi possível ler o BLOB de ${label}.` };
   return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      resolve({ dataUri: null, error: `Tempo esgotado ao ler o BLOB de ${label}.` });
+    }, 10_000);
     blob((error, _name, stream) => {
+      clearTimeout(timeout);
       if (error || !stream) return resolve({ dataUri: null, error: `Não foi possível ler o BLOB de ${label}.` });
       const chunks = [];
       stream.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
@@ -2283,6 +2287,17 @@ app.use((error, _req, res, _next) => {
 const server = app.listen(proxyPort, proxyHost, () => {
   console.log(`Proxy Firebird local ativo em http://${proxyHost}:${proxyPort} · build ${proxyBuild}`);
 });
+
+// Monitor connection pool every 30 seconds
+setInterval(() => {
+  const active = pool.activeCount;
+  const idle = pool.idleCount;
+  const waiting = pool.waitingCount;
+  const total = pool.totalCount;
+  if (active > 0 || waiting > 0 || total > 20) {
+    console.log(`[Pool] active=${active} idle=${idle} waiting=${waiting} total=${total}`);
+  }
+}, 30_000);
 
 for (const signal of ["SIGINT", "SIGTERM"]) {
   process.on(signal, async () => {

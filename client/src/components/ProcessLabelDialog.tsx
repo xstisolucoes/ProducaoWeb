@@ -13,6 +13,10 @@ import {
   printWithStationDialog,
   STATION_PRINTER_OPTION,
 } from "@/lib/stationPrint";
+import {
+  generateBrowserProcessLabelHtml,
+  printHtmlWithBrowserDialog,
+} from "@/lib/browserLabelPrint";
 import type { ProcessLabel } from "../../../server/firebirdProxy";
 import { Printer, Tag } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -47,6 +51,8 @@ export function ProcessLabelDialog({
   mpCodigo: number;
 }) {
   const [preview, setPreview] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState("");
   const [previewPdfUrl, setPreviewPdfUrl] = useState("");
   const [parameters, setParameters] = useState<PrintParameters>({
     printer: "",
@@ -63,6 +69,7 @@ export function ProcessLabelDialog({
   useEffect(() => {
     if (!open) {
       setPreview(false);
+      setPreviewHtml("");
       setPreviewPdfUrl("");
       setParameters({ printer: "", quantityPerPallet: "", copies: "1" });
     }
@@ -83,30 +90,36 @@ export function ProcessLabelDialog({
       return toast.error(
         "Informe a Impressora, a Quantidade por Palete e as Cópias."
       );
+    if (!data)
+      return toast.error("Dados da etiqueta ainda não carregados.");
+
     try {
-      const result = await previewPdf.mutateAsync({
-        opCodigo,
-        mpCodigo,
-        quantityPerPallet: Number(parameters.quantityPerPallet),
-      });
-      setPreviewPdfUrl(result.pdfDataUrl);
+      // Geração instantânea e nativa no browser (sem sobrecarregar o servidor nem o Raspberry)
+      const html = await generateBrowserProcessLabelHtml(
+        data,
+        Number(parameters.quantityPerPallet)
+      );
+      setPreviewHtml(html);
       setPreview(true);
     } catch (reason) {
       toast.error(
         reason instanceof Error
           ? reason.message
-          : "Não Foi Possível Gerar a Prévia PDF."
+          : "Não Foi Possível Gerar a Prévia da Etiqueta."
       );
     }
   };
   const print = async () => {
+    if (isPrinting || directPrint.isPending) return;
+    setIsPrinting(true);
     try {
       if (parameters.printer === STATION_PRINTER_OPTION) {
-        if (!previewPdfUrl)
+        if (!previewHtml)
           return toast.error(
             "Gere a prévia antes de enviar à impressora da estação."
           );
-        await printWithStationDialog(previewPdfUrl);
+        // Impressão nativa ultraleve via HTML (Chrome/Edge/Raspberry Chromium)
+        await printHtmlWithBrowserDialog(previewHtml);
         toast.success("Etiqueta Enviada à Impressora da Estação", {
           description: `${parameters.copies} Cópia(s) Enviada(s).`,
         });
@@ -128,6 +141,8 @@ export function ProcessLabelDialog({
           ? reason.message
           : "Não Foi Possível Enviar a Etiqueta à Impressora."
       );
+    } finally {
+      setIsPrinting(false);
     }
   };
 
@@ -255,7 +270,8 @@ export function ProcessLabelDialog({
                   Boolean(error) ||
                   !data ||
                   !valid ||
-                  previewPdf.isPending
+                  previewPdf.isPending ||
+                  directPrint.isPending
                 }
                 onClick={openPreview}
                 className="h-12 bg-[#177458] px-5 text-base font-black hover:bg-[#105f45]"
@@ -299,18 +315,24 @@ export function ProcessLabelDialog({
                   Voltar
                 </Button>
                 <Button
-                  disabled={directPrint.isPending}
+                  disabled={directPrint.isPending || isPrinting}
                   onClick={print}
                   className="h-10 bg-[#177458] font-black hover:bg-[#105f45]"
                 >
                   <Printer className="mr-1.5 h-4 w-4" />
-                  {directPrint.isPending ? "Enviando…" : "Imprimir"}
+                  {directPrint.isPending || isPrinting ? "Enviando…" : "Imprimir"}
                 </Button>
               </div>
             </div>
           </DialogHeader>
           <div className="min-h-0 flex-1 overflow-auto bg-[#e7ede8] p-5">
-            {previewPdfUrl ? (
+            {previewHtml ? (
+              <iframe
+                title="Prévia da Etiqueta de Processo"
+                srcDoc={previewHtml}
+                className="mx-auto h-[78dvh] w-full max-w-[720px] border-0 bg-white shadow-xl"
+              />
+            ) : previewPdfUrl ? (
               <iframe
                 title="Prévia PDF da Etiqueta de Processo"
                 src={previewPdfUrl}
