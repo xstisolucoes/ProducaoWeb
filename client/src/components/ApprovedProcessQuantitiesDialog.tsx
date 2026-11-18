@@ -1,8 +1,4 @@
-import {
-  SortableGridButton,
-  StatusPill,
-  useGridSort,
-} from "@/components/ProductionPrimitives";
+import { SortableHeader, useGridSort } from "@/components/ProductionPrimitives";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, CheckCircle2 } from "lucide-react";
 
 type ApprovedProcessQuantity = {
   processGroup: number | null;
@@ -19,6 +15,12 @@ type ApprovedProcessQuantity = {
   approvedQuantity: number | null;
   status: string | null;
 };
+
+function value(input: string | number | null | undefined) {
+  return input === null || input === undefined || input === ""
+    ? "—"
+    : String(input);
+}
 
 export function ApprovedProcessQuantitiesDialog({
   open,
@@ -33,19 +35,48 @@ export function ApprovedProcessQuantitiesDialog({
   loading: boolean;
   error: { message: string } | null;
 }) {
+  const totalApproved =
+    data?.reduce((total, item) => total + (item.approvedQuantity ?? 0), 0) ?? 0;
   const { sortedItems, sortKey, sortDirection, toggleSort } = useGridSort(data);
+  const header = (
+    label: string,
+    column: keyof ApprovedProcessQuantity,
+    alignment = ""
+  ) => (
+    <SortableHeader
+      label={label}
+      column={column}
+      sortKey={sortKey}
+      sortDirection={sortDirection}
+      onSort={key => toggleSort(key as keyof ApprovedProcessQuantity & string)}
+      className={alignment}
+    />
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="theme-surface !flex !w-[calc(100vw-1rem)] !max-w-4xl !flex-col !overflow-hidden border-2 border-[#d5b85f] bg-[#fffdf6] p-0 shadow-2xl sm:!w-[calc(100vw-2rem)]">
         <DialogHeader className="border-b-2 border-[#ead69c] bg-gradient-to-r from-[#fff6d9] via-[#f5fbf3] to-white px-5 py-4 sm:px-6">
-          <DialogTitle className="flex items-center gap-2 text-2xl font-black text-[#3f513a]">
-            <BarChart3 className="h-6 w-6 text-[#b88014]" />
-            Quantidades Aprovadas
-          </DialogTitle>
-          <DialogDescription className="mt-1 text-sm font-bold text-[#697a67]">
-            Histórico Consolidado da OP por Grupo de Processo, Arranjo e
-            Situação.
-          </DialogDescription>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <DialogTitle className="flex items-center gap-2 text-2xl font-black text-[#3f513a]">
+                <BarChart3 className="h-6 w-6 text-[#b88014]" />
+                Quantidades Aprovadas
+              </DialogTitle>
+              <DialogDescription className="mt-1 text-sm font-bold text-[#697a67]">
+                Histórico Consolidado da OP por Grupo de Processo, Arranjo e
+                Situação.
+              </DialogDescription>
+            </div>
+            <div className="reservation-total rounded-xl border px-4 py-2 text-right">
+              <p className="text-[12px] font-black tracking-[.14em]">
+                Total Aprovado
+              </p>
+              <p className="mt-1 font-mono text-2xl font-black">
+                {totalApproved}
+              </p>
+            </div>
+          </div>
         </DialogHeader>
         <div className="w-full bg-[#fffdf6] p-4 sm:p-6">
           {loading ? (
@@ -62,69 +93,48 @@ export function ApprovedProcessQuantitiesDialog({
             </p>
           ) : (
             <div className="w-full overflow-x-auto rounded-xl border-2 border-[#dfe7df] bg-white">
-              <div className="min-w-[650px]">
-                <div className="theme-grid-header grid grid-cols-[1.1fr_1.2fr_1fr_1fr] border-b-2 border-[#e0c976] bg-[#fff2c9] px-4 py-3 font-['Tahoma'] text-12px font-black tracking-[.12em] text-[#705719]">
-                  <SortableGridButton
-                    label="Processo"
-                    column="processGroup"
-                    sortKey={sortKey}
-                    sortDirection={sortDirection}
-                    onSort={key => toggleSort(key as never)}
-
-                    // "theme-grid-header sticky top-0 z-10 border-b-2 border-[#e0c976] bg-[#fff2c9] font-['Tahoma'] text-xs font-black ''tracking-[.12em] text-[#705719]
-                  />
-                  <SortableGridButton
-                    label="Arranjo"
-                    column="arrangement"
-                    sortKey={sortKey}
-                    sortDirection={sortDirection}
-                    onSort={key => toggleSort(key as never)}
-                    className="justify-self-center"
-                  />
-                  <SortableGridButton
-                    label="Q. Aprovada"
-                    column="approvedQuantity"
-                    sortKey={sortKey}
-                    sortDirection={sortDirection}
-                    onSort={key => toggleSort(key as never)}
-                    className="justify-self-center"
-                  />
-                  <SortableGridButton
-                    label="Status"
-                    column="status"
-                    sortKey={sortKey}
-                    sortDirection={sortDirection}
-                    onSort={key => toggleSort(key as never)}
-                    className="justify-self-center"
-                  />
-                </div>
-                {sortedItems.map((row, index) => (
-                  <div
-                    key={`${row.processGroup}-${row.arrangement}-${row.status}-${index}`}
-                    className={`theme-grid-row grid grid-cols-[1.1fr_1.2fr_1fr_1fr] items-center border-b border-[#edf0ea] px-4 py-3 ${index % 2 ? "bg-[#fbfdfb]" : "bg-white"}`}
-                  >
-                    <span className="font-bold text-[#355044]">
-                      {row.processGroup ?? "—"}
-                    </span>
-                    <span className="text-center font-mono font-bold text-[#56685f]">
-                      {row.arrangement || "—"}
-                    </span>
-                    <span className="text-center font-mono text-lg font-black text-[#177458]">
-                      {row.approvedQuantity ?? 0}
-                    </span>
-                    <span className="justify-self-center">
-                      <StatusPill status={row.status} />
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <table className="w-full min-w-[650px] text-left text-base">
+                <thead className="theme-grid-header sticky top-0 z-10 border-b-2 border-[#e0c976] bg-[#fff2c9] font-['Tahoma'] text-xs font-black tracking-[.12em] text-[#705719]">
+                  <tr className="justify-self-center">
+                    {header("Processo", "processGroup")}
+                    {header("Arranjo", "arrangement")}
+                    {header("Q. Aprovada", "approvedQuantity", "text-center")}
+                    {header("Status", "status", "text-center")}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedItems.map((row, index) => (
+                    <tr
+                      key={`${row.processGroup}-${row.arrangement}-${row.status}-${index}`}
+                      className={`theme-grid-row ${index % 2 ? "bg-[#fbfdfb]" : "bg-white"}`}
+                    >
+                      <td className="px-4 py-3 font-mono font-bold text-[#355044]">
+                        {value(row.processGroup)}
+                      </td>
+                      <td className="px-4 py-3 font-mono font-bold text-[#56685f]">
+                        {value(row.arrangement)}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-lg font-black text-[#177458] text-center">
+                        {row.approvedQuantity ?? 0}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {row.status ?? "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
-        <div className="flex w-full justify-end border-t border-[#e7ebdf] bg-[#fffdf6] px-5 py-4">
+        <div className="flex w-full items-center justify-between border-t border-[#e7ebdf] bg-[#fffdf6] px-5 py-4">
+          <p className="approved-help flex items-center gap-2 text-sm font-bold">
+            <CheckCircle2 className="h-5 w-5" />A tabela exibe quantidades
+            aprovadas consolidadas por processo e arranjo.
+          </p>
           <Button
             onClick={() => onOpenChange(false)}
-            className="h-12 rounded-lg bg-[#cf3f3f] px-6 text-base font-black text-white hover:bg-[#ad2e2e]"
+            className="h-12 rounded-lg bg-[#cf3f3f] px-7 text-base font-black text-white hover:bg-[#ad2e2e]"
           >
             Fechar
           </Button>

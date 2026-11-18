@@ -95,7 +95,8 @@ export function ProductReservationDialog({
               Não há reserva com saldo para esta OP.
             </p>
           ) : (
-            <div className="w-full overflow-auto rounded-xl border-2 border-[#dfe7df] bg-white">
+            // <div className="w-full overflow-auto rounded-xl border-2 border-[#dfe7df] bg-white">
+            <div className="w-full overflow-x-auto rounded-xl border-2 border-[#dfe7df] bg-white">
               <table className="w-full min-w-[1080px] text-left text-base">
                 <thead className="theme-grid-header sticky top-0 z-10 border-b-2 border-[#e0c976] bg-[#fff2c9] font-['Tahoma'] text-xs font-black ''tracking-[.12em] text-[#705719]">
                   <tr className="justify-self-center">

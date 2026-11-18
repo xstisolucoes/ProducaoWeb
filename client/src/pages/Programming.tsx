@@ -271,7 +271,7 @@ export default function Programming() {
   const pointingMachine =
     operator && isApontamentoMachineGroup(machine?.groupDescription);
   const programmingLimit =
-    qualityRelease || (operator && !manualPointing) ? 8 : 7;
+    qualityRelease || (operator && manualPointing) ? 8 : 6;
   const operationalStatusFilter =
     manualPointing || coladeiraMachine
       ? statusFilter
@@ -1071,7 +1071,7 @@ export default function Programming() {
           {programmer ? (
             <>
               <div className="min-w-0 flex-1">
-                <label className="mb-1 text-[12px] font-['Tahoma] ''tracking-[.14em] text-[#1d5c47]">
+                <label className="mb-1 text-[14px] font-['Tahoma] ''tracking-[.14em] text-[#1d5c47]">
                   Máquina
                 </label>
                 <button
@@ -1083,7 +1083,7 @@ export default function Programming() {
                 </button>
               </div>
               <div className="w-full sm:w-60">
-                <label className="mb-1  text-[12px] font-['Tahoma] ''tracking-[.14em] text-[#1d5c47]">
+                <label className="mb-1  text-[14px] font-['Tahoma] ''tracking-[.14em] text-[#1d5c47]">
                   Status
                 </label>
                 <select
@@ -1129,7 +1129,7 @@ export default function Programming() {
           <div className="flex w-full max-w-2xl flex-col gap-2 sm:flex-row sm:items-end">
             {manualPointing || coladeiraMachine ? (
               <div className="w-full sm:w-52">
-                <label className="mb-1 block text-[10px] font-black ''tracking-[.14em] text-[#3c735b]">
+                <label className="mb-1 block text-[15px] font-black ''tracking-[.14em] text-[#3c735b]">
                   Status
                 </label>
                 <select
@@ -1360,6 +1360,7 @@ export default function Programming() {
                   sortKey={programmingSortKey}
                   sortDirection={programmingSortDirection}
                   onSort={key => toggleProgrammingSort(key as never)}
+                  className="text-center"
                 />
                 {qualityRelease ? (
                   <SortableHeader

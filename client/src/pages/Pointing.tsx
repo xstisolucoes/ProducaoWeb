@@ -627,9 +627,33 @@ export default function Pointing() {
         : "AGUARDANDO INÍCIO";
   const produced = Number(quantityProduced);
   const lost = Number(quantityLost);
-  const effectiveArrangementTotal = reservation.data?.applicable
-    ? Math.max(1, Number(reservation.data.arrangementTotal ?? 1))
-    : Math.max(1, Number(item?.productionArrangementTotal ?? 1));
+
+  const effectiveArrangementLength = Math.max(
+    1,
+    Number(
+      reservation.data?.arrangementLength ??
+        item?.productionArrangementLength ??
+        1
+    )
+  );
+  const effectiveArrangementColumns = Math.max(
+    1,
+    Number(
+      reservation.data?.arrangementColumns ??
+        item?.productionArrangementColumns ??
+        1
+    )
+  );
+  const effectiveArrangementTotal =
+    effectiveArrangementLength * effectiveArrangementColumns;
+
+  // const effectiveArrangementTotal = Number(
+  //   reservation.data?.arrangementTotal ?? item?.productionArrangementTotal ?? 1
+  // );
+  // const effectiveArrangementTotal = reservation.data?.applicable
+  //   ? Math.max(1, Number(reservation.data.arrangementTotal ?? 1))
+  //   : Math.max(1, Number(item?.productionArrangementTotal ?? 1));
+
   const productionMultiplier =
     item?.calculateProductionArrangement ||
     item?.calculateReservationArrangement
@@ -2986,7 +3010,7 @@ function PalletizationImage({
   return (
     <section className="min-w-0 overflow-hidden rounded-2xl border-2 border-[#b8d1b2] bg-white p-3 min-[1000px]:p-4">
       <div className="mb-3 text-center">
-        <h3 className="text-xl font-black text-[#315d2e]">{title}</h3>
+        <h3 className="text-xl font-b3lack text-[#315d2e]">{title}</h3>
         {description ? (
           <p className="mt-1 text-sm font-bold text-[#62765d]">{description}</p>
         ) : null}

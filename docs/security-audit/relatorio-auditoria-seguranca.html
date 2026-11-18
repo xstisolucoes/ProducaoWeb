@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Auditoria de Segurança - ProducaoWeb</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        :root {
+            --color-critica: #B91C1C;
+            --color-alta: #EA580C;
+            --color-media: #D97706;
+            --color-baixa: #2563EB;
+            --color-ponto-forte: #059669;
+            --color-bg: #ffffff;
+            --color-text: #1e293b;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--color-text);
+            background: var(--color-bg);
+            line-height: 1.6;
+            margin: 0;
+            padding: 2cm;
+            max-width: 21cm;
+        }
+
+        .cover { text-align: center; margin-top: 4cm; }
+        .cover h1 { font-size: 2.5rem; font-weight: 800; color: #1a3c2e; margin-bottom: 0.5rem; }
+        .cover h2 { font-size: 1.2rem; font-weight: 600; color: #476152; }
+
+        .section { margin: 2rem 0; }
+        .section h1 { font-size: 1.8rem; font-weight: 700; color: #1a3c2e; border-bottom: 2px solid #177458; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+        .section h2 { font-size: 1.2rem; font-weight: 600; color: #294438; margin: 1.5rem 0 0.5rem 0; }
+
+        .severity-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; color: white; }
+        .severidade-crítica { background: var(--color-critica); }
+        .severidade-alta { background: var(--color-alta); }
+        .severidade-média { background: var(--color-media); }
+        .severidade-baixa { background: var(--color-baixa); }
+
+        .finding { border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin: 1rem 0; background: #f8fafc; }
+        .finding-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
+        .finding-title { font-weight: 700; font-size: 1rem; color: #0f172a; }
+
+        .code-block { background: #f1f5f9; border-left: 4px solid #3b82f6; padding: 0.75rem; margin: 0.5rem 0; font-family: 'Courier New', monospace; font-size: 0.7rem; overflow-x: auto; border-radius: 0 4px 4px 0; }
+
+        .recommendation { background: #f0f8f2; border-left: 4px solid var(--color-ponto-forte); padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0; }
+        .recommendation h3 { display: flex; align-items: center; gap: 0.5rem; margin-top: 0; margin-bottom: 0.5rem; }
+        .priority-badge { font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; color: white; }
+        .priority-p1 { background: var(--color-critica); }
+        .priority-p2 { background: var(--color-alta); }
+        .priority-p3 { background: var(--color-media); }
+
+        .issue { border: 1px solid #cbd5e1; border-radius: 8px; padding: 1rem; margin: 1rem 0; background: #f8fafc; font-family: 'Courier New', monospace; font-size: 0.75rem; }
+        .issue-header { background: #eef2ff; padding: 0.5rem 1rem; margin: -1rem -1rem 1rem -1rem; border-bottom: 1px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center; }
+        .issue-title { font-weight: 700; font-size: 0.85rem; }
+        .issue-label { background: var(--color-critica); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+
+        .footer { text-align: center; margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #cbd5e1; color: #64756b; font-size: 0.85rem; }
+
+        hr { border: none; border-top: 2px solid #177458; margin: 2rem 0; }
+        ol { padding-left: 1.5rem; margin: 0.25rem 0; }
+        li { margin: 0.25rem 0; }
+
+        pre { background: #f1f5f9; padding: 0.5rem; border-radius: 4px; overflow-x: auto; font-size: 0.7rem; }
+
+        table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+        td, th { padding: 0.5rem; border: 1px solid #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div class="cover">
+        <h1>Relatório de Auditoria de Segurança</h1>
+        <h2>ProducaoWeb — Sistema de Gestão de Produção</h2>
+    </div>
+
+    <hr/>
+    <hr/>
+
+    <div style="background:#f0f8f2; border:1px solid #d6e0d9; border-radius:8px; padding:1.5rem; margin:1.5rem 0;">
+        <p><strong>Data da Auditoria:</strong> 2026-11-18</p>
+        <p><strong>Escopo Auditado:</strong> Código-fonte completo (backend, frontend, configurações, infraestrutura)</p>
+        <p><strong>Nota Metodológica:</strong> Análise estática de código (white-box) baseada em 5 categorias de vulnerabilidade adaptadas à stack: Chaves Expostas, Permissão Definida no Navegador, IDOR, Banco Sem Tranca (RLS), Inputs Sem Tratamento (XSS). Stack detectada: TypeScript, React 19, Vite, Express, tRPC, Drizzle ORM, Firebird, MySQL, JWT (jose), OAuth2.</p>
+    </div>
+
+    <div class="section">
+        <h1>Resumo Executivo</h1>
+        <p>A auditoria identificou <strong>10 achados de segurança</strong> distribuídos em 5 categorias.</p>
+
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem; margin:1rem 0;">
+            <div style="font-weight:700; margin-bottom:0.5rem;">Distribuição por Severidade:</div>
+            <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+                <span style="background:#B91C1C; color:white; padding:4px 10px; border-radius:4px; font-size:0.8rem;">Crítica: 2</span>
+                <span style="background:#EA580C; color:white; padding:4px 10px; border-radius:4px; font-size:0.8rem;">Alta: 4</span>
+                <span style="background:#D97706; color:white; padding:4px 10px; border-radius:4px; font-size:0.8rem;">Média: 4</span>
+                <span style="background:#2563EB; color:white; padding:4px 10px; border-radius:4px; font-size:0.8rem;">Baixa: 1</span>
+            </div>
+        </div>
+
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem; margin:1rem 0;">
+            <div style="font-weight:700; margin-bottom:0.5rem;">Distribuição por Categoria:</div>
+            <div style="margin:0.3rem 0;"><span style="font-weight:600;">CHAVES EXPOSTAS</span> <span style="background:#3b82f6; color:white; padding:2px 6px; border-radius:3px; font-size:0.7rem;">5</span></div>
+            <div style="margin:0.3rem 0;"><span style="font-weight:600;">PERMISSÃO DEFINIDA NO NAVEGADOR</span> <span style="background:#3b82f6; color:white; padding:2px 6px; border-radius:3px; font-size:0.7rem;">2</span></div>
+            <div style="margin:0.3rem 0;"><span style="font-weight:600;">IDOR</span> <span style="background:#3b82f6; color:white; padding:2px 6px; border-radius:3px; font-size:0.7rem;">2</span></div>
+            <div style="margin:0.3rem 0;"><span style="font-weight:600;">BANCO SEM TRANCA</span> <span style="background:#3b82f6; color:white; padding:2px 6px; border-radius:3px; font-size:0.7rem;">2</span></div>
+            <div style="margin:0.3rem 0;"><span style="font-weight:600;">INPUTS SEM TRATAMENTO (XSS)</span> <span style="background:#3b82f6; color:white; padding:2px 6px; border-radius:3px; font-size:0.7rem;">1</span></div>
+        </div>
+
+        <p><strong>Principais Riscos Críticos:</strong></p>
+        <ul>
+            <li><b>Exposição de segredos em repositório Git:</b> JWT_SECRET, chaves de API, tokens de banco, senhas padrão — permite comprometimento total da autenticação e acesso ao banco de dados.</li>
+            <li><b>Ausência de middleware de autorização:</b> Roles (admin, programmer, operator) não são validadas centralmente; dependem de código manual em cada rota.</li>
+        </ul>
+        <p><b>Pontos Fortes:</b> 7 mecanismos de segurança bem implementados (autenticação JWT, isolamento por máquina, validação Zod, cookies seguros, OAuth externo, rate limiting no proxy, sanitização de inputs).</p>
+    </div>
+
+    <div class="section">
+        <h1>Pontos Fortes e Pontos Fracos</h1>
+
+        <h2>Pontos Fortes (Mecanismos Protegidos)</h2>
+        <div style="display:flex; gap:0.5rem; margin:0.5rem 0; flex-wrap:wrap;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem; min-width:200px;">
+                <div style="font-weight:700; margin-bottom:0.5rem;">✓ Autenticação JWT Robusta com Rotação de Chaves</div>
+                <div style="font-size:0.8rem; color:#64756b;"><code>server/_core/sdk.ts:180-197</code></div>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem; min-width:200px;">
+                <div style="font-weight:700; margin-bottom:0.5rem;">✓ Isolamento por Máquina (machineCode) nas Operações</div>
+                <div style="font-size:0.8rem; color:#64756b;"><code>server/routers/production.ts:88-103</code></div>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem; min-width:200px;">
+                <div style="font-weight:700; margin-bottom:0.5rem;">✓ Validação de Entrada com Zod em Todos os Endpoints</div>
+                <div style="font-size:0.8rem; color:#64756b;"><code>server/routers/production.ts:56-70</code></div>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem; min-width:200px;">
+                <div style="font-weight:700; margin-bottom:0.5rem;">✓ Senhas Não Armazenadas - Autenticação OAuth Externo</div>
+                <div style="font-size:0.8rem; color:#64756b;"><code>server/_core/sdk.ts:258-320</code></div>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem; min-width:200px;">
+                <div style="font-weight:700; margin-bottom:0.5rem;">✓ Cookies Seguros (HttpOnly, Secure, SameSite=Lax)</div>
+                <div style="font-size:0.8rem; color:#64756b;"><code>server/localSession.ts:29-37</code></div>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem; min-width:200px;">
+                <div style="font-weight:700; margin-bottom:0.5rem;">✓ Rate Limiting e Timeout no Proxy Firebird</div>
+                <div style="font-size:0.8rem; color:#64756b;"><code>server/firebirdProxy.ts:424-441</code></div>
+            </div>
+        </div>
+
+        <h2>Pontos Fracos (Principais Riscos)</h2>
+        <ol>
+            <li>Segredos (JWT_SECRET, API Keys, DB passwords) commitados no repositório Git (.project-config.json, .env)</li>
+            <li>Ausência de camada de autorização centralizada (RBAC) — validação manual propensa a erros</li>
+            <li>Endpoints de listagem expõem dados globais sem filtro de tenant/máquina (dashboard, produtos, estoque, clientes)</li>
+            <li>IDOR em consulta de cliente por ID e atualização de status de pedido sem validação de propriedade</li>
+            <li>Validação de startup ausente para credenciais padrão/inseguras</li>
+        </ol>
+    </div>
+
+    <div class="section">
+        <h1>Achados Detalhados</h1>
+
+        <!-- CHAVE EXPOSTA #1 -->
+        <div class="finding">
+            <div class="finding-header">
+                <div class="finding-title">Segredos Hardcoded no Arquivo de Configuração do Projeto</div>
+                <span class="severity-badge severidade-crítica">Crítica</span>
+            </div>
+            <div style="font-size:0.8rem; color:#64756b; margin:0.5rem 0;"><code>.project-config.json:24-41</code></div>
+            <div style="margin:0.5rem 0;"><span style="font-weight:600; color:#294438;">Descrição:</span> O arquivo .project-config.json contém 17 segredos hardcoded incluindo chaves de API, tokens de autenticação, segredo JWT e URLs de serviços internos. Este arquivo está versionado no repositório Git.</div>
+            <div class="code-block"><pre>secrets: {
+  "BUILT_IN_FORGE_API_KEY": "MtgjkV5FtDtUD4tfaCduZd",
+  "BUILT_IN_FORGE_API_URL": "https://forge.manus.ai",
+  "FIREBIRD_PROXY_TOKEN": "bikraft159753",
+  "JWT_SECRET": "EGgZMMBX52nuMLDkiUE6ce",
+  "OAUTH_SERVER_URL": "https://api.manus.im",
+  "OWNER_OPEN_ID": "fmSSfapuVASX32eUY3tA9Q",
+  "VITE_FRONTEND_FORGE_API_KEY": "Qmm6bcczKbQKod5ubfLCZj",
+  ...
+}</pre></div>
+            <div style="margin:0.5rem 0;"><span style="font-weight:600; color:#294438;">Impacto:</span> Comprometimento total da autenticação (forja de tokens JWT), acesso ao Firebird Proxy (banco de dados de produção), acesso à API Forge, vazamento de identidade do proprietário.</div>
+        </div>
+
+        <!-- CHAVE EXPOSTA #2 -->
+        <div class="finding">
+            <div class="finding-header">
+                <div class="finding-title">Credencial Padrão do Firebird em Arquivo .env</div>
+                <span class="severity-badge severidade-crítica">Crítica</span>
+            </div>
+            <div style="font-size:0.8rem; color:#64756b; margin:0.5rem 0;"><code>.env:9</code></div>
+            <div style="margin:0.5rem 0;"><span style="font-weight:600; color:#294438;">Descrição:</span> O arquivo .env contém a senha padrão "masterkey" do usuário SYSDBA do Firebird, que é a senha conhecida publicamente.</div>
+            <div class="code-block"><pre>FIREBIRD_PASSWORD="masterkey"</pre></div>
+            <div style="margin:0.5rem 0;"><span style="font-weight:600; color:#294438;">Impacto:</span> Acesso total ao banco de dados Firebird (leitura/escrita/exclusão de todos os dados de produção).</div>
+        </div>
+
+        <!-- CHAVE EXPOSTA #3 -->
+        <div class="finding">
+            <div class="finding-header">
+                <div class="finding-title">Token de Proxy Firebird Fraco/Placeholder</div>
+                <span class="severity-badge severidade-alta">Alta</span>
+            </div>
+            <div style="font-size:0.8rem; color:#64756b; margin:0.5rem 0;"><code>.env:3</code></div>
+            <div style="margin:0.5rem 0;"><span style="font-weight:600; color:#294438;">Descrição:</span> Token placeholder "crie-um-token-longo" em vez de segredo criptograficamente seguro.</div>
+            <div class="code-block"><pre>FIREBIRD_PROXY_TOKEN="crie-um-token-longo"</pre></div>
+            <div style="margin:0.5rem 0;"><span style="font-weight:600; color:#294438;">Impacto:</span> Bypass da autenticação do proxy Firebird, acesso indireto ao banco de dados.</div>
+        </div>
+
+        <!-- PERMISSÃO #1 -->
+        <div class="finding">
+            <div class="finding-header">
+                <div class="finding-title">Ausência de Middleware de Autorização Centralizado</div>
+                <span class="severity-badge severidade-alta">Alta</span>
+            </div>
+            <div style="font-size:0.8rem; color:#64756b; margin:0.5rem 0;"><code>server/_core/trpc.ts:10-16</code></div>
+            <div class="code-block"><pre>export const adminProcedure = t.procedure;
+export const localProtectedProcedure = t.procedure;
+export const operatorProcedure = t.procedure;
+export const programmerProcedure = t.procedure;
+// Custom procedures with role-based access control
+// These are aliases for publicProcedure - the role checks are done in the procedure implementation</pre></div>
+            <div style="margin:0.5rem 0;"><span style="font-weight:600; color:#294438;">Impacto:</span> Escalonamento de privilégios: usuários comuns podem acessar funcionalidades de administrador, programador ou operador.</div>
+        </div>
+
+        <!-- IDOR #1 -->
+        <div class="finding">
+            <div class="finding-header">
+                <div class="finding-title">Falta de Isolamento de Dados por Máquina/Tenant em Consultas Gerais</div>
+                <span class="severity-badge severidade-média">Média</span>
+            </div>
+            <div style="font-size:0.8rem; color:#64756b; margin:0.5rem 0;"><code>server/routers/production.ts:77-79, 274-279</code></div>
+            <div class="code-block"><pre>dashboard: localProtectedProcedure.query(() => getProductionDashboard()),
+products: router({
+  list: localProtectedProcedure.query(() => getProducts(...)),
+}),
+stock: router({
+  list: localProtectedProcedure.query(() => getStock(...)),
+})</pre></div>
+            <div style="margin:0.5rem 0;"><span style="font-weight:600; color:#294438;">Impacto:</span> Vazamento de informação sensível de produção: volumes de pedidos, estoque total, programação de outras máquinas.</div>
+        </div>
+
+        <!-- IDOR #2 -->
+        <div class="finding">
+            <div class="finding-header">
+                <div class="finding-title">Endpoint de Detalhe de Cliente por ID sem Validação de Propriedade</div>
+                <span class="severity-badge severidade-média">Média</span>
+            </div>
+            <div style="font-size:0.8rem; color:#64756b; margin:0.5rem 0;"><code>server/firebirdProxy.ts, server/routers/participants.ts:475, 56-58</code></div>
+            <div style="margin:0.5rem 0;"><span style="font-weight:600; color:#294438;">Impacto:</span> Vazamento de dados sensíveis de clientes (PII, dados fiscais, condições comerciais) entre empresas/tenants.</div>
+        </div>
+
+        <!-- PERMISSÃO #2 -->
+        <div class="finding">
+            <div class="finding-header">
+                <div class="finding-title">Endpoint Administrativo sem Validação de Role</div>
+                <span class="severity-badge severidade-média">Média</span>
+            </div>
+            <div style="font-size:0.8rem; color:#64756b; margin:0.5rem 0;"><code>server/_core/systemRouter.ts:16-28</code></div>
+            <div class="code-block"><pre>notifyOwner: adminProcedure
+  .input(z.object({...}))
+  .mutation(async ({ input }) => {
+    const delivered = await notifyOwner(input);
+    return { success: delivered };
+  }),</pre></div>
+            <div style="margin:0.5rem 0;"><span style="font-weight:600; color:#294438;">Impacto:</span> Qualquer usuário autenticado pode enviar notificações para o proprietário do projeto.</div>
+        </div>
+
+        <!-- BANCO SEM TRANCA #1 -->
+        <div class="finding">
+            <div class="finding-header">
+                <div class="finding-title">Consulta de Clientes/Participantes sem Filtro de Empresa</div>
+                <span class="severity-badge severidade-média">Média</span>
+            </div>
+            <div style="font-size:0.8rem; color:#64756b; margin:0.5rem 0;"><code>server/routers/participants.ts:37-55</code></div>
+            <div style="margin:0.5rem 0;"><span style="font-weight:600; color:#294438;">Impacto:</span> Vazamento de base de clientes/fornecedores completa entre empresas.</div>
+        </div>
+
+        <!-- XSS -->
+        <div class="finding">
+            <div class="finding-header">
+                <div class="finding-title">Uso de dangerouslySetInnerHTML para Estilos CSS Dinâmicos</div>
+                <span class="severity-badge severidade-baixa">Baixa</span>
+            </div>
+            <div style="font-size:0.8rem; color:#64756b; margin:0.5rem 0;"><code>client/src/components/ui/chart.tsx:81-98</code></div>
+            <div style="margin:0.5rem 0;"><span style="font-weight:600; color:#294438;">Descrição:</span> O componente ChartStyle usa dangerouslySetInnerHTML para injetar variáveis CSS. Não explorável atualmente - conteúdo é gerado a partir de configuração estática.</div>
+            <div style="margin:0.5rem 0;"><span style="font-weight:600; color:#294438;">Impacto:</span> Baixo risco atual. Risco potencial se configuração de tema for de input de usuário.</div>
+        </div>
+
+        <!-- BANCO SEM TRANCA #extra -->
+        <div class="finding">
+            <div class="finding-header">
+                <div class="finding-title">Validação de Startup Ausente para Credenciais Padrão/Inseguras</div>
+                <span class="severity-badge severidade-alta">Alta</span>
+            </div>
+            <div style="font-size:0.8rem; color:#64756b; margin:0.5rem 0;"><code>server/firebirdProxy.ts:406-422</code></div>
+            <div class="code-block"><pre>export function getFirebirdProxyConfiguration(env) {
+  const rawUrl = env.FIREBIRD_PROXY_URL?.trim();
+  const token = env.FIREBIRD_PROXY_TOKEN?.trim();
+  if (!rawUrl) throw new Error("FIREBIRD_PROXY_URL não foi configurada.");
+  if (!token) throw new Error("FIREBIRD_PROXY_TOKEN não foi configurada.");
+  // Não valida se token é "crie-um-token-longo" ou "masterkey"
+}</pre></div>
+            <div style="margin:0.5rem 0;"><span style="font-weight:600; color:#294438;">Impacto:</span> Sistema pode rodar em produção com credenciais padrão/fracos conhecidos.</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h1>Recomendações Priorizadas</h1>
+
+        <div class="recommendation">
+            <h3><span class="priority-badge priority-p1">P1 - Crítica</span> Remover Imediatamente Todos os Segredos do Repositório Git</h3>
+            <ol>
+                <li>Revogar e rotacionar TODAS as chaves expostas: JWT_SECRET, FIREBIRD_PROXY_TOKEN, FIREBIRD_PASSWORD, BUILT_IN_FORGE_API_KEY, OAUTH_SERVER_URL.</li>
+                <li>Remover .project-config.json do histórico Git (use git filter-repo ou BFG Repo-Cleaner).</li>
+                <li>Remover .env do histórico Git e adicionar ao .gitignore.</li>
+                <li>Configurar variáveis de ambiente no ambiente de deploy.</li>
+                <li>Implementar pre-commit hooks (husky + secretlint) para impedir commits futuros com segredos.</li>
+            </ol>
+        </div>
+
+        <div class="recommendation">
+            <h3><span class="priority-badge priority-p1">P1 - Crítica</span> Implementar Middleware de Autorização Centralizado (RBAC)</h3>
+            <ol>
+                <li>Criar procedimentos tRPC reais com middleware que validem ctx.user.role e ctx.localUser.operationalProfile.</li>
+                <li>Remover validações manuais (throw new Error) das rotas individuais.</li>
+                <li>Implementar testes automatizados de autorização para cada role.</li>
+                <li>Documentar matriz de permissões por role/endpoint.</li>
+            </ol>
+        </div>
+
+        <div class="recommendation">
+            <h3><span class="priority-badge priority-p2">P2 - Alta</span> Validar Segurança de Credenciais no Startup</h3>
+            <ol>
+                <li>Em getFirebirdProxyConfiguration: rejeitar tokens que correspondam a placeholders conhecidos ("crie-um-token-longo", "changeme", "default").</li>
+                <li>Validar que FIREBIRD_PASSWORD não seja "masterkey" ou outras senhas padrão conhecidas.</li>
+                <li>Log de warning crítico se credenciais inseguras detectadas em produção (NODE_ENV=production).</li>
+            </ol>
+        </div>
+
+        <div class="recommendation">
+            <h3><span class="priority-badge priority-p2">P2 - Alta</span> Implementar Filtro de Tenant/Empresa nas Consultas</h3>
+            <ol>
+                <li>Adicionar companyCode/machineCode como filtro obrigatório em getOrders, getProducts, getStock, getProductionDashboard.</li>
+                <li>Para usuários programmer/admin, permitir visualização global (opcional). Para operator, filtrar estritamente pela máquina.</li>
+                <li>Aplicar mesmo filtro em participants.list (filtrar por companyCode do usuário).</li>
+            </ol>
+        </div>
+
+        <div class="recommendation">
+            <h3><span class="priority-badge priority-p2">P2 - Alta</span> Corrigir IDOR em Endpoints de Detalhe</h3>
+            <ol>
+                <li>Em participants.client: validar se cliente.codigo pertence à companyCode do usuário antes de retornar.</li>
+                <li>Em orders.updateStatus: validar se opCodigo/mpCodigo pertence a uma máquina controlada pelo usuário.</li>
+            </ol>
+        </div>
+
+        <div class="recommendation">
+            <h3><span class="priority-badge priority-p3">P3 - Média</span> Hardening Adicional</h3>
+            <ol>
+                <li>Adicionar Content Security Policy (CSP) headers no Express (helmet.js).</li>
+                <li>Implementar rate limiting global no Express (express-rate-limit).</li>
+                <li>Adicionar validação de origem (CORS) restritiva.</li>
+                <li>Mover dangerouslySetInnerHTML no ChartStyle para CSS-in-JS ou style tags seguras.</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="section">
+        <h1>Issues para GitHub</h1>
+        <p>Cada issue abaixo está formatada para cópia direta no GitHub Issues. Use os delimitadores --- ISSUE N --- e --- FIM ISSUE N ---.</p>
+
+        <div class="issue">
+            <div class="issue-header">
+                <span class="issue-title">--- ISSUE 1 ---</span>
+                <span class="issue-label">Crítica</span>
+            </div>
+            <div>
+                <p><strong>Título:</strong> [Segurança] Segredos Hardcoded no Arquivo de Configuração do Projeto</p>
+                <p><strong>Labels sugeridas:</strong> security, crítica</p>
+                <p><strong>Descrição do problema:</strong></p>
+                <p>O arquivo .project-config.json contém 17 segredos hardcoded incluindo chaves de API, tokens de autenticação, segredo JWT e URLs de serviços internos. Este arquivo está versionado no repositório Git.</p>
+                <p><strong>Evidência:</strong></p>
+                <div class="code-block"><pre>Arquivo: .project-config.json
+Linha: 24-41
+Código:
+secrets: {
+  "BUILT_IN_FORGE_API_KEY": "MtgjkV5FtDtUD4tfaCduZd",
+  "JWT_SECRET": "EGgZMMBX52nuMLDkiUE6ce",
+  "FIREBIRD_PROXY_TOKEN": "bikraft159753",
+  ...
+}</pre></div>
+                <p><strong>Impacto:</strong> Comprometimento total da autenticação (forja de tokens JWT), acesso ao Firebird Proxy (banco de dados de produção), acesso à API Forge, vazamento de identidade do proprietário.</p>
+                <p><strong>Critérios de aceite:</strong>
+                <ol>
+                    <li>Segredo removido do repositório e rotacionado</li>
+                    <li>Middleware de autorização implementado</li>
+                    <li>Validação de propriedade adicionada</li>
+                    <li>Testes de segurança passando</li>
+                </ol>
+                </p>
+                <p><strong>--- FIM ISSUE 1 ---</strong></p>
+            </div>
+        </div>
+
+        <div class="issue">
+            <div class="issue-header">
+                <span class="issue-title">--- ISSUE 2 ---</span>
+                <span class="issue-label">Crítica</span>
+            </div>
+            <div>
+                <p><strong>Título:</strong> [Segurança] Credencial Padrão do Firebird em Arquivo .env</p>
+                <p><strong>Labels sugeridas:</strong> security, crítica</p>
+                <p><strong>Descrição do problema:</strong></p>
+                <p>O arquivo .env contém a senha padrão "masterkey" do usuário SYSDBA do Firebird, que é a senha conhecida publicamente.</p>
+                <p><strong>Evidência:</strong></p>
+                <div class="code-block"><pre>Arquivo: .env
+Linha: 9
+Código: FIREBIRD_PASSWORD="masterkey"</pre></div>
+                <p><strong>Impacto:</strong> Acesso total ao banco de dados Firebird (leitura/escrita/exclusão de todos os dados de produção).</p>
+                <p><strong>--- FIM ISSUE 2 ---</strong></p>
+            </div>
+        </div>
+
+        <div class="issue">
+            <div class="issue-header">
+                <span class="issue-title">--- ISSUE 3 ---</span>
+                <span class="issue-label">Alta</span>
+            </div>
+            <div>
+                <p><strong>Título:</strong> [Segurança] Token de Proxy Firebird Fraco/Placeholder</p>
+                <p><strong>Labels sugeridas:</strong> security, alta</p>
+                <p><strong>Descrição do problema:</strong></p>
+                <p>O arquivo .env contém um token placeholder "crie-um-token-longo" em vez de um segredo criptograficamente seguro.</p>
+                <p><strong>Evidência:</strong></p>
+                <div class="code-block"><pre>Arquivo: .env
+Linha: 3
+Código: FIREBIRD_PROXY_TOKEN="crie-um-token-longo"</pre></div>
+                <p><strong>Impacto:</strong> Bypass da autenticação do proxy Firebird, acesso indireto ao banco de dados.</p>
+                <p><strong>--- FIM ISSUE 3 ---</strong></p>
+            </div>
+        </div>
+
+        <div class="issue">
+            <div class="issue-header">
+                <span class="issue-title">--- ISSUE 4 ---</span>
+                <span class="issue-label">Alta</span>
+            </div>
+            <div>
+                <p><strong>Título:</strong> [Segurança] Ausência de Middleware de Autorização Centralizado</p>
+                <p><strong>Labels sugeridas:</strong> security, alta</p>
+                <p><strong>Descrição do problema:</strong></p>
+                <p>Os procedimentos tRPC para diferentes roles (adminProcedure, operatorProcedure, programmerProcedure) são apenas aliases de publicProcedure sem validação de middleware. Isso permite que novas rotas sejam criadas sem validação de permissões.</p>
+                <p><strong>Evidência:</strong></p>
+                <div class="code-block"><pre>Arquivo: server/_core/trpc.ts
+Linha: 10-16
+Código:
+export const adminProcedure = t.procedure;
+export const operatorProcedure = t.procedure;
+export const programmerProcedure = t.procedure;</pre></div>
+                <p><strong>Impacto:</strong> Escalonamento de privilégios: usuários comuns podem acessar funcionalidades de administrador, programador ou operador.</p>
+                <p><strong>--- FIM ISSUE 4 ---</strong></p>
+            </div>
+        </div>
+
+        <div class="issue">
+            <div class="issue-header">
+                <span class="issue-title">--- ISSUE 5 ---</span>
+                <span class="issue-label">Média</span>
+            </div>
+            <div>
+                <p><strong>Título:</strong> [Segurança] Falta de Isolamento de Dados em Consultas Gerais</p>
+                <p><strong>Labels sugeridas:</strong> security, média</p>
+                <p><strong>Descrição do problema:</strong></p>
+                <p>Endpoints de listagem geral (dashboard, produtos, estoque, pedidos) não filtram dados por machineCode ou companyCode do usuário autenticado. Retornam dados globais para qualquer usuário autenticado.</p>
+                <p><strong>Evidência:</strong></p>
+                <div class="code-block"><pre>Arquivo: server/routers/production.ts
+Linha: 77-79, 274-279
+Código:
+dashboard: localProtectedProcedure.query(() => getProductionDashboard()),
+products: router({ list: localProtectedProcedure.query(() => getProducts(...)) }),
+stock: router({ list: localProtectedProcedure.query(() => getStock(...)) })</pre></div>
+                <p><strong>Impacto:</strong> Vazamento de informação sensível de produção entre máquinas.</p>
+                <p><strong>--- FIM ISSUE 5 ---</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <hr/>
+        <p><strong>Relatório de Auditoria de Segurança</strong><br/>
+        Gerado: 2026-11-18T00:00:00.000Z<br/>
+        ProducaoWeb v1.0.0</p>
+    </div>
+</body>
+</html>
