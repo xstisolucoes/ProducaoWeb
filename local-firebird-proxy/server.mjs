@@ -44,6 +44,17 @@ const processLabelPrinters = String(process.env.PRODUCTION_LABEL_PRINTERS ?? "")
   .filter(Boolean);
 const execFileAsync = promisify(execFile);
 
+// Normaliza caminhos para acesso via rede
+// Substitui F:\ ou Z:\ por caminhos UNC acessíveis pelo IIS
+function normalizarCaminho(caminho) {
+  if (!caminho) return caminho;
+  // Mapeamento: F:\Bikraft\Ficha Impressao\ → \\192.168.0.10\Bikraft\Ficha Impressao\
+  return caminho.replace(
+    /^([FZ]):\\Bikraft\\Ficha Impressao\\/i,
+    "\\\\192.168.0.10\\Bikraft\\Ficha Impressao\\"
+  );
+}
+
 async function printPdfDirectly(pdfBuffer, printer, copies) {
   if (process.platform !== "win32")
     throw new Error(
@@ -208,14 +219,15 @@ const imageMimeTypes = {
 };
 async function readLocalImageDataUri(imagePath, label) {
   if (!imagePath) return { dataUri: null, error: null };
-  const extension = path.extname(imagePath).toLowerCase();
+  const normalizedImagePath = normalizarCaminho(imagePath);
+  const extension = path.extname(normalizedImagePath).toLowerCase();
   if (!imageMimeTypes[extension])
     return {
       dataUri: null,
       error: `A imagem cadastrada para ${label} deve ser JPG, PNG ou SVG.`,
     };
   try {
-    const image = await readFile(imagePath);
+    const image = await readFile(normalizedImagePath);
     return {
       dataUri: `data:${imageMimeTypes[extension]};base64,${image.toString("base64")}`,
       error: null,
@@ -2606,16 +2618,18 @@ app.get(
       const layoutPath = String(
         row.layout_path ?? row.LAYOUT_PATH ?? ""
       ).trim();
+      const normalizedLayoutPath = normalizarCaminho(layoutPath);
       let svgDataUri = null;
       let layoutError = null;
       if (layoutPath) {
-        if (path.extname(layoutPath).toLowerCase() !== ".svg")
+        if (path.extname(normalizedLayoutPath).toLowerCase() !== ".svg")
           layoutError = "O arquivo de layout cadastrado não é SVG.";
         else
           try {
-            const svg = await readFile(layoutPath);
+            // Tenta ler o arquivo - em redes Windows, pode precisar de autenticação
+            const svg = await readFile(normalizedLayoutPath);
             svgDataUri = `data:image/svg+xml;base64,${svg.toString("base64")}`;
-          } catch {
+          } catch (error) {
             layoutError =
               "Não foi possível abrir o SVG no caminho cadastrado da ficha de impressão.";
           }
@@ -2740,14 +2754,15 @@ app.get(
       };
       const readImageDataUri = async (imagePath, label) => {
         if (!imagePath) return { dataUri: null, error: null };
-        const imageExtension = path.extname(imagePath).toLowerCase();
+        const normalizedImagePath = normalizarCaminho(imagePath);
+        const imageExtension = path.extname(normalizedImagePath).toLowerCase();
         if (!imageMimeTypes[imageExtension])
           return {
             dataUri: null,
             error: `A imagem cadastrada para ${label} deve ser JPG, PNG ou SVG.`,
           };
         try {
-          const image = await readFile(imagePath);
+          const image = await readFile(normalizedImagePath);
           return {
             dataUri: `data:${imageMimeTypes[imageExtension]};base64,${image.toString("base64")}`,
             error: null,
