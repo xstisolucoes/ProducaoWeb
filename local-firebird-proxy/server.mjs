@@ -51,7 +51,7 @@ function normalizarCaminho(caminho) {
   // Mapeamento: F:\Bikraft\Ficha Impressao\ → \\192.168.0.10\Bikraft\Ficha Impressao\
   return caminho.replace(
     /^([FZ]):\\Bikraft\\Ficha Impressao\\/i,
-    "\\\\192.168.0.10\\Bikraft\\Dados\\Ficha Impressao\\"
+    "\\\\192.168.0.10\\Dados\\Bikraft\\Ficha Impressao\\"
   );
 }
 
