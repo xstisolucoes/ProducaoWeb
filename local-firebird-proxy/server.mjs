@@ -51,7 +51,7 @@ function normalizarCaminho(caminho) {
   // Mapeamento: F:\Bikraft\Ficha Impressao\ → \\192.168.0.10\Bikraft\Ficha Impressao\
   return caminho.replace(
     /^([FZ]):\\Bikraft\\Ficha Impressao\\/i,
-    "\\\\192.168.0.10\\Bikraft\\Ficha Impressao\\"
+    "\\\\192.168.0.10\\Bikraft\\Dados\\Ficha Impressao\\"
   );
 }
 
@@ -1238,12 +1238,10 @@ app.post("/v1/auth/login", ensureAuthorized, async (req, res, next) => {
     const hasSelectedMachine =
       Number.isInteger(selectedMachineCode) && selectedMachineCode > 0;
     if (!hasSelectedMachine && !canConfigure) {
-      return res
-        .status(403)
-        .json({
-          error:
-            "Esta estação ainda não está configurada. Solicite ao PCP, Programador ou Administrador que configure a estação.",
-        });
+      return res.status(403).json({
+        error:
+          "Esta estação ainda não está configurada. Solicite ao PCP, Programador ou Administrador que configure a estação.",
+      });
     }
     const machine = await findMachineForOperator(
       Number(user.usu_codigo),
@@ -1255,28 +1253,22 @@ app.post("/v1/auth/login", ensureAuthorized, async (req, res, next) => {
       ["manual-pointing", "manual-production"].includes(profile) &&
       !isManualPointingMachine(machine)
     ) {
-      return res
-        .status(403)
-        .json({
-          error:
-            "Usuários Apontador e Manual só podem acessar máquinas marcadas como Processo Manual.",
-        });
+      return res.status(403).json({
+        error:
+          "Usuários Apontador e Manual só podem acessar máquinas marcadas como Processo Manual.",
+      });
     }
     if (profile === "quality-release" && !isProductReleaseMachine(machine)) {
-      return res
-        .status(403)
-        .json({
-          error:
-            "Usuários Qualidade só podem acessar a máquina manual de Liberação de Produto.",
-        });
+      return res.status(403).json({
+        error:
+          "Usuários Qualidade só podem acessar a máquina manual de Liberação de Produto.",
+      });
     }
     if (profile === "operator" && isManualPointingMachine(machine)) {
-      return res
-        .status(403)
-        .json({
-          error:
-            "Máquinas de Processo Manual são exclusivas para usuários Apontador ou Manual.",
-        });
+      return res.status(403).json({
+        error:
+          "Máquinas de Processo Manual são exclusivas para usuários Apontador ou Manual.",
+      });
     }
     res.json({
       id: Number(user.usu_codigo),
@@ -1563,12 +1555,10 @@ app.get("/v1/clients/:codigo", ensureAuthorized, async (req, res, next) => {
 app.post("/v1/clients", ensureAuthorized, async (req, res, next) => {
   try {
     if (process.env.XPAPER_CADASTRO_WRITE_ENABLED?.trim().toUpperCase() !== "S")
-      return res
-        .status(403)
-        .json({
-          error:
-            "A Gravação de Clientes Está Bloqueada. Defina XPAPER_CADASTRO_WRITE_ENABLED=S Após Validar um Cliente de Teste.",
-        });
+      return res.status(403).json({
+        error:
+          "A Gravação de Clientes Está Bloqueada. Defina XPAPER_CADASTRO_WRITE_ENABLED=S Após Validar um Cliente de Teste.",
+      });
     const source = req.body ?? {};
     const text = (key, max) =>
       String(source[key] ?? "")
@@ -1941,12 +1931,10 @@ app.post(
         process.env.PRODUCTION_POINTING_WRITE_ENABLED?.trim().toUpperCase() !==
         "S"
       )
-        return res
-          .status(403)
-          .json({
-            error:
-              "A gravação de ociosidade está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma máquina de teste.",
-          });
+        return res.status(403).json({
+          error:
+            "A gravação de ociosidade está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma máquina de teste.",
+        });
       const machineCode = Number(req.body?.machineCode);
       const operatorId = Number(req.body?.operatorId);
       const eventType = String(req.body?.eventType ?? "").trim();
@@ -2241,12 +2229,10 @@ app.post("/v1/requests", ensureAuthorized, async (req, res, next) => {
       process.env.PRODUCTION_POINTING_WRITE_ENABLED?.trim().toUpperCase() !==
       "S"
     )
-      return res
-        .status(403)
-        .json({
-          error:
-            "A escrita de solicitações está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma solicitação de teste.",
-        });
+      return res.status(403).json({
+        error:
+          "A escrita de solicitações está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma solicitação de teste.",
+      });
     const type = String(req.body?.type ?? "");
     const requesterId = Number(req.body?.requesterId);
     const requesterSectorCode = Number(req.body?.requesterSectorCode) || null;
@@ -2270,11 +2256,9 @@ app.post("/v1/requests", ensureAuthorized, async (req, res, next) => {
       sectorRows[0]?.code ?? sectorRows[0]?.CODE ?? 0
     );
     if (!Number.isInteger(targetSectorCode) || targetSectorCode < 1)
-      return res
-        .status(409)
-        .json({
-          error: `O setor ativo ${targetSectorName} não foi encontrado na tabela SETORES.`,
-        });
+      return res.status(409).json({
+        error: `O setor ativo ${targetSectorName} não foi encontrado na tabela SETORES.`,
+      });
     const ids = await query(
       `select coalesce(max(sol_codigo), 0) + 1 as id from solicitacoes`
     );
@@ -2317,19 +2301,15 @@ app.patch(
       if (!current[0])
         return res.status(404).json({ error: "Ordem não encontrada." });
       if (["Atendido", "A Concluir"].includes(String(current[0].mp_status)))
-        return res
-          .status(409)
-          .json({
-            error:
-              "Não é permitido alterar o processo de uma ordem Atendida ou A Concluir.",
-          });
+        return res.status(409).json({
+          error:
+            "Não é permitido alterar o processo de uma ordem Atendida ou A Concluir.",
+        });
       if (String(current[0].mp_status) === "Setup a Concluir")
-        return res
-          .status(409)
-          .json({
-            error:
-              "Não é permitido alterar o processo de uma ordem Setup a Concluir.",
-          });
+        return res.status(409).json({
+          error:
+            "Não é permitido alterar o processo de uma ordem Setup a Concluir.",
+        });
       const eligible = await query(
         `select first 1 candidate.mqp_codigo as code
       from prod_vendas_proc_prod pvp
@@ -2346,12 +2326,10 @@ app.patch(
         ]
       );
       if (!eligible[0])
-        return res
-          .status(409)
-          .json({
-            error:
-              "A máquina selecionada não é elegível para o produto, revisão e grupo produtivo desta OP.",
-          });
+        return res.status(409).json({
+          error:
+            "A máquina selecionada não é elegível para o produto, revisão e grupo produtivo desta OP.",
+        });
       const queues = await query(
         `select coalesce(max(mp_fila), 0) + 1 as queue from mov_processos where mqp_codigo = ? and mp_fila < 1000`,
         [machineCode]
@@ -2894,17 +2872,15 @@ app.get(
             });
           const causeCode = Number(row.cause_code ?? row.CAUSE_CODE);
           if (Number.isInteger(causeCode) && causeCode > 0)
-            itemMap
-              .get(itemCode)
-              .causes.push({
-                code: causeCode,
-                description: String(
-                  row.cause_description ??
-                    row.CAUSE_DESCRIPTION ??
-                    "Sem descrição"
-                ),
-                status: row.cause_status ?? row.CAUSE_STATUS ?? null,
-              });
+            itemMap.get(itemCode).causes.push({
+              code: causeCode,
+              description: String(
+                row.cause_description ??
+                  row.CAUSE_DESCRIPTION ??
+                  "Sem descrição"
+              ),
+              status: row.cause_status ?? row.CAUSE_STATUS ?? null,
+            });
         }
         checklists.push({
           code: checklistCode,
@@ -2959,12 +2935,10 @@ app.post(
         process.env.PRODUCTION_POINTING_WRITE_ENABLED?.trim().toUpperCase() !==
         "S"
       )
-        return res
-          .status(403)
-          .json({
-            error:
-              "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
-          });
+        return res.status(403).json({
+          error:
+            "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
+        });
       const opCodigo = Number(req.params.opCodigo);
       const mpCodigo = Number(req.params.mpCodigo);
       const machineCode = Number(req.body?.machineCode);
@@ -3020,12 +2994,10 @@ app.post(
             item.causeCodes.some(code => !Number.isInteger(code) || code < 1)
         )
       )
-        return res
-          .status(400)
-          .json({
-            error:
-              "Informe pelo menos uma não conformidade com quantidade válida.",
-          });
+        return res.status(400).json({
+          error:
+            "Informe pelo menos uma não conformidade com quantidade válida.",
+        });
       const duplicatedItems = new Set();
       if (
         normalizedItems.some(item => {
@@ -3035,11 +3007,9 @@ app.post(
           return false;
         })
       )
-        return res
-          .status(400)
-          .json({
-            error: "Cada item não conforme pode ser informado somente uma vez.",
-          });
+        return res.status(400).json({
+          error: "Cada item não conforme pode ser informado somente uma vez.",
+        });
       const originLabel =
         origin === "raw-material" ? "Materia-prima (PO)" : "Produto";
       const inspectionType =
@@ -3402,11 +3372,9 @@ app.post(
         copies > 99 ||
         !pdfBase64
       )
-        return res
-          .status(400)
-          .json({
-            error: "Dados inválidos para impressão direta da etiqueta.",
-          });
+        return res.status(400).json({
+          error: "Dados inválidos para impressão direta da etiqueta.",
+        });
       const available = await getWindowsPrinters();
       const selected = available.find(
         item =>
@@ -3415,12 +3383,10 @@ app.post(
           }) === 0
       );
       if (!selected)
-        return res
-          .status(404)
-          .json({
-            error:
-              "A impressora selecionada não foi encontrada nesta estação Windows.",
-          });
+        return res.status(404).json({
+          error:
+            "A impressora selecionada não foi encontrada nesta estação Windows.",
+        });
       if (selected.offline)
         return res
           .status(409)
@@ -3452,11 +3418,9 @@ app.get(
           value => Number.isInteger(value) && value > 0
         )
       )
-        return res
-          .status(400)
-          .json({
-            error: "Dados inválidos para a Etiqueta de Produto Acabado.",
-          });
+        return res.status(400).json({
+          error: "Dados inválidos para a Etiqueta de Produto Acabado.",
+        });
       const rows = await query(
         `select first 1
       pve.pve_codigo as stock_code, pve.op_codigo as operation_code, pve.pv_codigo as product_code, pve.pv_revisao as revision,
@@ -3479,12 +3443,10 @@ app.get(
       );
       const row = rows[0];
       if (!row)
-        return res
-          .status(404)
-          .json({
-            error:
-              "Não existe estoque acabado disponível para esta OP. Aponte a produção antes de imprimir a etiqueta.",
-          });
+        return res.status(404).json({
+          error:
+            "Não existe estoque acabado disponível para esta OP. Aponte a produção antes de imprimir a etiqueta.",
+        });
       const companyPayload =
         Number.isInteger(companyCode) && companyCode > 0
           ? await pool.withConnection(async db => {
@@ -3548,12 +3510,10 @@ app.post(
         copies > 99 ||
         !pdfBase64
       )
-        return res
-          .status(400)
-          .json({
-            error:
-              "Dados inválidos para impressão direta da etiqueta de Produto Acabado.",
-          });
+        return res.status(400).json({
+          error:
+            "Dados inválidos para impressão direta da etiqueta de Produto Acabado.",
+        });
       const available = await getWindowsPrinters();
       const selected = available.find(
         item =>
@@ -3562,12 +3522,10 @@ app.post(
           }) === 0
       );
       if (!selected)
-        return res
-          .status(404)
-          .json({
-            error:
-              "A impressora selecionada não foi encontrada nesta estação Windows.",
-          });
+        return res.status(404).json({
+          error:
+            "A impressora selecionada não foi encontrada nesta estação Windows.",
+        });
       if (selected.offline)
         return res
           .status(409)
@@ -3616,11 +3574,9 @@ app.get(
           movement.machine_group ?? movement.MACHINE_GROUP
         )
       )
-        return res
-          .status(403)
-          .json({
-            error: "Esta máquina não pertence ao grupo Liberação de Produto.",
-          });
+        return res.status(403).json({
+          error: "Esta máquina não pertence ao grupo Liberação de Produto.",
+        });
       const lotSize = Math.max(
         0,
         Number(movement.lot_size ?? movement.LOT_SIZE ?? 0) || 0
@@ -3663,12 +3619,10 @@ app.post(
         process.env.PRODUCTION_POINTING_WRITE_ENABLED?.trim().toUpperCase() !==
         "S"
       )
-        return res
-          .status(403)
-          .json({
-            error:
-              "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
-          });
+        return res.status(403).json({
+          error:
+            "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
+        });
       const opCodigo = Number(req.params.opCodigo);
       const mpCodigo = Number(req.params.mpCodigo);
       const machineCode = Number(req.body?.machineCode);
@@ -4074,12 +4028,10 @@ app.post(
         process.env.PRODUCTION_POINTING_WRITE_ENABLED?.trim().toUpperCase() !==
         "S"
       ) {
-        return res
-          .status(403)
-          .json({
-            error:
-              "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
-          });
+        return res.status(403).json({
+          error:
+            "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
+        });
       }
       const opCodigo = Number(req.params.opCodigo);
       const mpCodigo = Number(req.params.mpCodigo);
@@ -4116,13 +4068,11 @@ app.post(
         ...(coladeiraMachine ? ["Parcial"] : []),
       ];
       if (!startableStatuses.includes(String(movement.mp_status)))
-        return res
-          .status(409)
-          .json({
-            error: coladeiraMachine
-              ? "A ordem não está Liberada, Aberta, Parcial, A Concluir ou Setup a Concluir para iniciar na Coladeira."
-              : "A ordem não está liberada, aberta, A Concluir ou Setup a Concluir para iniciar.",
-          });
+        return res.status(409).json({
+          error: coladeiraMachine
+            ? "A ordem não está Liberada, Aberta, Parcial, A Concluir ou Setup a Concluir para iniciar na Coladeira."
+            : "A ordem não está liberada, aberta, A Concluir ou Setup a Concluir para iniciar.",
+        });
       if (!coladeiraMachine && Number(movement.mp_fila) !== 1)
         return res
           .status(409)
@@ -4138,12 +4088,10 @@ app.post(
         pendingRows[0] &&
         String(movement.mp_status) !== "A Concluir"
       )
-        return res
-          .status(409)
-          .json({
-            error:
-              "Existe uma ordem A Concluir prioritária nesta máquina. Retome-a antes de iniciar outra ordem.",
-          });
+        return res.status(409).json({
+          error:
+            "Existe uma ordem A Concluir prioritária nesta máquina. Retome-a antes de iniciar outra ordem.",
+        });
       const resumingToConclude = String(movement.mp_status) === "A Concluir";
       if (resumingToConclude) {
         const resumed = await withTransaction(async transaction => {
@@ -4258,12 +4206,10 @@ app.post(
         process.env.PRODUCTION_POINTING_WRITE_ENABLED?.trim().toUpperCase() !==
         "S"
       )
-        return res
-          .status(403)
-          .json({
-            error:
-              "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
-          });
+        return res.status(403).json({
+          error:
+            "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
+        });
       const opCodigo = Number(req.params.opCodigo);
       const mpCodigo = Number(req.params.mpCodigo);
       const machineCode = Number(req.body?.machineCode);
@@ -4297,12 +4243,10 @@ app.post(
           }
         : null;
       if (!isManualPointingMachine(manualMachine))
-        return res
-          .status(403)
-          .json({
-            error:
-              "O Apontamento Manual só pode ser iniciado em máquina marcada como Processo Manual.",
-          });
+        return res.status(403).json({
+          error:
+            "O Apontamento Manual só pode ser iniciado em máquina marcada como Processo Manual.",
+        });
       const specialSetMachine = isSpecialProductionMachine(manualMachine);
       const started = await withTransaction(async transaction => {
         const rows = await transaction.queryAsync(
@@ -4421,12 +4365,10 @@ app.post(
         process.env.PRODUCTION_POINTING_WRITE_ENABLED?.trim().toUpperCase() !==
         "S"
       ) {
-        return res
-          .status(403)
-          .json({
-            error:
-              "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
-          });
+        return res.status(403).json({
+          error:
+            "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
+        });
       }
       const opCodigo = Number(req.params.opCodigo);
       const mpCodigo = Number(req.params.mpCodigo);
@@ -4550,12 +4492,10 @@ app.post(
         process.env.PRODUCTION_POINTING_WRITE_ENABLED?.trim().toUpperCase() !==
         "S"
       )
-        return res
-          .status(403)
-          .json({
-            error:
-              "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
-          });
+        return res.status(403).json({
+          error:
+            "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
+        });
       const opCodigo = Number(req.params.opCodigo);
       const mpCodigo = Number(req.params.mpCodigo);
       const machineCode = Number(req.body?.machineCode);
@@ -4585,12 +4525,10 @@ app.post(
         expectedCodes.length === uniqueConfirmed.length &&
         expectedCodes.every((code, index) => code === uniqueConfirmed[index]);
       if (!sameChecklist)
-        return res
-          .status(409)
-          .json({
-            error:
-              "Confirme todos os itens de liberação de máquina para iniciar a produção.",
-          });
+        return res.status(409).json({
+          error:
+            "Confirme todos os itens de liberação de máquina para iniciar a produção.",
+        });
       const rows = await query(
         `select first 1 mp.mp_posicao, mp.mp_fila, gm.gmq_grupo as group_description
       from mov_processos mp inner join maquinas_processos mq on mq.mqp_codigo = mp.mqp_codigo
@@ -4682,12 +4620,10 @@ app.post(
         process.env.PRODUCTION_POINTING_WRITE_ENABLED?.trim().toUpperCase() !==
         "S"
       )
-        return res
-          .status(403)
-          .json({
-            error:
-              "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
-          });
+        return res.status(403).json({
+          error:
+            "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
+        });
       const opCodigo = Number(req.params.opCodigo);
       const mpCodigo = Number(req.params.mpCodigo);
       const machineCode = Number(req.body?.machineCode);
@@ -4720,12 +4656,10 @@ app.post(
         expectedCodes.length === uniqueConfirmed.length &&
         expectedCodes.every((code, index) => code === uniqueConfirmed[index]);
       if (!sameChecklist)
-        return res
-          .status(409)
-          .json({
-            error:
-              "Confirme todos os itens da Inspeção de Processo antes de prosseguir.",
-          });
+        return res.status(409).json({
+          error:
+            "Confirme todos os itens da Inspeção de Processo antes de prosseguir.",
+        });
       const activeRows = await query(
         `select first 1 mph_codigo as schedule_code from mov_processos_horarios
       where op_codigo = ? and mp_codigo = ? and mqp_codigo = ? and mph_verificador = 'A'
@@ -4736,12 +4670,10 @@ app.post(
         activeRows[0]?.schedule_code ?? activeRows[0]?.SCHEDULE_CODE
       );
       if (!Number.isInteger(activeScheduleCode) || activeScheduleCode < 1)
-        return res
-          .status(409)
-          .json({
-            error:
-              "Não há um horário ativo para registrar a Inspeção de Processo.",
-          });
+        return res.status(409).json({
+          error:
+            "Não há um horário ativo para registrar a Inspeção de Processo.",
+        });
       await query(
         `update mov_processos_horarios set mph_inspecao_processo = case
       when coalesce(trim(mph_inspecao_processo), '') = '' then ${processInspectionTimestampSql}
@@ -4819,11 +4751,9 @@ app.get(
         processRows[0].group_code ?? processRows[0].GROUP_CODE
       );
       if (!Number.isInteger(groupCode) || groupCode < 1)
-        return res
-          .status(409)
-          .json({
-            error: "A máquina atual não possui grupo válido para o rastreio.",
-          });
+        return res.status(409).json({
+          error: "A máquina atual não possui grupo válido para o rastreio.",
+        });
       const rows = await query(
         `select ope.ope_codigo as structure_code, pvet.pc_codigo as product_code, pc.pc_descricao as product_name,
       ope.pce_lote as lot, coalesce(pc.pc_controlar_validade, 'N') as requires_validity
@@ -4866,12 +4796,10 @@ app.post(
         process.env.PRODUCTION_POINTING_WRITE_ENABLED?.trim().toUpperCase() !==
         "S"
       )
-        return res
-          .status(403)
-          .json({
-            error:
-              "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
-          });
+        return res.status(403).json({
+          error:
+            "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
+        });
       const opCodigo = Number(req.params.opCodigo);
       const structureCode = Number(req.params.structureCode);
       const lot = String(req.body?.lot ?? "").trim();
@@ -4895,11 +4823,9 @@ app.post(
       );
       const structure = structureRows[0];
       if (!structure)
-        return res
-          .status(404)
-          .json({
-            error: "Matéria-prima não encontrada na estrutura desta ordem.",
-          });
+        return res.status(404).json({
+          error: "Matéria-prima não encontrada na estrutura desta ordem.",
+        });
       const productCode = Number(
         structure.product_code ?? structure.PRODUCT_CODE
       );
@@ -4913,12 +4839,10 @@ app.post(
           [lot, productCode]
         );
         if (!validityRows[0])
-          return res
-            .status(409)
-            .json({
-              error:
-                "O lote informado não pertence à matéria-prima desta ordem ou não está no Controle de Validade.",
-            });
+          return res.status(409).json({
+            error:
+              "O lote informado não pertence à matéria-prima desta ordem ou não está no Controle de Validade.",
+          });
       }
       await query(
         `update ordem_producao_estrutura set pce_lote = ? where ope_codigo = ? and op_codigo = ?`,
@@ -4940,12 +4864,10 @@ app.post(
         process.env.PRODUCTION_POINTING_WRITE_ENABLED?.trim().toUpperCase() !==
         "S"
       )
-        return res
-          .status(403)
-          .json({
-            error:
-              "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
-          });
+        return res.status(403).json({
+          error:
+            "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
+        });
       const opCodigo = Number(req.params.opCodigo);
       const mpCodigo = Number(req.params.mpCodigo);
       const machineCode = Number(req.body?.machineCode);
@@ -4968,11 +4890,9 @@ app.post(
           .json({ error: "Processo não encontrado para a máquina atual." });
       const currentPosition = movement.mp_posicao ?? movement.MP_POSICAO;
       if (!["SI", "PI"].includes(String(currentPosition)))
-        return res
-          .status(409)
-          .json({
-            error: "A parada só pode ser iniciada durante setup ou produção.",
-          });
+        return res.status(409).json({
+          error: "A parada só pode ser iniciada durante setup ou produção.",
+        });
       const activeRows = await query(
         `select count(*) as total from historico_paradas where op_codigo = ? and mqp_codigo = ? and hpar_situacao = 'A'`,
         [opCodigo, machineCode]
@@ -5028,12 +4948,10 @@ app.post(
         process.env.PRODUCTION_POINTING_WRITE_ENABLED?.trim().toUpperCase() !==
         "S"
       )
-        return res
-          .status(403)
-          .json({
-            error:
-              "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
-          });
+        return res.status(403).json({
+          error:
+            "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
+        });
       const opCodigo = Number(req.params.opCodigo);
       const machineCode = Number(req.body?.machineCode);
       if (
@@ -5047,12 +4965,10 @@ app.post(
         [opCodigo, machineCode]
       );
       if (!scheduleRows[0])
-        return res
-          .status(409)
-          .json({
-            error:
-              "Não foi encontrado o horário ativo do processo para finalizar a parada.",
-          });
+        return res.status(409).json({
+          error:
+            "Não foi encontrado o horário ativo do processo para finalizar a parada.",
+        });
       await query(
         `update historico_paradas set hpar_hora_fim = current_timestamp, hpar_situacao = 'F' where op_codigo = ? and mqp_codigo = ? and mph_codigo = ? and hpar_situacao = 'A'`,
         [
@@ -5077,12 +4993,10 @@ app.post(
         process.env.PRODUCTION_POINTING_WRITE_ENABLED?.trim().toUpperCase() !==
         "S"
       )
-        return res
-          .status(403)
-          .json({
-            error:
-              "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
-          });
+        return res.status(403).json({
+          error:
+            "A escrita de apontamento está bloqueada. Defina PRODUCTION_POINTING_WRITE_ENABLED=S apenas após validar uma ordem de teste.",
+        });
       const opCodigo = Number(req.params.opCodigo);
       const mpCodigo = Number(req.params.mpCodigo);
       const machineCode = Number(req.body?.machineCode);
@@ -5581,12 +5495,10 @@ app.use((error, _req, res, _next) => {
       "[Firebird Proxy] Operação cancelada por tempo limite:",
       error?.message
     );
-    return res
-      .status(504)
-      .json({
-        error:
-          "A consulta ao Firebird excedeu o tempo limite e foi cancelada. Tente novamente.",
-      });
+    return res.status(504).json({
+      error:
+        "A consulta ao Firebird excedeu o tempo limite e foi cancelada. Tente novamente.",
+    });
   }
   // 2) Firebird refused to wait for a lock any longer (isc_tpb_lock_timeout or a no-wait lock conflict)
   if (
@@ -5601,12 +5513,10 @@ app.use((error, _req, res, _next) => {
       "[Firebird Proxy] Conflito de bloqueio no Firebird:",
       error?.message
     );
-    return res
-      .status(409)
-      .json({
-        error:
-          "O registro está sendo usado por outra estação. Aguarde alguns segundos e tente novamente.",
-      });
+    return res.status(409).json({
+      error:
+        "O registro está sendo usado por outra estação. Aguarde alguns segundos e tente novamente.",
+    });
   }
   console.error("[Firebird Proxy]", error);
   res
