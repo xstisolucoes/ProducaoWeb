@@ -48,12 +48,18 @@ const execFileAsync = promisify(execFile);
 // Substitui F:\ ou Z:\ por caminhos UNC acessíveis pelo IIS
 function normalizarCaminho(caminho) {
   if (!caminho) return caminho;
+
   // Mapeamento: F:\Bikraft\Ficha Impressao\ → \\192.168.0.10\Dados\Bikraft\Ficha Impressao\
   // Mapeamento: F:\Bikraft\Desenhos da Paletização\ → \\192.168.0.10\Dados\Bikraft\Desenhos da Paletização\
-  return caminho.replace(
-    /^([FZ]):\\Bikraft\\(Ficha Impressao|Desenhos da Paletização)\\/i,
-    "\\\\192.168.0.10\\Dados\\Bikraft\\$1\\"
-  );
+  const match = caminho.match(/^([FZ]):\\Bikraft\\(Ficha Impressao|Desenhos da Paletização)\\/i);
+  if (match) {
+    const [, drive, subDir] = match;
+    return caminho.replace(
+      new RegExp(`^([FZ]):\\\\Bikraft\\\\${subDir}\\\\`, 'i'),
+      `\\\\192.168.0.10\\Dados\\Bikraft\\${subDir}\\`
+    );
+  }
+  return caminho;
 }
 
 // Normaliza recursivamente caminhos dentro de objetos JSON
