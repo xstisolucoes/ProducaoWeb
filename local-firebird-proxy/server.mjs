@@ -48,9 +48,9 @@ const execFileAsync = promisify(execFile);
 // Substitui F:\ ou Z:\ por caminhos UNC acessíveis pelo IIS
 function normalizarCaminho(caminho) {
   if (!caminho) return caminho;
-  // Mapeamento: F:\Bikraft\Ficha Impressao\ → \\192.168.0.10\Bikraft\Ficha Impressao\
+
   return caminho.replace(
-    /^([FZ]):\\Bikraft\\Ficha Impressao\\/i,
+    /^[FZ]:\\Bikraft\\Ficha Impressao\\/i,
     "\\\\192.168.0.10\\Dados\\Bikraft\\Ficha Impressao\\"
   );
 }
