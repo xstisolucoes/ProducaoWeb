@@ -48,11 +48,31 @@ const execFileAsync = promisify(execFile);
 // Substitui F:\ ou Z:\ por caminhos UNC acessíveis pelo IIS
 function normalizarCaminho(caminho) {
   if (!caminho) return caminho;
-
+  // Mapeamento: F:\Bikraft\Ficha Impressao\ → \\192.168.0.10\Dados\Bikraft\Ficha Impressao\
+  // Mapeamento: F:\Bikraft\Desenhos da Paletização\ → \\192.168.0.10\Dados\Bikraft\Desenhos da Paletização\
   return caminho.replace(
-    /^[FZ]:\\Bikraft\\Ficha Impressao\\/i,
-    "\\\\192.168.0.10\\Dados\\Bikraft\\Ficha Impressao\\"
+    /^([FZ]):\\Bikraft\\(Ficha Impressao|Desenhos da Paletização)\\/i,
+    "\\\\192.168.0.10\\Dados\\Bikraft\\$1\\"
   );
+}
+
+// Normaliza recursivamente caminhos dentro de objetos JSON
+function normalizarCaminhosEmObjeto(obj) {
+  if (typeof obj !== "object" || obj === null) return obj;
+  if (Array.isArray(obj)) {
+    return obj.map(item => normalizarCaminhosEmObjeto(item));
+  }
+  const resultado = {};
+  for (const [chave, valor] of Object.entries(obj)) {
+    if (typeof valor === "string" && valor.match(/^[a-zA-Z]:\\/)) {
+      resultado[chave] = normalizarCaminho(valor);
+    } else if (typeof valor === "object") {
+      resultado[chave] = normalizarCaminhosEmObjeto(valor);
+    } else {
+      resultado[chave] = valor;
+    }
+  }
+  return JSON.stringify(resultado);
 }
 
 async function printPdfDirectly(pdfBuffer, printer, copies) {
@@ -2698,8 +2718,23 @@ app.get(
             .toUpperCase()
         );
       const customerCode = Number(field("customer_code") ?? 0);
-      const palletImagePath = String(field("pallet_image_path") ?? "").trim();
-      const layerImagePath = String(field("layer_image_path") ?? "").trim();
+      // Normaliza caminhos dentro de JSON ou strings simples
+      const normalizarCampo = valor => {
+        if (!valor) return "";
+        const str = String(valor).trim();
+        // Se for JSON, tenta processar e normalizar caminhos dentro
+        if (str.startsWith("{") || str.startsWith("[")) {
+          try {
+            const obj = JSON.parse(str);
+            return normalizarCaminhosEmObjeto(obj);
+          } catch {
+            return normalizarCaminho(str);
+          }
+        }
+        return normalizarCaminho(str);
+      };
+      const palletImagePath = normalizarCampo(field("pallet_image_path"));
+      const layerImagePath = normalizarCampo(field("layer_image_path"));
       const palletDetailsAvailable = [
         "pallet_code",
         "layer_code",
