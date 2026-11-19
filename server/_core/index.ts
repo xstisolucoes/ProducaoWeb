@@ -9,6 +9,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import fs from "node:fs";
+import path from "node:path";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -79,14 +80,22 @@ async function startServer() {
 
   const pasta = String.raw`\\192.168.0.10\Dados\Bikraft\Ficha Impressao`;
 
-  console.log("[IMAGENS] Usuario:", process.env.USERNAME);
-  console.log("[IMAGENS] Pasta:", pasta);
-
   try {
-    const arquivos = fs.readdirSync(pasta);
-    console.log("[IMAGENS] Acesso OK. Arquivos:", arquivos.length);
+    const arquivo = fs
+      .readdirSync(pasta)
+      .find(nome => /\.(jpg|jpeg|png|webp)$/i.test(nome));
+
+    if (arquivo) {
+      const caminho = path.join(pasta, arquivo);
+      const dados = fs.readFileSync(caminho);
+
+      console.log("[IMAGENS] Arquivo:", arquivo);
+      console.log("[IMAGENS] Leitura OK:", dados.length, "bytes");
+    } else {
+      console.log("[IMAGENS] Nenhuma imagem encontrada na raiz da pasta");
+    }
   } catch (erro) {
-    console.error("[IMAGENS] Falha:", erro.code, erro.message);
+    console.error("[IMAGENS] Erro:", erro.code, erro.message);
   }
 
   // Handler de shutdown graceful
